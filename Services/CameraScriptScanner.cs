@@ -1,0 +1,180 @@
+using System.IO;
+using System.Text.Json;
+using CameraScriptManager.Models;
+
+namespace CameraScriptManager.Services;
+
+public class CameraScriptScanner
+{
+    private static readonly HashSet<string> SkipFileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "info.dat",
+        "BPMInfo.dat",
+        "cinema-video.json",
+        "AudioData.dat"
+    };
+
+    public List<CameraScriptEntry> Scan(string customLevelsPath, string customWIPLevelsPath)
+    {
+        var results = new List<CameraScriptEntry>();
+
+        if (!string.IsNullOrWhiteSpace(customLevelsPath) && Directory.Exists(customLevelsPath))
+            ScanFolder(customLevelsPath, "CustomLevels", results);
+
+        if (!string.IsNullOrWhiteSpace(customWIPLevelsPath) && Directory.Exists(customWIPLevelsPath))
+            ScanFolder(customWIPLevelsPath, "CustomWIPLevels", results);
+
+        return results;
+    }
+
+    private void ScanFolder(string rootPath, string sourceType, List<CameraScriptEntry> results)
+    {
+        try
+        {
+            foreach (var dir in Directory.GetDirectories(rootPath))
+            {
+                var folderName = Path.GetFileName(dir);
+                var jsonFiles = Directory.GetFiles(dir, "*.json");
+
+                foreach (var jsonFile in jsonFiles)
+                {
+                    var fileName = Path.GetFileName(jsonFile);
+                    if (SkipFileNames.Contains(fileName))
+                        continue;
+
+                    try
+                    {
+                        var content = File.ReadAllText(jsonFile);
+                        if (!IsValidCameraScript(content))
+                            continue;
+
+                        var entry = CreateEntry(content, jsonFile, dir, folderName, sourceType);
+                        results.Add(entry);
+                    }
+                    catch { }
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static bool IsValidCameraScript(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            return root.TryGetProperty("Movements", out var movements)
+                && movements.ValueKind == JsonValueKind.Array;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static CameraScriptEntry CreateEntry(string jsonContent, string fullPath, string folderPath, string folderName, string sourceType)
+    {
+        var entry = new CameraScriptEntry
+        {
+            FileName = Path.GetFileName(fullPath),
+            FolderPath = folderPath,
+            FolderName = folderName,
+            SourceType = sourceType,
+            FullFilePath = fullPath,
+            JsonContent = jsonContent
+        };
+
+        // Try read metadata from JSON
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonContent);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("metadata", out var metadata))
+            {
+                entry.HasOriginalMetadata = true;
+
+                if (metadata.TryGetProperty("mapId", out var mapId))
+                    entry.MapId = mapId.GetString() ?? "";
+
+                if (metadata.TryGetProperty("cameraScriptAuthorName", out var author))
+                {
+                    entry.CameraScriptAuthorName = author.GetString() ?? "";
+                    entry.IsCameraScriptAuthorFromMetadata = !string.IsNullOrWhiteSpace(entry.CameraScriptAuthorName);
+                }
+
+                if (metadata.TryGetProperty("bpm", out var bpm))
+                    entry.Bpm = bpm.GetDouble();
+
+                if (metadata.TryGetProperty("duration", out var duration))
+                    entry.Duration = duration.GetDouble();
+
+                if (metadata.TryGetProperty("songName", out var songName))
+                    entry.SongName = songName.GetString() ?? "";
+
+                if (metadata.TryGetProperty("songSubName", out var songSubName))
+                    entry.SongSubName = songSubName.GetString() ?? "";
+
+                if (metadata.TryGetProperty("songAuthorName", out var songAuthor))
+                    entry.SongAuthorName = songAuthor.GetString() ?? "";
+
+                if (metadata.TryGetProperty("levelAuthorName", out var levelAuthor))
+                    entry.LevelAuthorName = levelAuthor.GetString() ?? "";
+            }
+        }
+        catch { }
+
+        // Extract mapId from folder name if not found in metadata
+        if (string.IsNullOrWhiteSpace(entry.MapId))
+        {
+            entry.MapId = HexIdExtractor.ExtractHexId(folderName) ?? "";
+        }
+
+        // Read Info.dat for supplementary data
+        var infoDat = InfoDatReader.ReadFromFolder(folderPath);
+        if (infoDat != null)
+        {
+            bool supplemented = false;
+
+            if (string.IsNullOrWhiteSpace(entry.SongName) && !string.IsNullOrWhiteSpace(infoDat.SongName))
+            {
+                entry.SongName = infoDat.SongName;
+                supplemented = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entry.SongSubName) && !string.IsNullOrWhiteSpace(infoDat.SongSubName))
+            {
+                entry.SongSubName = infoDat.SongSubName;
+                supplemented = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entry.SongAuthorName) && !string.IsNullOrWhiteSpace(infoDat.SongAuthorName))
+            {
+                entry.SongAuthorName = infoDat.SongAuthorName;
+                supplemented = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entry.LevelAuthorName) && !string.IsNullOrWhiteSpace(infoDat.LevelAuthorName))
+            {
+                entry.LevelAuthorName = infoDat.LevelAuthorName;
+                supplemented = true;
+            }
+
+            if (entry.Bpm == 0 && infoDat.Bpm > 0)
+            {
+                entry.Bpm = infoDat.Bpm;
+                supplemented = true;
+            }
+
+            // If no original metadata but Info.dat provided data, mark as needing metadata write
+            if (!entry.HasOriginalMetadata && supplemented)
+            {
+                // Will be used to set IsModified = true in the ViewModel
+                entry.HasOriginalMetadata = false;
+            }
+        }
+
+        return entry;
+    }
+}
