@@ -94,12 +94,10 @@ public partial class MainWindow : Window
 
         foreach (var item in selectedItems)
         {
-            if (string.IsNullOrWhiteSpace(item.OriginalSourceFile))
+            string? targetPath = item.SelectedOriginalSourceFile ?? item.OriginalSourceFiles.FirstOrDefault();
+            
+            if (string.IsNullOrWhiteSpace(targetPath))
                 continue;
-
-            // Handle ZIP inner files vs absolute JSON file paths. 
-            // The OriginalSourceFile format is likely an absolute path, perhaps with a zip internal path appended like C:\foo\bar.zip\inner\file.json
-            string targetPath = item.OriginalSourceFile;
             
             // If the path contains a .zip, we navigate to the folder containing the .zip
             int zipIdx = targetPath.IndexOf(".zip", StringComparison.OrdinalIgnoreCase);

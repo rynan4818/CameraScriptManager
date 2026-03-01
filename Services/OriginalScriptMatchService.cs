@@ -127,9 +127,6 @@ public class OriginalScriptMatchService
     {
         foreach (var target in targetEntries)
         {
-            if (!string.IsNullOrEmpty(target.OriginalSourceFile))
-                continue; // Already matched
-
             // 1. Check MapId if available in folder name or file name
             string? sourceIdFromFolder = HexIdExtractor.ExtractHexId(sourceFolderName);
             string? sourceIdFromFile = HexIdExtractor.ExtractHexId(sourceFileName);
@@ -151,7 +148,10 @@ public class OriginalScriptMatchService
             if (sourceInfo.MovementCount == targetInfo.MovementCount &&
                 Math.Abs(sourceInfo.TotalDurationAndDelay - targetInfo.TotalDurationAndDelay) <= 0.1)
             {
-                target.OriginalSourceFile = displayName;
+                if (!target.OriginalSourceFiles.Contains(displayName))
+                {
+                    target.OriginalSourceFiles.Add(displayName);
+                }
             }
         }
     }

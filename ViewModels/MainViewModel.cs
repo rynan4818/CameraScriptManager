@@ -349,9 +349,14 @@ public class MainViewModel : ViewModelBase
         int matchCount = 0;
         foreach (var item in targetItems)
         {
-            if (!string.IsNullOrEmpty(item.Entry.OriginalSourceFile))
+            if (item.Entry.OriginalSourceFiles.Count > 0)
             {
-                item.OriginalSourceFile = item.Entry.OriginalSourceFile;
+                item.OriginalSourceFiles.Clear();
+                foreach (var match in item.Entry.OriginalSourceFiles)
+                {
+                    item.OriginalSourceFiles.Add(match);
+                }
+                item.SelectedOriginalSourceFile = item.OriginalSourceFiles.FirstOrDefault();
                 matchCount++;
             }
         }

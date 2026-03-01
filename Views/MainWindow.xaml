@@ -201,7 +201,18 @@
                 <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="140" IsReadOnly="True"/>
                 <DataGridTextColumn Header="フォルダ" Binding="{Binding FolderName}" Width="200" IsReadOnly="True"/>
                 <DataGridTextColumn Header="ソース" Binding="{Binding SourceType}" Width="110" IsReadOnly="True"/>
-                <DataGridTextColumn Header="元データ(ZIP/JSON)" Binding="{Binding OriginalSourceFile}" Width="250" IsReadOnly="True" Foreground="#0055AA"/>
+                <DataGridTemplateColumn Header="元データ(ZIP/JSON)" Width="250" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ListBox ItemsSource="{Binding OriginalSourceFiles}" 
+                                     SelectedItem="{Binding SelectedOriginalSourceFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent" BorderThickness="0"
+                                     Foreground="#0055AA"
+                                     MaxHeight="60"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 

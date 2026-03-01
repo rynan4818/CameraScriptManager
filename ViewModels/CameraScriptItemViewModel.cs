@@ -17,7 +17,7 @@ public class CameraScriptItemViewModel : ViewModelBase
     private double _duration;
     private bool _isCameraScriptAuthorLocked;
     private bool _suppressModifiedTracking;
-    private string _originalSourceFile = "";
+    private string? _selectedOriginalSourceFile;
 
     public CameraScriptItemViewModel(CameraScriptEntry entry)
     {
@@ -33,7 +33,9 @@ public class CameraScriptItemViewModel : ViewModelBase
         _bpm = entry.Bpm;
         _duration = entry.Duration;
         _isCameraScriptAuthorLocked = entry.IsCameraScriptAuthorFromMetadata;
-        _originalSourceFile = entry.OriginalSourceFile;
+        
+        OriginalSourceFiles = new System.Collections.ObjectModel.ObservableCollection<string>(entry.OriginalSourceFiles);
+        _selectedOriginalSourceFile = OriginalSourceFiles.FirstOrDefault();
 
         // If no original metadata but Info.dat provided data, mark as modified
         if (!entry.HasOriginalMetadata &&
@@ -144,17 +146,13 @@ public class CameraScriptItemViewModel : ViewModelBase
         set => SetProperty(ref _isCameraScriptAuthorLocked, value);
     }
 
-    public string OriginalSourceFile
+    public string? SelectedOriginalSourceFile
     {
-        get => _originalSourceFile;
-        set
-        {
-            if (SetProperty(ref _originalSourceFile, value))
-            {
-                _entry.OriginalSourceFile = value;
-            }
-        }
+        get => _selectedOriginalSourceFile;
+        set => SetProperty(ref _selectedOriginalSourceFile, value);
     }
+
+    public System.Collections.ObjectModel.ObservableCollection<string> OriginalSourceFiles { get; }
 
     public string FileName => _entry.FileName;
     public string FolderName => _entry.FolderName;
