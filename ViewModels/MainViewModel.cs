@@ -132,15 +132,15 @@ public class MainViewModel : ViewModelBase
 
     private Task AddMetadataAsync()
     {
-        var modifiedItems = Items.Where(i => i.IsModified).ToList();
-        if (modifiedItems.Count == 0)
+        var targetItems = Items.Where(i => i.IsSelected).ToList();
+        if (targetItems.Count == 0)
         {
-            StatusText = "編集済みの項目がありません";
+            StatusText = "選択された項目がありません";
             return Task.CompletedTask;
         }
 
         var result = MessageBox.Show(
-            $"編集済みの {modifiedItems.Count} 件のカメラスクリプトにメタデータを追加します。\n変更前のファイルはバックアップされます。\nよろしいですか？",
+            $"選択された {targetItems.Count} 件のカメラスクリプトにメタデータを追加します。\n変更前のファイルはバックアップされます。\nよろしいですか？",
             "メタ情報追加",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -152,7 +152,7 @@ public class MainViewModel : ViewModelBase
 
         var files = new List<(string fullFilePath, string originalJson, string newJson, string sourceType)>();
 
-        foreach (var item in modifiedItems)
+        foreach (var item in targetItems)
         {
             var newJson = MetadataService.PrepareJsonWithMetadata(
                 item.Entry.JsonContent,
@@ -173,14 +173,14 @@ public class MainViewModel : ViewModelBase
             MetadataService.CreateBackupAndWriteMetadata(files, CustomLevelsPath, CustomWIPLevelsPath);
 
             // Update internal state after writing
-            foreach (var item in modifiedItems)
+            foreach (var item in targetItems)
             {
                 item.Entry.JsonContent = File.ReadAllText(item.FullFilePath);
                 item.Entry.HasOriginalMetadata = true;
                 item.IsModified = false;
             }
 
-            StatusText = $"メタ情報追加完了: {modifiedItems.Count} 件のファイルを更新しました";
+            StatusText = $"メタ情報追加完了: {targetItems.Count} 件のファイルを更新しました";
         }
         catch (Exception ex)
         {

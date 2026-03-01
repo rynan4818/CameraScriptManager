@@ -8,6 +8,16 @@
     <Window.Resources>
         <converters:ModifiedRowBackgroundConverter x:Key="ModifiedBgConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        
+        <!-- Reusable CellStyle for Modified cells -->
+        <Style x:Key="ModifiedCellStyle" TargetType="DataGridCell">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsModified}" Value="True">
+                    <Setter Property="Background" Value="#C0FFFF80" />
+                    <Setter Property="Foreground" Value="Black" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <Grid Margin="8">
         <Grid.RowDefinitions>
@@ -65,11 +75,6 @@
                   IsReadOnly="False"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling">
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow">
-                    <Setter Property="Background" Value="{Binding IsModified, Converter={StaticResource ModifiedBgConverter}}"/>
-                </Style>
-            </DataGrid.RowStyle>
 
             <DataGrid.ContextMenu>
                 <ContextMenu>
@@ -77,11 +82,15 @@
                     <Separator/>
                     <MenuItem Header="cameraScriptAuthorName ロック" Click="LockAuthor_Click"/>
                     <MenuItem Header="cameraScriptAuthorName ロック解除" Click="UnlockAuthor_Click"/>
+                    <Separator/>
+                    <MenuItem Header="選択 ON/OFFを切り替え" Click="ToggleSelection_Click"/>
+                    <Separator/>
+                    <MenuItem Header="エクスプローラーで開く" Click="OpenExplorer_Click"/>
                 </ContextMenu>
             </DataGrid.ContextMenu>
 
             <DataGrid.Columns>
-                <!-- Select checkbox -->
+                <!-- Select checkbox (No BG Color) -->
                 <DataGridTemplateColumn Header="選択" Width="40" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -92,7 +101,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Modified indicator -->
-                <DataGridTemplateColumn Header="編集済" Width="50" CanUserSort="True" SortMemberPath="IsModified">
+                <DataGridTemplateColumn Header="編集済" Width="50" CanUserSort="True" SortMemberPath="IsModified" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsModified, Mode=OneWay}"
@@ -103,29 +112,49 @@
                 </DataGridTemplateColumn>
 
                 <!-- MapId -->
-                <DataGridTextColumn Header="ID" Binding="{Binding MapId, UpdateSourceTrigger=LostFocus}" Width="70"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding MapId, UpdateSourceTrigger=LostFocus}" Width="70" CellStyle="{StaticResource ModifiedCellStyle}"/>
 
-                <!-- CameraScriptAuthorName with lock -->
-                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="160" SortMemberPath="CameraScriptAuthorName">
+                <!-- CameraScriptAuthorName with lock and drag handle -->
+                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="160" SortMemberPath="CameraScriptAuthorName" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=LostFocus}"
-                                     IsReadOnly="{Binding IsCameraScriptAuthorLocked}"
-                                     BorderThickness="0"
-                                     Background="Transparent"
-                                     Padding="2,0"/>
+                            <Grid>
+                                <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=PropertyChanged}"
+                                         IsReadOnly="{Binding IsCameraScriptAuthorLocked}"
+                                         BorderThickness="0"
+                                         Padding="2,0"
+                                         VerticalAlignment="Center">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCameraScriptAuthorLocked}" Value="True">
+                                                    <Setter Property="Background" Value="#DDDDDD"/>
+                                                    <Setter Property="Foreground" Value="#555555"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <!-- Fill Handle for dragging to copy -->
+                                <Border Width="6" Height="6" Background="Black" 
+                                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                        Cursor="Cross" Tag="{Binding}"
+                                        MouseLeftButtonDown="FillHandle_MouseLeftButtonDown"
+                                        Visibility="{Binding IsCameraScriptAuthorLocked, Converter={StaticResource InverseBoolConverter}, ConverterParameter=Visibility}"/>
+                            </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <!-- Song info columns (read-only display, editable) -->
-                <DataGridTextColumn Header="songName" Binding="{Binding SongName, UpdateSourceTrigger=LostFocus}" Width="180"/>
-                <DataGridTextColumn Header="songSubName" Binding="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" Width="120"/>
-                <DataGridTextColumn Header="songAuthorName" Binding="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" Width="130"/>
-                <DataGridTextColumn Header="levelAuthorName" Binding="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" Width="120"/>
-                <DataGridTextColumn Header="BPM" Binding="{Binding Bpm, UpdateSourceTrigger=LostFocus}" Width="60"/>
+                <!-- Song info columns (read-only display, editable) with ModifiedCellStyle -->
+                <DataGridTextColumn Header="songName" Binding="{Binding SongName, UpdateSourceTrigger=LostFocus}" Width="180" CellStyle="{StaticResource ModifiedCellStyle}"/>
+                <DataGridTextColumn Header="songSubName" Binding="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" Width="120" CellStyle="{StaticResource ModifiedCellStyle}"/>
+                <DataGridTextColumn Header="songAuthorName" Binding="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" Width="130" CellStyle="{StaticResource ModifiedCellStyle}"/>
+                <DataGridTextColumn Header="levelAuthorName" Binding="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" Width="120" CellStyle="{StaticResource ModifiedCellStyle}"/>
+                <DataGridTextColumn Header="BPM" Binding="{Binding Bpm, UpdateSourceTrigger=LostFocus}" Width="60" CellStyle="{StaticResource ModifiedCellStyle}"/>
 
-                <!-- File info (read-only) -->
+                <!-- File info (read-only, no BG color change) -->
                 <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="140" IsReadOnly="True"/>
                 <DataGridTextColumn Header="フォルダ" Binding="{Binding FolderName}" Width="200" IsReadOnly="True"/>
                 <DataGridTextColumn Header="ソース" Binding="{Binding SourceType}" Width="110" IsReadOnly="True"/>
