@@ -7,6 +7,9 @@ public class AppSettings
 {
     public string CustomLevelsPath { get; set; } = "";
     public string CustomWIPLevelsPath { get; set; } = "";
+    public string OriginalScriptPath1 { get; set; } = "";
+    public string OriginalScriptPath2 { get; set; } = "";
+    public string OriginalScriptPath3 { get; set; } = "";
 }
 
 public class SettingsService

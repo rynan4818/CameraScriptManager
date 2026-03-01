@@ -18,4 +18,5 @@ public class CameraScriptEntry
     public string JsonContent { get; set; } = "";
     public bool HasOriginalMetadata { get; set; }
     public bool IsCameraScriptAuthorFromMetadata { get; set; }
+    public string OriginalSourceFile { get; set; } = "";
 }

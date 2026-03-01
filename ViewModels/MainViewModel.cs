@@ -13,6 +13,9 @@ public class MainViewModel : ViewModelBase
     private readonly BeatSaverApiClient _apiClient = new();
     private string _customLevelsPath = "";
     private string _customWIPLevelsPath = "";
+    private string _originalScriptPath1 = "";
+    private string _originalScriptPath2 = "";
+    private string _originalScriptPath3 = "";
     private string _statusText = "";
 
     public MainViewModel()
@@ -22,8 +25,12 @@ public class MainViewModel : ViewModelBase
         ScanCommand = new AsyncRelayCommand(ScanAsync);
         AddMetadataCommand = new AsyncRelayCommand(AddMetadataAsync);
         ExportZipCommand = new AsyncRelayCommand(ExportZipAsync);
+        FindOriginalScriptsCommand = new AsyncRelayCommand(FindOriginalScriptsAsync);
         BrowseCustomLevelsCommand = new RelayCommand(BrowseCustomLevels);
         BrowseCustomWIPLevelsCommand = new RelayCommand(BrowseCustomWIPLevels);
+        BrowseOriginalScript1Command = new RelayCommand(BrowseOriginalScript1);
+        BrowseOriginalScript2Command = new RelayCommand(BrowseOriginalScript2);
+        BrowseOriginalScript3Command = new RelayCommand(BrowseOriginalScript3);
 
         LoadSettings();
     }
@@ -50,6 +57,36 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    public string OriginalScriptPath1
+    {
+        get => _originalScriptPath1;
+        set
+        {
+            if (SetProperty(ref _originalScriptPath1, value))
+                SaveSettings();
+        }
+    }
+
+    public string OriginalScriptPath2
+    {
+        get => _originalScriptPath2;
+        set
+        {
+            if (SetProperty(ref _originalScriptPath2, value))
+                SaveSettings();
+        }
+    }
+
+    public string OriginalScriptPath3
+    {
+        get => _originalScriptPath3;
+        set
+        {
+            if (SetProperty(ref _originalScriptPath3, value))
+                SaveSettings();
+        }
+    }
+
     public string StatusText
     {
         get => _statusText;
@@ -59,16 +96,26 @@ public class MainViewModel : ViewModelBase
     public AsyncRelayCommand ScanCommand { get; }
     public AsyncRelayCommand AddMetadataCommand { get; }
     public AsyncRelayCommand ExportZipCommand { get; }
+    public AsyncRelayCommand FindOriginalScriptsCommand { get; }
     public RelayCommand BrowseCustomLevelsCommand { get; }
     public RelayCommand BrowseCustomWIPLevelsCommand { get; }
+    public RelayCommand BrowseOriginalScript1Command { get; }
+    public RelayCommand BrowseOriginalScript2Command { get; }
+    public RelayCommand BrowseOriginalScript3Command { get; }
 
     private void LoadSettings()
     {
         var settings = _settingsService.Load();
         _customLevelsPath = settings.CustomLevelsPath;
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
+        _originalScriptPath1 = settings.OriginalScriptPath1;
+        _originalScriptPath2 = settings.OriginalScriptPath2;
+        _originalScriptPath3 = settings.OriginalScriptPath3;
         OnPropertyChanged(nameof(CustomLevelsPath));
         OnPropertyChanged(nameof(CustomWIPLevelsPath));
+        OnPropertyChanged(nameof(OriginalScriptPath1));
+        OnPropertyChanged(nameof(OriginalScriptPath2));
+        OnPropertyChanged(nameof(OriginalScriptPath3));
     }
 
     private void SaveSettings()
@@ -76,7 +123,10 @@ public class MainViewModel : ViewModelBase
         _settingsService.Save(new AppSettings
         {
             CustomLevelsPath = _customLevelsPath,
-            CustomWIPLevelsPath = _customWIPLevelsPath
+            CustomWIPLevelsPath = _customWIPLevelsPath,
+            OriginalScriptPath1 = _originalScriptPath1,
+            OriginalScriptPath2 = _originalScriptPath2,
+            OriginalScriptPath3 = _originalScriptPath3
         });
     }
 
@@ -262,6 +312,54 @@ public class MainViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
+    private Task FindOriginalScriptsAsync()
+    {
+        var targetItems = Items.Where(i => i.IsSelected).ToList();
+        if (targetItems.Count == 0)
+        {
+            StatusText = "元データ照合を行う項目を選択してください";
+            return Task.CompletedTask;
+        }
+
+        var searchPaths = new List<string>
+        {
+            OriginalScriptPath1,
+            OriginalScriptPath2,
+            OriginalScriptPath3
+        };
+
+        var dialog = new CameraScriptManager.Views.ProgressDialog("元データを検索中...", async () =>
+        {
+            var service = new CameraScriptManager.Services.OriginalScriptMatchService(searchPaths, msg =>
+            {
+                Application.Current.Dispatcher.Invoke(() => StatusText = msg);
+            });
+            var entries = targetItems.Select(i => i.Entry).ToList();
+            await service.MatchOriginalScriptsAsync(entries);
+        });
+
+        if (Application.Current.MainWindow != null)
+        {
+            dialog.Owner = Application.Current.MainWindow;
+        }
+
+        dialog.ShowDialog();
+
+        // Update view models with matching results
+        int matchCount = 0;
+        foreach (var item in targetItems)
+        {
+            if (!string.IsNullOrEmpty(item.Entry.OriginalSourceFile))
+            {
+                item.OriginalSourceFile = item.Entry.OriginalSourceFile;
+                matchCount++;
+            }
+        }
+
+        StatusText = $"元データ照合完了: {matchCount}/{targetItems.Count} 件のファイルがマッチしました";
+        return Task.CompletedTask;
+    }
+
     private void BrowseCustomLevels()
     {
         var path = BrowseFolder("CustomLevelsフォルダを選択", CustomLevelsPath);
@@ -274,6 +372,27 @@ public class MainViewModel : ViewModelBase
         var path = BrowseFolder("CustomWIPLevelsフォルダを選択", CustomWIPLevelsPath);
         if (path != null)
             CustomWIPLevelsPath = path;
+    }
+
+    private void BrowseOriginalScript1()
+    {
+        var path = BrowseFolder("元データ検索フォルダ1を選択", OriginalScriptPath1);
+        if (path != null)
+            OriginalScriptPath1 = path;
+    }
+
+    private void BrowseOriginalScript2()
+    {
+        var path = BrowseFolder("元データ検索フォルダ2を選択", OriginalScriptPath2);
+        if (path != null)
+            OriginalScriptPath2 = path;
+    }
+
+    private void BrowseOriginalScript3()
+    {
+        var path = BrowseFolder("元データ検索フォルダ3を選択", OriginalScriptPath3);
+        if (path != null)
+            OriginalScriptPath3 = path;
     }
 
     private static string? BrowseFolder(string description, string currentPath)
