@@ -86,7 +86,7 @@ public class OriginalScriptMatchService
         string fileName = Path.GetFileName(jsonFilePath);
         string folderName = Path.GetFileName(Path.GetDirectoryName(jsonFilePath) ?? "");
 
-        CheckAndApplyMatch(targetEntries, sourceInfo, fileName, folderName, fileName);
+        CheckAndApplyMatch(targetEntries, sourceInfo, fileName, folderName, Path.GetFullPath(jsonFilePath));
     }
 
     private void ProcessZipFile(string zipFilePath, IReadOnlyList<CameraScriptEntry> targetEntries)
@@ -109,7 +109,10 @@ public class OriginalScriptMatchService
             if (sourceInfo == null) continue;
 
             string folderName = Path.GetDirectoryName(entry.FullName)?.Replace('\\', '/') ?? "";
-            string displayName = string.IsNullOrEmpty(folderName) ? $"{zipFileName}/{entry.Name}" : $"{zipFileName}/{folderName}/{entry.Name}";
+            
+            // Generate full path representing the file inside the zip for UI copy/paste reference
+            string fullZipPath = Path.GetFullPath(zipFilePath);
+            string displayName = string.IsNullOrEmpty(folderName) ? $"{fullZipPath}\\{entry.Name}" : $"{fullZipPath}\\{folderName.Replace('/', '\\')}\\{entry.Name}";
 
             CheckAndApplyMatch(targetEntries, sourceInfo, entry.Name, string.IsNullOrEmpty(folderName) ? zipFileName : folderName, displayName);
         }

@@ -125,7 +125,10 @@
                     <Separator/>
                     <MenuItem Header="選択 ON/OFFを切り替え" Click="ToggleSelection_Click"/>
                     <Separator/>
-                    <MenuItem Header="エクスプローラーで開く" Click="OpenExplorer_Click"/>
+                    <MenuItem Header="エクスプローラーで開く">
+                        <MenuItem Header="譜面フォルダ" Click="OpenMapFolder_Click"/>
+                        <MenuItem Header="元データ(ZIP/JSON) フォルダ" Click="OpenOriginalFolder_Click"/>
+                    </MenuItem>
                 </ContextMenu>
             </DataGrid.ContextMenu>
 

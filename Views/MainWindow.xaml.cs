@@ -67,7 +67,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenExplorer_Click(object sender, RoutedEventArgs e)
+    private void OpenMapFolder_Click(object sender, RoutedEventArgs e)
     {
         var selectedItems = ScriptDataGrid.SelectedItems
             .OfType<CameraScriptItemViewModel>()
@@ -80,6 +80,36 @@ public partial class MainWindow : Window
                 item.FolderName);
 
             if (System.IO.Directory.Exists(folderPath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", folderPath));
+            }
+        }
+    }
+
+    private void OpenOriginalFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedItems = ScriptDataGrid.SelectedItems
+            .OfType<CameraScriptItemViewModel>()
+            .ToList();
+
+        foreach (var item in selectedItems)
+        {
+            if (string.IsNullOrWhiteSpace(item.OriginalSourceFile))
+                continue;
+
+            // Handle ZIP inner files vs absolute JSON file paths. 
+            // The OriginalSourceFile format is likely an absolute path, perhaps with a zip internal path appended like C:\foo\bar.zip\inner\file.json
+            string targetPath = item.OriginalSourceFile;
+            
+            // If the path contains a .zip, we navigate to the folder containing the .zip
+            int zipIdx = targetPath.IndexOf(".zip", StringComparison.OrdinalIgnoreCase);
+            if (zipIdx >= 0)
+            {
+                targetPath = targetPath.Substring(0, zipIdx + 4);
+            }
+
+            var folderPath = System.IO.Path.GetDirectoryName(targetPath);
+            if (!string.IsNullOrWhiteSpace(folderPath) && System.IO.Directory.Exists(folderPath))
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", folderPath));
             }

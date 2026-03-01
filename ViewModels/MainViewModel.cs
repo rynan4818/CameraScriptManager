@@ -314,10 +314,10 @@ public class MainViewModel : ViewModelBase
 
     private Task FindOriginalScriptsAsync()
     {
-        var targetItems = Items.Where(i => i.IsSelected).ToList();
+        var targetItems = Items.ToList();
         if (targetItems.Count == 0)
         {
-            StatusText = "元データ照合を行う項目を選択してください";
+            StatusText = "カメラスクリプトが見つかりません";
             return Task.CompletedTask;
         }
 
