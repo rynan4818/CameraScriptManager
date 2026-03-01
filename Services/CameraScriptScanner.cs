@@ -14,6 +14,8 @@ public class CameraScriptScanner
         "AudioData.dat"
     };
 
+    private readonly OggDurationService _oggDurationService = new();
+
     public List<CameraScriptEntry> Scan(string customLevelsPath, string customWIPLevelsPath)
     {
         var results = new List<CameraScriptEntry>();
@@ -73,7 +75,7 @@ public class CameraScriptScanner
         }
     }
 
-    private static CameraScriptEntry CreateEntry(string jsonContent, string fullPath, string folderPath, string folderName, string sourceType)
+    private CameraScriptEntry CreateEntry(string jsonContent, string fullPath, string folderPath, string folderName, string sourceType)
     {
         var entry = new CameraScriptEntry
         {
@@ -82,7 +84,9 @@ public class CameraScriptScanner
             FolderName = folderName,
             SourceType = sourceType,
             FullFilePath = fullPath,
-            JsonContent = jsonContent
+            JsonContent = jsonContent,
+            ScriptDuration = CalculateScriptDuration(jsonContent),
+            OggDuration = _oggDurationService.GetDurationFromFolder(folderPath)
         };
 
         // Try read metadata from JSON
@@ -176,5 +180,32 @@ public class CameraScriptScanner
         }
 
         return entry;
+    }
+
+    /// <summary>
+    /// SongScript JSONのMovements配列からDurationとDelayの合計値（秒）を計算する。
+    /// </summary>
+    private static double CalculateScriptDuration(string jsonContent)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonContent);
+            if (!doc.RootElement.TryGetProperty("Movements", out var movements))
+                return 0;
+
+            double total = 0;
+            foreach (var movement in movements.EnumerateArray())
+            {
+                if (movement.TryGetProperty("Duration", out var duration))
+                    total += duration.GetDouble();
+                if (movement.TryGetProperty("Delay", out var delay))
+                    total += delay.GetDouble();
+            }
+            return total;
+        }
+        catch
+        {
+            return 0;
+        }
     }
 }

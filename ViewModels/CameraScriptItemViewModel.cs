@@ -140,6 +140,19 @@ public class CameraScriptItemViewModel : ViewModelBase
         set => SetProperty(ref _duration, value);
     }
 
+    public double ScriptDuration => _entry.ScriptDuration;
+    public double OggDuration => _entry.OggDuration;
+
+    public string ScriptDurationText => FormatDuration(ScriptDuration);
+    public string OggDurationText => FormatDuration(OggDuration);
+
+    private static string FormatDuration(double seconds)
+    {
+        if (seconds <= 0) return "0:00";
+        var ts = TimeSpan.FromSeconds(seconds);
+        return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
+    }
+
     public bool IsCameraScriptAuthorLocked
     {
         get => _isCameraScriptAuthorLocked;

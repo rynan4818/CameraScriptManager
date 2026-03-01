@@ -195,7 +195,9 @@
                 <DataGridTextColumn Header="songSubName" Binding="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" Width="120" CellStyle="{StaticResource ModifiedCellStyle}"/>
                 <DataGridTextColumn Header="songAuthorName" Binding="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" Width="130" CellStyle="{StaticResource ModifiedCellStyle}"/>
                 <DataGridTextColumn Header="levelAuthorName" Binding="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" Width="120" CellStyle="{StaticResource ModifiedCellStyle}"/>
-                <DataGridTextColumn Header="BPM" Binding="{Binding Bpm, UpdateSourceTrigger=LostFocus}" Width="60" CellStyle="{StaticResource ModifiedCellStyle}"/>
+                <DataGridTextColumn Header="BPM" Binding="{Binding Bpm, UpdateSourceTrigger=LostFocus}" Width="50" CellStyle="{StaticResource ModifiedCellStyle}"/>
+                <DataGridTextColumn Header="曲長(ogg)" Binding="{Binding OggDurationText, Mode=OneWay}" Width="70" IsReadOnly="True" />
+                <DataGridTextColumn Header="ｽｸﾘﾌﾟﾄ長" Binding="{Binding ScriptDurationText, Mode=OneWay}" Width="70" IsReadOnly="True" />
 
                 <!-- File info (read-only, no BG color change) -->
                 <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="140" IsReadOnly="True"/>

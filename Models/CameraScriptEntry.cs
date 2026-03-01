@@ -18,5 +18,7 @@ public class CameraScriptEntry
     public string JsonContent { get; set; } = "";
     public bool HasOriginalMetadata { get; set; }
     public bool IsCameraScriptAuthorFromMetadata { get; set; }
+    public double ScriptDuration { get; set; }
+    public double OggDuration { get; set; }
     public List<string> OriginalSourceFiles { get; set; } = new();
 }
