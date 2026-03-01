@@ -8,9 +8,9 @@ namespace CameraScriptManager.Services;
 public class OriginalScriptMatchService
 {
     private readonly string[] _searchPaths;
-    private readonly Action<string>? _progressCallback;
+    private readonly Action<string, double?>? _progressCallback;
 
-    public OriginalScriptMatchService(IEnumerable<string> searchPaths, Action<string>? progressCallback = null)
+    public OriginalScriptMatchService(IEnumerable<string> searchPaths, Action<string, double?>? progressCallback = null)
     {
         _searchPaths = searchPaths.Where(p => !string.IsNullOrWhiteSpace(p) && Directory.Exists(p)).ToArray();
         _progressCallback = progressCallback;
@@ -25,7 +25,7 @@ public class OriginalScriptMatchService
         var sourceFiles = new List<string>();
         foreach (var path in _searchPaths)
         {
-            _progressCallback?.Invoke($"検索パスをスキャン中: {path}");
+            _progressCallback?.Invoke($"検索パスをスキャン中: {path}", null);
             await Task.Run(() =>
             {
                 CollectFiles(path, sourceFiles);
@@ -38,8 +38,8 @@ public class OriginalScriptMatchService
         foreach (var sourceFile in sourceFiles)
         {
             currentFile++;
-            if (currentFile % 10 == 0)
-                _progressCallback?.Invoke($"元データ照合中... ({currentFile}/{totalFiles})");
+            if (currentFile % 10 == 0 || currentFile == totalFiles)
+                _progressCallback?.Invoke($"元データ照合中... ({currentFile}/{totalFiles})", (double)currentFile / totalFiles * 100);
 
             bool isZip = sourceFile.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
 

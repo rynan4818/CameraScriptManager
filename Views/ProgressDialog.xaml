@@ -12,6 +12,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock x:Name="MessageText" Text="読み込み中..." TextWrapping="Wrap" Margin="0,0,0,15" HorizontalAlignment="Center" FontSize="14"/>
-        <ProgressBar x:Name="ProgressBar" Grid.Row="1" IsIndeterminate="True" Height="20" />
+        <ProgressBar x:Name="ProgressBar" Grid.Row="1" IsIndeterminate="True" Height="20" Maximum="100"/>
     </Grid>
 </Window>

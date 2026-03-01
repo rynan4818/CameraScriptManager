@@ -76,7 +76,7 @@ public partial class MainWindow : Window
         foreach (var item in selectedItems)
         {
             var folderPath = System.IO.Path.Combine(
-                item.SourceType == "WIP" ? ViewModel.CustomWIPLevelsPath : ViewModel.CustomLevelsPath,
+                item.SourceType == "CustomWIPLevels" ? ViewModel.CustomWIPLevelsPath : ViewModel.CustomLevelsPath,
                 item.FolderName);
 
             if (System.IO.Directory.Exists(folderPath))

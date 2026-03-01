@@ -186,6 +186,7 @@ public class MainViewModel : ViewModelBase
         if (targetItems.Count == 0)
         {
             StatusText = "選択された項目がありません";
+            MessageBox.Show("処理を行う項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
             return Task.CompletedTask;
         }
 
@@ -247,6 +248,7 @@ public class MainViewModel : ViewModelBase
         if (selectedItems.Count == 0)
         {
             StatusText = "エクスポートする項目を選択してください";
+            MessageBox.Show("エクスポートする項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
             return Task.CompletedTask;
         }
 
@@ -328,10 +330,11 @@ public class MainViewModel : ViewModelBase
             OriginalScriptPath3
         };
 
-        var dialog = new CameraScriptManager.Views.ProgressDialog("元データを検索中...", async () =>
+        var dialog = new CameraScriptManager.Views.ProgressDialog("元データを検索中...", async (progress) =>
         {
-            var service = new CameraScriptManager.Services.OriginalScriptMatchService(searchPaths, msg =>
+            var service = new CameraScriptManager.Services.OriginalScriptMatchService(searchPaths, (msg, pct) =>
             {
+                progress(msg, pct);
                 Application.Current.Dispatcher.Invoke(() => StatusText = msg);
             });
             var entries = targetItems.Select(i => i.Entry).ToList();

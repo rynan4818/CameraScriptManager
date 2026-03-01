@@ -17,6 +17,32 @@ public partial class ProgressDialog : Window
         Loaded += ProgressDialog_Loaded;
     }
 
+    public ProgressDialog(string message, Func<Action<string, double?>, Task> workAsyncWithProgress)
+    {
+        InitializeComponent();
+        MessageText.Text = message;
+        _workAsync = () => workAsyncWithProgress(UpdateProgress);
+
+        Loaded += ProgressDialog_Loaded;
+    }
+
+    public void UpdateProgress(string message, double? percent)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            MessageText.Text = message;
+            if (percent.HasValue)
+            {
+                ProgressBar.IsIndeterminate = false;
+                ProgressBar.Value = percent.Value;
+            }
+            else
+            {
+                ProgressBar.IsIndeterminate = true;
+            }
+        });
+    }
+
     private async void ProgressDialog_Loaded(object sender, RoutedEventArgs e)
     {
         try
