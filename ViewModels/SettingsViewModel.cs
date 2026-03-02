@@ -137,27 +137,7 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    // Copier Rename Naming
-    private bool _isCopierRenameNamingDefault = true;
-    public bool IsCopierRenameNamingDefault
-    {
-        get => _isCopierRenameNamingDefault;
-        set
-        {
-            if (SetProperty(ref _isCopierRenameNamingDefault, value))
-            {
-                OnPropertyChanged(nameof(IsCopierRenameNamingCustom));
-                SaveSettings();
-                OnSettingsChanged();
-            }
-        }
-    }
 
-    public bool IsCopierRenameNamingCustom
-    {
-        get => !IsCopierRenameNamingDefault;
-        set => IsCopierRenameNamingDefault = !value;
-    }
 
     private string _copierRenameCustomFormat = "";
     public string CopierRenameCustomFormat
@@ -201,7 +181,7 @@ public class SettingsViewModel : ViewModelBase
             ? "{MapId}_{SongName}_{LevelAuthorName}"
             : settings.ManagerZipCustomFormat;
 
-        _isCopierRenameNamingDefault = settings.CopierRenameNamingMode != "Custom";
+
         _copierRenameCustomFormat = string.IsNullOrEmpty(settings.CopierRenameCustomFormat)
             ? "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript"
             : settings.CopierRenameCustomFormat;
@@ -214,8 +194,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsManagerZipNamingDefault));
         OnPropertyChanged(nameof(IsManagerZipNamingCustom));
         OnPropertyChanged(nameof(ManagerZipCustomFormat));
-        OnPropertyChanged(nameof(IsCopierRenameNamingDefault));
-        OnPropertyChanged(nameof(IsCopierRenameNamingCustom));
+
         OnPropertyChanged(nameof(CopierRenameCustomFormat));
     }
 
@@ -230,7 +209,7 @@ public class SettingsViewModel : ViewModelBase
             OriginalScriptPath3 = OriginalScriptPath3,
             ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom",
             ManagerZipCustomFormat = ManagerZipCustomFormat,
-            CopierRenameNamingMode = IsCopierRenameNamingDefault ? "Default" : "Custom",
+            CopierRenameNamingMode = "Custom",
             CopierRenameCustomFormat = CopierRenameCustomFormat
         });
     }

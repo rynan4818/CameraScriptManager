@@ -40,7 +40,7 @@ public class CopierViewModel : ViewModelBase
         else if (Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed))
             _defaultRenameOption = parsed;
         else
-            _defaultRenameOption = RenameOption.SongScript;
+            _defaultRenameOption = RenameOption.カスタム;
 
         // Commands
         RescanCommand = new RelayCommand(RescanFolders);
@@ -67,7 +67,7 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
-    private RenameOption _defaultRenameOption = RenameOption.SongScript;
+    private RenameOption _defaultRenameOption = RenameOption.カスタム;
     public RenameOption DefaultRenameOption
     {
         get => _defaultRenameOption;
@@ -115,7 +115,7 @@ public class CopierViewModel : ViewModelBase
         else if (Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed))
             _defaultRenameOption = parsed;
         else
-            _defaultRenameOption = RenameOption.SongScript;
+            _defaultRenameOption = RenameOption.カスタム;
 
         if (pathChanged)
         {

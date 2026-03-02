@@ -89,7 +89,7 @@ public partial class CopierView : UserControl
     private void ContextMenu_RenameNone(object sender, RoutedEventArgs e)
     {
         foreach (var entry in GetSelectedEntries())
-            entry.RenameChoice = RenameOption.None;
+            entry.RenameChoice = RenameOption.無し;
     }
 
     private void ContextMenu_RenameSongScript(object sender, RoutedEventArgs e)

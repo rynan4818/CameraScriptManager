@@ -113,9 +113,30 @@ public class SongScriptCopyService
         if (!string.IsNullOrEmpty(entry.CustomFileName))
             return SanitizeFileName(entry.CustomFileName);
 
+        if (entry.RenameChoice == RenameOption.カスタム)
+        {
+            var settingsService = new SettingsService();
+            var settings = settingsService.Load();
+            var tags = new Dictionary<string, string>
+            {
+                { "MapId", entry.HexId },
+                { "SongName", entry.SongName },
+                { "SongSubName", entry.Metadata?.SongSubName ?? "" },
+                { "SongAuthorName", entry.Metadata?.SongAuthorName ?? "" },
+                { "LevelAuthorName", entry.Metadata?.LevelAuthorName ?? "" },
+                { "CameraScriptAuthorName", entry.CameraScriptAuthorName ?? "" },
+                { "FileName", Path.GetFileName(entry.SourceFileName) },
+                { "Bpm", entry.Metadata?.Bpm.ToString() ?? "" }
+            };
+            string name = NamingEngine.ReplaceTags(settings.CopierRenameCustomFormat, tags);
+            if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                name += ".json";
+            return SanitizeFileName(name);
+        }
+
         return entry.RenameChoice switch
         {
-            RenameOption.None =>
+            RenameOption.無し =>
                 SanitizeFileName(Path.GetFileName(entry.SourceFileName)),
             RenameOption.AuthorIdSongName =>
                 SanitizeFileName($"{entry.CameraScriptAuthorName}_{entry.HexId}_{entry.SongName}_SongScript.json"),

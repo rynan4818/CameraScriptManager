@@ -27,13 +27,13 @@
         <!-- Settings & Action Buttons -->
         <WrapPanel Grid.Row="0" Margin="0,0,0,5" VerticalAlignment="Center">
             <CheckBox Content="metadataをSongScriptに追加" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"/>
-            <TextBlock Text="Rename:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBlock Text="リネーム:" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ComboBox SelectedItem="{Binding DefaultRenameOption, UpdateSourceTrigger=PropertyChanged}"
                       ItemsSource="{Binding Source={StaticResource RenameOptions}}"
                       IsEditable="False" Width="150" VerticalAlignment="Center" Margin="0,0,15,0"/>
             
-            <Button Content="Re-scan" Command="{Binding RescanCommand}" Width="80" Margin="0,0,5,0"/>
-            <Button Content="Clear" Command="{Binding ClearEntriesCommand}" Width="60" Margin="0,0,5,0"/>
+            <Button Content="再チェック" Command="{Binding RescanCommand}" Width="80" Margin="0,0,5,0"/>
+            <Button Content="クリア" Command="{Binding ClearEntriesCommand}" Width="60" Margin="0,0,5,0"/>
             <Button Content="コピー実行" Command="{Binding CopyCommand}" Width="100" FontWeight="Bold" Background="#4CAF50" Foreground="White" Margin="0,0,5,0"/>
         </WrapPanel>
 
@@ -66,7 +66,7 @@
                     <MenuItem Header="選択したIDをコピー" Click="ContextMenu_CopyIds"/>
                     <Separator/>
                     <MenuItem Header="Rename">
-                        <MenuItem Header="Renameしない" Click="ContextMenu_RenameNone"/>
+                        <MenuItem Header="無し" Click="ContextMenu_RenameNone"/>
                         <MenuItem Header="SongScript" Click="ContextMenu_RenameSongScript"/>
                         <MenuItem Header="Author_ID_SongName" Click="ContextMenu_RenameAuthorIdSongName"/>
                     </MenuItem>
@@ -93,14 +93,14 @@
 
             <DataGrid.Columns>
                 <!-- Source Path (left-aligned, sortable) -->
-                <DataGridTextColumn Header="Source" Binding="{Binding SourceDisplayPath}" IsReadOnly="True" Width="200"
+                <DataGridTextColumn Header="ソース" Binding="{Binding SourceDisplayPath}" IsReadOnly="True" Width="200"
                                     SortMemberPath="SourceDisplayPath"/>
 
                 <!-- Hex ID (editable) -->
                 <DataGridTextColumn Header="ID" Binding="{Binding HexId, UpdateSourceTrigger=LostFocus}" Width="60"/>
 
                 <!-- Song Name -->
-                <DataGridTextColumn Header="Song Name" Binding="{Binding SongName}" IsReadOnly="True" Width="200"/>
+                <DataGridTextColumn Header="songName" Binding="{Binding SongName}" IsReadOnly="True" Width="200"/>
 
                 <!-- BeatSaver URL -->
                 <DataGridTemplateColumn Header="BeatSaver" Width="70">
@@ -116,7 +116,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Author (sortable) -->
-                <DataGridTemplateColumn Header="Author" Width="100" SortMemberPath="CameraScriptAuthorName">
+                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="100" SortMemberPath="CameraScriptAuthorName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>
@@ -168,7 +168,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- CL Folder Selector (disabled if single, red if multiple) -->
-                <DataGridTemplateColumn Header="CustomLevels Folder" Width="250">
+                <DataGridTemplateColumn Header="CustomLevelsフォルダ" Width="250">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding CustomLevelsFolders}"
@@ -220,7 +220,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- WIP Folder Selector (disabled if single, red if multiple) -->
-                <DataGridTemplateColumn Header="CustomWIPLevels Folder" Width="250">
+                <DataGridTemplateColumn Header="CustomWIPLevelsフォルダ" Width="250">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding CustomWIPLevelsFolders}"
@@ -234,7 +234,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Rename Option -->
-                <DataGridTemplateColumn Header="Rename" Width="120">
+                <DataGridTemplateColumn Header="リネーム" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox SelectedItem="{Binding RenameChoice, UpdateSourceTrigger=PropertyChanged}"
@@ -245,13 +245,13 @@
                 </DataGridTemplateColumn>
 
                 <!-- Renamed FileName (editable) -->
-                <DataGridTextColumn Header="FileName" Binding="{Binding RenameDisplayName, UpdateSourceTrigger=LostFocus}" Width="200"/>
+                <DataGridTextColumn Header="ファイル名" Binding="{Binding RenameDisplayName, UpdateSourceTrigger=LostFocus}" Width="200"/>
 
                 <!-- Script Duration (MovementsのDuration+Delay合計) -->
-                <DataGridTextColumn Header="Script" Binding="{Binding ScriptDuration, StringFormat=F1}" IsReadOnly="True" Width="55"/>
+                <DataGridTextColumn Header="ｽｸﾘﾌﾟﾄ長" Binding="{Binding ScriptDurationText, Mode=OneWay}" IsReadOnly="True" Width="70"/>
 
                 <!-- Ogg Duration -->
-                <DataGridTextColumn Header="Song" Binding="{Binding OggDuration, StringFormat=F0}" IsReadOnly="True" Width="50"/>
+                <DataGridTextColumn Header="曲長(egg)" Binding="{Binding OggDurationText, Mode=OneWay}" IsReadOnly="True" Width="70"/>
             </DataGrid.Columns>
         </DataGrid>
 

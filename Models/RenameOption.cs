@@ -2,7 +2,8 @@ namespace CameraScriptManager.Models;
 
 public enum RenameOption
 {
-    None,
+    無し,
     SongScript,
-    AuthorIdSongName
+    AuthorIdSongName,
+    カスタム
 }

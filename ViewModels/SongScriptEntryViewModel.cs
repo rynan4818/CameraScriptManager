@@ -134,7 +134,21 @@ public class SongScriptEntryViewModel : ViewModelBase
     /// <summary>譜面フォルダの音声ファイルから算出した曲のDuration（秒）</summary>
     public double OggDuration => _model.OggDuration;
 
-    public void NotifyOggDurationChanged() => OnPropertyChanged(nameof(OggDuration));
+    public string ScriptDurationText => FormatDuration(ScriptDuration);
+    public string OggDurationText => FormatDuration(OggDuration);
+
+    private static string FormatDuration(double seconds)
+    {
+        if (seconds <= 0) return "0:00";
+        var ts = TimeSpan.FromSeconds(seconds);
+        return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
+    }
+
+    public void NotifyOggDurationChanged()
+    {
+        OnPropertyChanged(nameof(OggDuration));
+        OnPropertyChanged(nameof(OggDurationText));
+    }
 
     // CustomLevels
     private bool _copyToCustomLevels;
@@ -225,9 +239,9 @@ public class SongScriptEntryViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(_model.CustomFileName))
                 return _model.CustomFileName;
 
-            var settings = _settingsService.Load();
-            if (settings.CopierRenameNamingMode == "Custom")
+            if (_renameChoice == RenameOption.カスタム)
             {
+                var settings = _settingsService.Load();
                 var tags = new Dictionary<string, string>
                 {
                     { "MapId", _model.HexId },
@@ -247,7 +261,7 @@ public class SongScriptEntryViewModel : ViewModelBase
 
             return _renameChoice switch
             {
-                RenameOption.None => System.IO.Path.GetFileName(_model.SourceFileName),
+                RenameOption.無し => System.IO.Path.GetFileName(_model.SourceFileName),
                 RenameOption.SongScript => "SongScript.json",
                 RenameOption.AuthorIdSongName => $"{CameraScriptAuthorName}_{HexId}_{SongName}_SongScript.json",
                 _ => "SongScript.json"
