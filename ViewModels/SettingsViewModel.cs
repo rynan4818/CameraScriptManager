@@ -184,6 +184,8 @@ public class SettingsViewModel : ViewModelBase
     private void LoadSettings()
     {
         var settings = _settingsService.Load();
+        _customLevelsPath = settings.CustomLevelsPath;
+        _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _originalScriptPath1 = settings.OriginalScriptPath1;
         _originalScriptPath2 = settings.OriginalScriptPath2;
         _originalScriptPath3 = settings.OriginalScriptPath3;
