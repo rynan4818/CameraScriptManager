@@ -23,6 +23,11 @@
             <TabItem Header="Copier">
                 <local:CopierView DataContext="{Binding CopierViewModel}" />
             </TabItem>
+
+            <!-- Settings Tab -->
+            <TabItem Header="Settings">
+                <local:SettingsView DataContext="{Binding SettingsViewModel}" />
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

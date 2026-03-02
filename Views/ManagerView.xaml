@@ -19,85 +19,20 @@
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Row 0: CustomLevels Path -->
-        <Grid Grid.Row="0" Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="140"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="80"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="CustomLevels:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <TextBox Grid.Column="1" Text="{Binding CustomLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="4,0"/>
-            <Button Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomLevelsCommand}"/>
-        </Grid>
-
-        <!-- Row 1: CustomWIPLevels Path -->
-        <Grid Grid.Row="1" Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="140"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="80"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="CustomWIPLevels:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <TextBox Grid.Column="1" Text="{Binding CustomWIPLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="4,0"/>
-            <Button Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomWIPLevelsCommand}"/>
-        </Grid>
-
-        <!-- Row 2: OriginalScript Path 1 -->
-        <Grid Grid.Row="2" Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="140"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="80"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="元データ検索(ZIP/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <TextBox Grid.Column="1" Text="{Binding OriginalScriptPath1, UpdateSourceTrigger=PropertyChanged}" Margin="4,0"/>
-            <Button Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}"/>
-        </Grid>
-
-        <!-- Row 3: OriginalScript Path 2 -->
-        <Grid Grid.Row="3" Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="140"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="80"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="元データ検索(ZIP/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <TextBox Grid.Column="1" Text="{Binding OriginalScriptPath2, UpdateSourceTrigger=PropertyChanged}" Margin="4,0"/>
-            <Button Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}"/>
-        </Grid>
-
-        <!-- Row 4: OriginalScript Path 3 -->
-        <Grid Grid.Row="4" Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="140"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="80"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="元データ検索(ZIP/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <TextBox Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="4,0"/>
-            <Button Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}"/>
-        </Grid>
-
-        <!-- Row 5: Buttons -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,4,0,8">
+        <!-- Buttons -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,8">
             <Button Content="再チェック" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"/>
             <Button Content="メタ情報追加" Command="{Binding AddMetadataCommand}" Padding="16,4" Margin="0,0,8,0"/>
             <Button Content="ZIP出力" Command="{Binding ExportZipCommand}" Padding="16,4" Margin="0,0,8,0"/>
             <Button Content="元データ照合" Command="{Binding FindOriginalScriptsCommand}" Padding="16,4"/>
         </StackPanel>
 
-        <!-- Row 6: DataGrid -->
-        <DataGrid Grid.Row="6"
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="1"
                   x:Name="ScriptDataGrid"
                   ItemsSource="{Binding Items}"
                   AutoGenerateColumns="False"
@@ -217,8 +152,8 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Row 7: Status bar -->
-        <StatusBar Grid.Row="7" Margin="0,4,0,0">
+        <!-- Status bar -->
+        <StatusBar Grid.Row="2" Margin="0,4,0,0">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
             </StatusBarItem>

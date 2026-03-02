@@ -1,0 +1,70 @@
+<UserControl x:Class="CameraScriptManager.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:CameraScriptManager.Models"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase">
+
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="RenameOptions" MethodName="GetValues" ObjectType="{x:Type models:RenameOption}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:RenameOption"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Paths Configuration -->
+        <GroupBox Grid.Row="0" Header="パス設定" Margin="0,0,0,10">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- CustomLevels -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="CustomLevels:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CustomLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="0" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomLevelsCommand}" Margin="5"/>
+
+                <!-- CustomWIPLevels -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="CustomWIPLevels:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CustomWIPLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomWIPLevelsCommand}" Margin="5"/>
+
+                <Separator Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10"/>
+
+                <!-- OriginalScript 1 -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="元データ検索(ZIP/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding OriginalScriptPath1, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="3" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}" Margin="5"/>
+
+                <!-- OriginalScript 2 -->
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="元データ検索(ZIP/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OriginalScriptPath2, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="4" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}" Margin="5"/>
+
+                <!-- OriginalScript 3 -->
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(ZIP/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"/>
+            </Grid>
+        </GroupBox>
+
+
+
+    </Grid>
+</UserControl>

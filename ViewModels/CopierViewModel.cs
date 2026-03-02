@@ -43,8 +43,6 @@ public class CopierViewModel : ViewModelBase
             _defaultRenameOption = RenameOption.SongScript;
 
         // Commands
-        BrowseCustomLevelsCommand = new RelayCommand(BrowseCustomLevels);
-        BrowseCustomWIPLevelsCommand = new RelayCommand(BrowseCustomWIPLevels);
         RescanCommand = new RelayCommand(RescanFolders);
         CopyCommand = new AsyncRelayCommand(ExecuteCopy, () => Entries.Count > 0 && !IsBusy);
         ClearEntriesCommand = new RelayCommand(() => Entries.Clear());
@@ -56,26 +54,7 @@ public class CopierViewModel : ViewModelBase
 
     // Settings
     private string _customLevelsPath = "";
-    public string CustomLevelsPath
-    {
-        get => _customLevelsPath;
-        set
-        {
-            if (SetProperty(ref _customLevelsPath, value))
-                SaveSettings();
-        }
-    }
-
     private string _customWIPLevelsPath = "";
-    public string CustomWIPLevelsPath
-    {
-        get => _customWIPLevelsPath;
-        set
-        {
-            if (SetProperty(ref _customWIPLevelsPath, value))
-                SaveSettings();
-        }
-    }
 
     private bool _addMetadata = true;
     public bool AddMetadata
@@ -116,41 +95,32 @@ public class CopierViewModel : ViewModelBase
     public ObservableCollection<SongScriptEntryViewModel> Entries { get; } = new();
 
     // Commands
-    public ICommand BrowseCustomLevelsCommand { get; }
-    public ICommand BrowseCustomWIPLevelsCommand { get; }
     public ICommand RescanCommand { get; }
     public ICommand CopyCommand { get; }
     public ICommand ClearEntriesCommand { get; }
     public ICommand OpenFilesCommand { get; }
 
-    private void BrowseCustomLevels()
+    public void ReloadSettings()
     {
-        var path = BrowseFolder("CustomLevels フォルダを選択", CustomLevelsPath);
-        if (path != null)
+        var settings = _settingsService.Load();
+        bool pathChanged = _customLevelsPath != settings.CustomLevelsPath || 
+                           _customWIPLevelsPath != settings.CustomWIPLevelsPath;
+                           
+        _customLevelsPath = settings.CustomLevelsPath;
+        _customWIPLevelsPath = settings.CustomWIPLevelsPath;
+        _addMetadata = settings.AddMetadata;
+        
+        if (settings.DefaultRenameToAuthorIdSongName == true)
+            _defaultRenameOption = RenameOption.AuthorIdSongName;
+        else if (Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed))
+            _defaultRenameOption = parsed;
+        else
+            _defaultRenameOption = RenameOption.SongScript;
+
+        if (pathChanged)
         {
-            CustomLevelsPath = path;
             RescanFolders();
         }
-    }
-
-    private void BrowseCustomWIPLevels()
-    {
-        var path = BrowseFolder("CustomWIPLevels フォルダを選択", CustomWIPLevelsPath);
-        if (path != null)
-        {
-            CustomWIPLevelsPath = path;
-            RescanFolders();
-        }
-    }
-
-    private static string? BrowseFolder(string description, string initialPath)
-    {
-        var dialog = new Microsoft.Win32.OpenFolderDialog
-        {
-            Title = description,
-            InitialDirectory = Directory.Exists(initialPath) ? initialPath : ""
-        };
-        return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 
     private void OpenFiles()
@@ -170,8 +140,11 @@ public class CopierViewModel : ViewModelBase
 
     public void RescanFolders()
     {
-        _customLevelsFolders = _scanner.ScanFolder(CustomLevelsPath, true);
-        _customWIPLevelsFolders = _scanner.ScanFolder(CustomWIPLevelsPath, false);
+        if (string.IsNullOrEmpty(_customLevelsPath) && string.IsNullOrEmpty(_customWIPLevelsPath))
+            return;
+
+        _customLevelsFolders = _scanner.ScanFolder(_customLevelsPath, true);
+        _customWIPLevelsFolders = _scanner.ScanFolder(_customWIPLevelsPath, false);
 
         int clCount = _customLevelsFolders.Values.Sum(v => v.Count);
         int wipCount = _customWIPLevelsFolders.Values.Sum(v => v.Count);
@@ -196,8 +169,7 @@ public class CopierViewModel : ViewModelBase
 
             foreach (var entry in entries)
             {
-                // Set default rename option
-                entry.RenameChoice = DefaultRenameOption;
+                entry.RenameChoice = _defaultRenameOption;
 
                 // Match folders
                 string key = entry.HexId.ToLowerInvariant();
@@ -319,7 +291,7 @@ public class CopierViewModel : ViewModelBase
         try
         {
             var progress = new Progress<string>(msg => StatusMessage = msg);
-            var results = await _copyService.CopyAllAsync(entriesToCopy, AddMetadata, progress);
+            var results = await _copyService.CopyAllAsync(entriesToCopy, _addMetadata, progress);
 
             int successCount = results.Count(r => r.Success);
             int failCount = results.Count(r => !r.Success);
@@ -351,12 +323,9 @@ public class CopierViewModel : ViewModelBase
 
     private void SaveSettings()
     {
-        _settingsService.Save(new AppSettings
-        {
-            CustomLevelsPath = CustomLevelsPath,
-            CustomWIPLevelsPath = CustomWIPLevelsPath,
-            AddMetadata = AddMetadata,
-            DefaultRenameOption = DefaultRenameOption.ToString()
-        });
+        var currentSettings = _settingsService.Load();
+        currentSettings.AddMetadata = AddMetadata;
+        currentSettings.DefaultRenameOption = DefaultRenameOption.ToString();
+        _settingsService.Save(currentSettings);
     }
 }
