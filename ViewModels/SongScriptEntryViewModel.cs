@@ -93,21 +93,8 @@ public class SongScriptEntryViewModel : ViewModelBase
 
     public void UpdateSongName()
     {
-        string newName = _model.SourceSongName;
-        if (_model.SongNameChoice == SongNameOption.BeatSaverSongName && _model.Metadata != null)
-        {
-            newName = _model.Metadata.SongName ?? newName;
-        }
-        else if (_model.SongNameChoice == SongNameOption.BeatSaverSongNameAndAuthor && _model.Metadata != null)
-        {
-            var song = _model.Metadata.SongName ?? "";
-            var author = _model.Metadata.LevelAuthorName ?? "";
-            if (!string.IsNullOrEmpty(song) && !string.IsNullOrEmpty(author))
-                newName = $"{song} - {author}";
-            else if (!string.IsNullOrEmpty(song))
-                newName = song;
-        }
-        SongName = newName;
+        _model.UpdateSongName();
+        SongName = _model.SongName;
     }
 
     public string BeatSaverUrl => _model.BeatSaverUrl;
@@ -236,36 +223,8 @@ public class SongScriptEntryViewModel : ViewModelBase
     {
         get
         {
-            if (!string.IsNullOrEmpty(_model.CustomFileName))
-                return _model.CustomFileName;
-
-            if (_renameChoice == RenameOption.カスタム)
-            {
-                var settings = _settingsService.Load();
-                var tags = new Dictionary<string, string>
-                {
-                    { "MapId", _model.HexId },
-                    { "SongName", _model.SongName },
-                    { "SongSubName", _model.Metadata?.SongSubName ?? "" },
-                    { "SongAuthorName", _model.Metadata?.SongAuthorName ?? "" },
-                    { "LevelAuthorName", _model.Metadata?.LevelAuthorName ?? "" },
-                    { "CameraScriptAuthorName", CameraScriptAuthorName },
-                    { "FileName", Path.GetFileName(_model.SourceFileName) },
-                    { "Bpm", _model.Metadata?.Bpm.ToString() ?? "" }
-                };
-                string name = NamingEngine.ReplaceTags(settings.CopierRenameCustomFormat, tags);
-                if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                    name += ".json";
-                return name;
-            }
-
-            return _renameChoice switch
-            {
-                RenameOption.無し => System.IO.Path.GetFileName(_model.SourceFileName),
-                RenameOption.SongScript => "SongScript.json",
-                RenameOption.AuthorIdSongName => $"{CameraScriptAuthorName}_{HexId}_{SongName}_SongScript.json",
-                _ => "SongScript.json"
-            };
+            var settings = _settingsService.Load();
+            return _model.GenerateRenameDisplayName(settings.CopierRenameCustomFormat ?? "", CameraScriptAuthorName);
         }
         set
         {
@@ -326,37 +285,22 @@ public class SongScriptEntryViewModel : ViewModelBase
         Dictionary<string, List<BeatMapFolder>> customLevels,
         Dictionary<string, List<BeatMapFolder>> customWIPLevels)
     {
-        string key = _model.HexId.ToLowerInvariant();
-
-        _model.MatchedCustomLevels = customLevels.TryGetValue(key, out var clList) ? clList : new();
-        _model.MatchedCustomWIPLevels = customWIPLevels.TryGetValue(key, out var wipList) ? wipList : new();
+        _model.UpdateMatchedFolders(customLevels, customWIPLevels);
 
         CustomLevelsFolders.Clear();
         foreach (var f in _model.MatchedCustomLevels) CustomLevelsFolders.Add(f);
         CustomWIPLevelsFolders.Clear();
         foreach (var f in _model.MatchedCustomWIPLevels) CustomWIPLevelsFolders.Add(f);
 
-        if (_model.MatchedCustomLevels.Count > 0)
-        {
-            CopyToCustomLevels = true;
-            SelectedCustomLevelsFolder = _model.MatchedCustomLevels[0];
-        }
-        else
-        {
-            CopyToCustomLevels = false;
-            SelectedCustomLevelsFolder = null;
-        }
+        _copyToCustomLevels = _model.CopyToCustomLevels;
+        _selectedCustomLevelsFolder = _model.SelectedCustomLevelsFolder;
+        _copyToCustomWIPLevels = _model.CopyToCustomWIPLevels;
+        _selectedCustomWIPLevelsFolder = _model.SelectedCustomWIPLevelsFolder;
 
-        if (_model.MatchedCustomWIPLevels.Count > 0)
-        {
-            CopyToCustomWIPLevels = true;
-            SelectedCustomWIPLevelsFolder = _model.MatchedCustomWIPLevels[0];
-        }
-        else
-        {
-            CopyToCustomWIPLevels = false;
-            SelectedCustomWIPLevelsFolder = null;
-        }
+        OnPropertyChanged(nameof(CopyToCustomLevels));
+        OnPropertyChanged(nameof(SelectedCustomLevelsFolder));
+        OnPropertyChanged(nameof(CopyToCustomWIPLevels));
+        OnPropertyChanged(nameof(SelectedCustomWIPLevelsFolder));
 
         OnPropertyChanged(nameof(CanCopyToCustomLevels));
         OnPropertyChanged(nameof(CustomLevelsFolderCount));

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -47,6 +48,22 @@ public class CopierViewModel : ViewModelBase
         CopyCommand = new AsyncRelayCommand(ExecuteCopy, () => Entries.Count > 0 && !IsBusy);
         ClearEntriesCommand = new RelayCommand(() => Entries.Clear());
         OpenFilesCommand = new RelayCommand(OpenFiles);
+        
+        // Context Menu Commands
+        DeleteSelectedCommand = new RelayCommand(ExecuteDeleteSelected);
+        CopyIdsCommand = new RelayCommand(ExecuteCopyIds);
+        RenameNoneCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.無し));
+        RenameSongScriptCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.SongScript));
+        RenameAuthorIdSongNameCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.AuthorIdSongName));
+        CustomLevelsOnCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "CL", true));
+        CustomLevelsOffCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "CL", false));
+        CustomWipLevelsOnCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "WIP", true));
+        CustomWipLevelsOffCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "WIP", false));
+        OpenExplorerCLCommand = new RelayCommand(p => ExecuteOpenExplorer(p, "CL"));
+        OpenExplorerWIPCommand = new RelayCommand(p => ExecuteOpenExplorer(p, "WIP"));
+        SongNameSourceCommand = new AsyncRelayCommand(p => ExecuteSetSongNameOptionAsync(p, SongNameOption.Source));
+        SongNameBeatSaverCommand = new AsyncRelayCommand(p => ExecuteSetSongNameOptionAsync(p, SongNameOption.BeatSaverSongName));
+        SongNameBeatSaverAndAuthorCommand = new AsyncRelayCommand(p => ExecuteSetSongNameOptionAsync(p, SongNameOption.BeatSaverSongNameAndAuthor));
 
         // Initial scan
         RescanFolders();
@@ -99,6 +116,22 @@ public class CopierViewModel : ViewModelBase
     public ICommand CopyCommand { get; }
     public ICommand ClearEntriesCommand { get; }
     public ICommand OpenFilesCommand { get; }
+
+    // Context Menu Commands
+    public ICommand DeleteSelectedCommand { get; }
+    public ICommand CopyIdsCommand { get; }
+    public ICommand RenameNoneCommand { get; }
+    public ICommand RenameSongScriptCommand { get; }
+    public ICommand RenameAuthorIdSongNameCommand { get; }
+    public ICommand CustomLevelsOnCommand { get; }
+    public ICommand CustomLevelsOffCommand { get; }
+    public ICommand CustomWipLevelsOnCommand { get; }
+    public ICommand CustomWipLevelsOffCommand { get; }
+    public ICommand OpenExplorerCLCommand { get; }
+    public ICommand OpenExplorerWIPCommand { get; }
+    public ICommand SongNameSourceCommand { get; }
+    public ICommand SongNameBeatSaverCommand { get; }
+    public ICommand SongNameBeatSaverAndAuthorCommand { get; }
 
     public void ReloadSettings()
     {
@@ -232,6 +265,89 @@ public class CopierViewModel : ViewModelBase
         catch
         {
             entry.UpdateSongName();
+        }
+    }
+
+    private IList<SongScriptEntryViewModel> GetSelectedEntries(object? parameter)
+    {
+        if (parameter is System.Collections.IList list)
+        {
+            return list.Cast<SongScriptEntryViewModel>().ToList();
+        }
+        return new List<SongScriptEntryViewModel>();
+    }
+
+    private void ExecuteDeleteSelected(object? parameter)
+    {
+        var selected = GetSelectedEntries(parameter);
+        foreach (var entry in selected)
+            Entries.Remove(entry);
+    }
+
+    private void ExecuteCopyIds(object? parameter)
+    {
+        var selected = GetSelectedEntries(parameter);
+        if (selected.Count == 0) return;
+
+        var ids = selected
+            .Where(i => !string.IsNullOrWhiteSpace(i.HexId))
+            .Select(i => i.HexId)
+            .Distinct();
+            
+        string text = string.Join("\r\n", ids);
+        if (!string.IsNullOrEmpty(text))
+        {
+            Clipboard.SetText(text);
+        }
+    }
+
+    private void ExecuteRenameOption(object? parameter, RenameOption option)
+    {
+        foreach (var entry in GetSelectedEntries(parameter))
+            entry.RenameChoice = option;
+    }
+
+    private void ExecuteSettingsToggle(object? parameter, string type, bool state)
+    {
+        foreach (var entry in GetSelectedEntries(parameter))
+        {
+            if (type == "CL") 
+            {
+                if (state && entry.CanCopyToCustomLevels) entry.CopyToCustomLevels = true;
+                else if (!state) entry.CopyToCustomLevels = false;
+            }
+            else if (type == "WIP")
+            {
+                if (state && entry.CanCopyToCustomWIPLevels) entry.CopyToCustomWIPLevels = true;
+                else if (!state) entry.CopyToCustomWIPLevels = false;
+            }
+        }
+    }
+
+    private void ExecuteOpenExplorer(object? parameter, string type)
+    {
+        foreach (var entry in GetSelectedEntries(parameter))
+        {
+            var folder = type == "CL" ? entry.SelectedCustomLevelsFolder : entry.SelectedCustomWIPLevelsFolder;
+            if (folder != null && Directory.Exists(folder.FullPath))
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe", folder.FullPath) { UseShellExecute = true });
+            }
+        }
+    }
+
+    private async Task ExecuteSetSongNameOptionAsync(object? parameter, SongNameOption option)
+    {
+        var selectedEntries = GetSelectedEntries(parameter);
+        foreach (var entry in selectedEntries)
+        {
+            entry.SongNameChoice = option;
+            
+            if ((option == SongNameOption.BeatSaverSongName || option == SongNameOption.BeatSaverSongNameAndAuthor) && 
+                entry.Model.Metadata == null)
+            {
+                await FetchApiDataAsync(entry);
+            }
         }
     }
 

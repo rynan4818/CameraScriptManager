@@ -11,6 +11,7 @@ public class ManagerViewModel : ViewModelBase
     private readonly SettingsService _settingsService = new();
     private readonly CameraScriptScanner _scanner = new();
     private readonly BeatSaverApiClient _apiClient = new();
+    private readonly IDialogService _dialogService = new DialogService();
     private string _customLevelsPath = "";
     private string _customWIPLevelsPath = "";
     private string _originalScriptPath1 = "";
@@ -69,16 +70,10 @@ public class ManagerViewModel : ViewModelBase
 
         var entries = new System.Collections.Generic.List<CameraScriptManager.Models.CameraScriptEntry>();
 
-        var dialog = new CameraScriptManager.Views.ProgressDialog("カメラスクリプトを読込中...", async () =>
+        _dialogService.ShowProgressDialog("カメラスクリプトを読込中...", async (_) =>
         {
             entries = await Task.Run(() => _scanner.Scan(_customLevelsPath, _customWIPLevelsPath));
         });
-
-        if (Application.Current.MainWindow != null)
-        {
-            dialog.Owner = Application.Current.MainWindow;
-        }
-        dialog.ShowDialog();
 
         Items.Clear();
 
@@ -119,11 +114,11 @@ public class ManagerViewModel : ViewModelBase
         if (targetItems.Count == 0)
         {
             StatusText = "選択された項目がありません";
-            MessageBox.Show("処理を行う項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogService.ShowMessageBox("処理を行う項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
             return Task.CompletedTask;
         }
 
-        var result = MessageBox.Show(
+        var result = _dialogService.ShowMessageBoxWithResult(
             $"選択された {targetItems.Count} 件のカメラスクリプトにメタデータを追加します。\n変更前のファイルはバックアップされます。\nよろしいですか？",
             "メタ情報追加",
             MessageBoxButton.YesNo,
@@ -169,7 +164,7 @@ public class ManagerViewModel : ViewModelBase
         catch (Exception ex)
         {
             StatusText = $"エラー: {ex.Message}";
-            MessageBox.Show($"メタ情報の追加中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowMessageBox($"メタ情報の追加中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         return Task.CompletedTask;
@@ -181,69 +176,31 @@ public class ManagerViewModel : ViewModelBase
         if (selectedItems.Count == 0)
         {
             StatusText = "エクスポートする項目を選択してください";
-            MessageBox.Show("エクスポートする項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogService.ShowMessageBox("エクスポートする項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
             return Task.CompletedTask;
         }
 
         bool isSingle = selectedItems.Count == 1;
-        string defaultFileName;
+        string defaultFileName = isSingle 
+            ? ZipExportService.SanitizeFileName($"{selectedItems[0].MapId}_{selectedItems[0].SongName}_{selectedItems[0].LevelAuthorName}.zip")
+            : "CameraScripts.zip";
 
-        if (isSingle)
-        {
-            var item = selectedItems[0];
-            defaultFileName = ZipExportService.SanitizeFileName(
-                $"{item.MapId}_{item.SongName}_{item.LevelAuthorName}.zip");
-        }
-        else
-        {
-            defaultFileName = "CameraScripts.zip";
-        }
-
-        var dialog = new SaveFileDialog
-        {
-            Filter = "ZIPファイル (*.zip)|*.zip",
-            FileName = defaultFileName,
-            Title = "カメラスクリプトのエクスポート"
-        };
-
-        if (dialog.ShowDialog() != true)
-            return Task.CompletedTask;
+        var fileName = _dialogService.ShowSaveFileDialog(defaultFileName, "ZIPファイル (*.zip)|*.zip", "カメラスクリプトのエクスポート");
+        if (fileName == null) return Task.CompletedTask;
 
         StatusText = "ZIPエクスポート中...";
 
         var items = new List<(string zipEntryFolder, string fileName, string jsonContent)>();
+        var settings = _settingsService.Load();
 
         foreach (var selected in selectedItems)
         {
-            string folderName;
-            if (isSingle)
-            {
-                folderName = "";
-            }
-            else
-            {
-                var settings = _settingsService.Load();
-                if (settings.ManagerZipNamingMode == "Custom")
-                {
-                    var tags = new Dictionary<string, string>
-                    {
-                        { "MapId", selected.MapId },
-                        { "SongName", selected.SongName },
-                        { "SongSubName", selected.SongSubName },
-                        { "SongAuthorName", selected.SongAuthorName },
-                        { "LevelAuthorName", selected.LevelAuthorName },
-                        { "CameraScriptAuthorName", selected.CameraScriptAuthorName },
-                        { "FileName", selected.FileName },
-                        { "Bpm", selected.Bpm.ToString() }
-                    };
-                    folderName = NamingEngine.ReplaceTags(settings.ManagerZipCustomFormat, tags);
-                }
-                else
-                {
-                    folderName = NamingEngine.SanitizeFileName(
-                        $"{selected.MapId}_{selected.SongName}_{selected.LevelAuthorName}");
-                }
-            }
+            string folderName = ZipExportService.GetFolderName(
+                isSingle, 
+                settings.ManagerZipNamingMode ?? "", 
+                settings.ManagerZipCustomFormat ?? "", 
+                selected.Entry, 
+                selected.CameraScriptAuthorName ?? "");
 
             string content = selected.IsModified
                 ? selected.GetCurrentJsonContent()
@@ -254,13 +211,13 @@ public class ManagerViewModel : ViewModelBase
 
         try
         {
-            ZipExportService.Export(items, dialog.FileName);
-            StatusText = $"ZIPエクスポート完了: {dialog.FileName}";
+            ZipExportService.Export(items, fileName);
+            StatusText = $"ZIPエクスポート完了: {fileName}";
         }
         catch (Exception ex)
         {
             StatusText = $"エラー: {ex.Message}";
-            MessageBox.Show($"ZIPエクスポート中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowMessageBox($"ZIPエクスポート中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         return Task.CompletedTask;
@@ -282,7 +239,7 @@ public class ManagerViewModel : ViewModelBase
             _originalScriptPath3
         };
 
-        var dialog = new CameraScriptManager.Views.ProgressDialog("元データを検索中...", async (progress) =>
+        _dialogService.ShowProgressDialog("元データを検索中...", async (progress) =>
         {
             var service = new CameraScriptManager.Services.OriginalScriptMatchService(searchPaths, (msg, pct) =>
             {
@@ -292,13 +249,6 @@ public class ManagerViewModel : ViewModelBase
             var entries = targetItems.Select(i => i.Entry).ToList();
             await service.MatchOriginalScriptsAsync(entries);
         });
-
-        if (Application.Current.MainWindow != null)
-        {
-            dialog.Owner = Application.Current.MainWindow;
-        }
-
-        dialog.ShowDialog();
 
         // Update view models with matching results
         int matchCount = 0;

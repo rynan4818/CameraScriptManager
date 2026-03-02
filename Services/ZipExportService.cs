@@ -34,4 +34,27 @@ public static class ZipExportService
             name = name.Replace(c, '_');
         return name;
     }
+
+    public static string GetFolderName(bool isSingle, string namingMode, string customFormat, CameraScriptManager.Models.CameraScriptEntry entry, string cameraScriptAuthor)
+    {
+        if (isSingle) return "";
+
+        if (namingMode == "Custom")
+        {
+            var tags = new System.Collections.Generic.Dictionary<string, string>
+            {
+                { "MapId", entry.MapId },
+                { "SongName", entry.SongName },
+                { "SongSubName", entry.SongSubName },
+                { "SongAuthorName", entry.SongAuthorName },
+                { "LevelAuthorName", entry.LevelAuthorName },
+                { "CameraScriptAuthorName", cameraScriptAuthor },
+                { "FileName", Path.GetFileName(entry.FullFilePath) },
+                { "Bpm", entry.Bpm.ToString() }
+            };
+            return NamingEngine.ReplaceTags(customFormat, tags);
+        }
+
+        return NamingEngine.SanitizeFileName($"{entry.MapId}_{entry.SongName}_{entry.LevelAuthorName}");
+    }
 }

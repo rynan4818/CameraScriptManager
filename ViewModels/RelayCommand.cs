@@ -31,8 +31,10 @@ public class RelayCommand : ICommand
 
 public class AsyncRelayCommand : ICommand
 {
-    private readonly Func<Task> _execute;
+    private readonly Func<Task>? _execute;
+    private readonly Func<object?, Task>? _executeWithParam;
     private readonly Func<bool>? _canExecute;
+    private readonly Func<object?, bool>? _canExecuteWithParam;
     private bool _isExecuting;
 
     public AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
@@ -41,22 +43,40 @@ public class AsyncRelayCommand : ICommand
         _canExecute = canExecute;
     }
 
+    public AsyncRelayCommand(Func<object?, Task> execute, Func<object?, bool>? canExecute = null)
+    {
+        _executeWithParam = execute;
+        _canExecuteWithParam = canExecute;
+    }
+
     public event EventHandler? CanExecuteChanged
     {
         add => CommandManager.RequerySuggested += value;
         remove => CommandManager.RequerySuggested -= value;
     }
 
-    public bool CanExecute(object? parameter) => !_isExecuting && (_canExecute?.Invoke() ?? true);
+    public bool CanExecute(object? parameter) 
+    {
+        if (_isExecuting) return false;
+        
+        if (_canExecuteWithParam != null)
+            return _canExecuteWithParam(parameter);
+            
+        return _canExecute?.Invoke() ?? true;
+    }
 
     public async void Execute(object? parameter)
     {
-        if (_isExecuting) return;
+        if (!CanExecute(parameter)) return;
+        
         _isExecuting = true;
         CommandManager.InvalidateRequerySuggested();
         try
         {
-            await _execute();
+            if (_executeWithParam != null)
+                await _executeWithParam(parameter);
+            else if (_execute != null)
+                await _execute();
         }
         finally
         {

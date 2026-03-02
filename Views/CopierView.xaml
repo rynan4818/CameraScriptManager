@@ -61,32 +61,60 @@
             <!-- Context Menu -->
             <DataGrid.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="選択行を削除" Click="ContextMenu_DeleteSelected"/>
+                    <MenuItem Header="選択行を削除" 
+                              Command="{Binding PlacementTarget.DataContext.DeleteSelectedCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     <Separator/>
-                    <MenuItem Header="選択したIDをコピー" Click="ContextMenu_CopyIds"/>
+                    <MenuItem Header="選択したIDをコピー" 
+                              Command="{Binding PlacementTarget.DataContext.CopyIdsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     <Separator/>
                     <MenuItem Header="Rename">
-                        <MenuItem Header="無し" Click="ContextMenu_RenameNone"/>
-                        <MenuItem Header="SongScript" Click="ContextMenu_RenameSongScript"/>
-                        <MenuItem Header="Author_ID_SongName" Click="ContextMenu_RenameAuthorIdSongName"/>
+                        <MenuItem Header="無し" 
+                                  Command="{Binding PlacementTarget.DataContext.RenameNoneCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="SongScript" 
+                                  Command="{Binding PlacementTarget.DataContext.RenameSongScriptCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="Author_ID_SongName" 
+                                  Command="{Binding PlacementTarget.DataContext.RenameAuthorIdSongNameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                     <MenuItem Header="Song Name">
-                        <MenuItem Header="Sourceから取得 (Default)" Click="ContextMenu_SongNameSource"/>
-                        <MenuItem Header="BeatSaverから取得 (songName)" Click="ContextMenu_SongNameBeatSaver"/>
-                        <MenuItem Header="BeatSaverから取得 (songName - levelAuthorName)" Click="ContextMenu_SongNameBeatSaverAndAuthor"/>
+                        <MenuItem Header="Sourceから取得 (Default)" 
+                                  Command="{Binding PlacementTarget.DataContext.SongNameSourceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="BeatSaverから取得 (songName)" 
+                                  Command="{Binding PlacementTarget.DataContext.SongNameBeatSaverCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="BeatSaverから取得 (songName - levelAuthorName)" 
+                                  Command="{Binding PlacementTarget.DataContext.SongNameBeatSaverAndAuthorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                     <MenuItem Header="CL チェック">
-                        <MenuItem Header="ON" Click="ContextMenu_CL_On"/>
-                        <MenuItem Header="OFF" Click="ContextMenu_CL_Off"/>
+                        <MenuItem Header="ON" 
+                                  Command="{Binding PlacementTarget.DataContext.CustomLevelsOnCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="OFF" 
+                                  Command="{Binding PlacementTarget.DataContext.CustomLevelsOffCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                     <MenuItem Header="WIP チェック">
-                        <MenuItem Header="ON" Click="ContextMenu_WIP_On"/>
-                        <MenuItem Header="OFF" Click="ContextMenu_WIP_Off"/>
+                        <MenuItem Header="ON" 
+                                  Command="{Binding PlacementTarget.DataContext.CustomWipLevelsOnCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="OFF" 
+                                  Command="{Binding PlacementTarget.DataContext.CustomWipLevelsOffCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                     <Separator/>
                     <MenuItem Header="エクスプローラーで開く">
-                        <MenuItem Header="CustomLevels Folder" Click="ContextMenu_OpenExplorerCL"/>
-                        <MenuItem Header="CustomWIPLevels Folder" Click="ContextMenu_OpenExplorerWIP"/>
+                        <MenuItem Header="CustomLevels Folder" 
+                                  Command="{Binding PlacementTarget.DataContext.OpenExplorerCLCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="CustomWIPLevels Folder" 
+                                  Command="{Binding PlacementTarget.DataContext.OpenExplorerWIPCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                 </ContextMenu>
             </DataGrid.ContextMenu>

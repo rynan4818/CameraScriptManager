@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace CameraScriptManager.Models;
 
 public class SongScriptEntry
@@ -27,4 +29,88 @@ public class SongScriptEntry
     public string? CustomFileName { get; set; }
     public bool HasOverwriteWarningCustomLevels { get; set; }
     public bool HasOverwriteWarningCustomWIPLevels { get; set; }
+
+    public void UpdateSongName()
+    {
+        string newName = SourceSongName;
+        if (SongNameChoice == SongNameOption.BeatSaverSongName && Metadata != null)
+        {
+            newName = Metadata.SongName ?? newName;
+        }
+        else if (SongNameChoice == SongNameOption.BeatSaverSongNameAndAuthor && Metadata != null)
+        {
+            var song = Metadata.SongName ?? "";
+            var author = Metadata.LevelAuthorName ?? "";
+            if (!string.IsNullOrEmpty(song) && !string.IsNullOrEmpty(author))
+                newName = $"{song} - {author}";
+            else if (!string.IsNullOrEmpty(song))
+                newName = song;
+        }
+        SongName = newName;
+    }
+
+    public string GenerateRenameDisplayName(string customFormat, string cameraScriptAuthor)
+    {
+        if (!string.IsNullOrEmpty(CustomFileName))
+            return CustomFileName;
+
+        if (RenameChoice == RenameOption.カスタム)
+        {
+            var tags = new Dictionary<string, string>
+            {
+                { "MapId", HexId },
+                { "SongName", SongName },
+                { "SongSubName", Metadata?.SongSubName ?? "" },
+                { "SongAuthorName", Metadata?.SongAuthorName ?? "" },
+                { "LevelAuthorName", Metadata?.LevelAuthorName ?? "" },
+                { "CameraScriptAuthorName", cameraScriptAuthor },
+                { "FileName", Path.GetFileName(SourceFileName) },
+                { "Bpm", Metadata?.Bpm.ToString() ?? "" }
+            };
+            string name = Services.NamingEngine.ReplaceTags(customFormat, tags);
+            if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                name += ".json";
+            return name;
+        }
+
+        return RenameChoice switch
+        {
+            RenameOption.無し => Path.GetFileName(SourceFileName),
+            RenameOption.SongScript => "SongScript.json",
+            RenameOption.AuthorIdSongName => $"{cameraScriptAuthor}_{HexId}_{SongName}_SongScript.json",
+            _ => "SongScript.json"
+        };
+    }
+
+    public void UpdateMatchedFolders(
+        Dictionary<string, List<BeatMapFolder>> customLevels,
+        Dictionary<string, List<BeatMapFolder>> customWIPLevels)
+    {
+        string key = HexId.ToLowerInvariant();
+
+        MatchedCustomLevels = customLevels.TryGetValue(key, out var clList) ? clList : new();
+        MatchedCustomWIPLevels = customWIPLevels.TryGetValue(key, out var wipList) ? wipList : new();
+
+        if (MatchedCustomLevels.Count > 0)
+        {
+            CopyToCustomLevels = true;
+            SelectedCustomLevelsFolder = MatchedCustomLevels[0];
+        }
+        else
+        {
+            CopyToCustomLevels = false;
+            SelectedCustomLevelsFolder = null;
+        }
+
+        if (MatchedCustomWIPLevels.Count > 0)
+        {
+            CopyToCustomWIPLevels = true;
+            SelectedCustomWIPLevelsFolder = MatchedCustomWIPLevels[0];
+        }
+        else
+        {
+            CopyToCustomWIPLevels = false;
+            SelectedCustomWIPLevelsFolder = null;
+        }
+    }
 }

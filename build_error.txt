@@ -1,0 +1,13 @@
+  復元対象のプロジェクトを決定しています...
+  復元対象のすべてのプロジェクトは最新です。
+D:\PROGRAM\github\CameraSongScript\CameraScriptManager\Services\DialogService.cs(38,48): error CS1503: 引数 2: は 'System.Func<System.Action<string, int>, System.Threading.Tasks.Task>' から 'System.Func<System.Threading.Tasks.Task>' へ変換することはできません [D:\PROGRAM\github\CameraSongScript\CameraScriptManager\CameraScriptManager_jaso4ozv_wpftmp.csproj]
+D:\PROGRAM\github\CameraSongScript\CameraScriptManager\ViewModels\ManagerViewModel.cs(246,31): error CS1503: 引数 2: は 'double?' から 'int' へ変換することはできません [D:\PROGRAM\github\CameraSongScript\CameraScriptManager\CameraScriptManager_jaso4ozv_wpftmp.csproj]
+
+ビルドに失敗しました。
+
+D:\PROGRAM\github\CameraSongScript\CameraScriptManager\Services\DialogService.cs(38,48): error CS1503: 引数 2: は 'System.Func<System.Action<string, int>, System.Threading.Tasks.Task>' から 'System.Func<System.Threading.Tasks.Task>' へ変換することはできません [D:\PROGRAM\github\CameraSongScript\CameraScriptManager\CameraScriptManager_jaso4ozv_wpftmp.csproj]
+D:\PROGRAM\github\CameraSongScript\CameraScriptManager\ViewModels\ManagerViewModel.cs(246,31): error CS1503: 引数 2: は 'double?' から 'int' へ変換することはできません [D:\PROGRAM\github\CameraSongScript\CameraScriptManager\CameraScriptManager_jaso4ozv_wpftmp.csproj]
+    0 個の警告
+    2 エラー
+
+経過時間 00:00:02.19
