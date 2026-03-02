@@ -153,7 +153,19 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-
+    private bool _createBackup = true;
+    public bool CreateBackup
+    {
+        get => _createBackup;
+        set
+        {
+            if (SetProperty(ref _createBackup, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
 
     public event EventHandler? SettingsChanged;
 
@@ -186,6 +198,8 @@ public class SettingsViewModel : ViewModelBase
             ? "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript"
             : settings.CopierRenameCustomFormat;
 
+        _createBackup = settings.CreateBackup;
+
         OnPropertyChanged(nameof(CustomLevelsPath));
         OnPropertyChanged(nameof(CustomWIPLevelsPath));
         OnPropertyChanged(nameof(OriginalScriptPath1));
@@ -196,6 +210,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(ManagerZipCustomFormat));
 
         OnPropertyChanged(nameof(CopierRenameCustomFormat));
+        OnPropertyChanged(nameof(CreateBackup));
     }
 
     private void SaveSettings()
@@ -210,7 +225,8 @@ public class SettingsViewModel : ViewModelBase
             ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom",
             ManagerZipCustomFormat = ManagerZipCustomFormat,
             CopierRenameNamingMode = "Custom",
-            CopierRenameCustomFormat = CopierRenameCustomFormat
+            CopierRenameCustomFormat = CopierRenameCustomFormat,
+            CreateBackup = CreateBackup
         });
     }
 

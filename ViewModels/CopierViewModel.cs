@@ -109,7 +109,7 @@ public class CopierViewModel : ViewModelBase
         _customLevelsPath = settings.CustomLevelsPath;
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _addMetadata = settings.AddMetadata;
-        
+
         if (settings.DefaultRenameToAuthorIdSongName == true)
             _defaultRenameOption = RenameOption.AuthorIdSongName;
         else if (Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed))
@@ -291,7 +291,8 @@ public class CopierViewModel : ViewModelBase
         try
         {
             var progress = new Progress<string>(msg => StatusMessage = msg);
-            var results = await _copyService.CopyAllAsync(entriesToCopy, _addMetadata, progress);
+            var settings = _settingsService.Load();
+            var results = await _copyService.CopyAllAsync(entriesToCopy, _addMetadata, settings.CreateBackup, progress);
 
             int successCount = results.Count(r => r.Success);
             int failCount = results.Count(r => !r.Success);

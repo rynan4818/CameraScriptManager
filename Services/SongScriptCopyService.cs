@@ -17,6 +17,7 @@ public class SongScriptCopyService
     public async Task<List<CopyResult>> CopyAllAsync(
         IList<SongScriptEntry> entries,
         bool addMetadata,
+        bool createBackup,
         IProgress<string>? progress = null)
     {
         var results = new List<CopyResult>();
@@ -37,7 +38,7 @@ public class SongScriptCopyService
             {
                 string fileName = GetTargetFileName(entry);
                 string targetPath = Path.Combine(entry.SelectedCustomLevelsFolder.FullPath, fileName);
-                results.Add(CopyFile(entry, jsonToWrite, targetPath));
+                results.Add(CopyFile(entry, jsonToWrite, targetPath, createBackup));
                 progress?.Report($"コピー完了: {entry.SelectedCustomLevelsFolder.FolderName}");
             }
 
@@ -45,7 +46,7 @@ public class SongScriptCopyService
             {
                 string fileName = GetTargetFileName(entry);
                 string targetPath = Path.Combine(entry.SelectedCustomWIPLevelsFolder.FullPath, fileName);
-                results.Add(CopyFile(entry, jsonToWrite, targetPath));
+                results.Add(CopyFile(entry, jsonToWrite, targetPath, createBackup));
                 progress?.Report($"コピー完了: {entry.SelectedCustomWIPLevelsFolder.FolderName}");
             }
         }
@@ -151,11 +152,18 @@ public class SongScriptCopyService
         return name;
     }
 
-    private static CopyResult CopyFile(SongScriptEntry entry, string content, string targetPath)
+    private static CopyResult CopyFile(SongScriptEntry entry, string content, string targetPath, bool createBackup)
     {
         try
         {
             bool overwrite = File.Exists(targetPath);
+            if (overwrite && createBackup)
+            {
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string backupPath = targetPath + $".{timestamp}.bak";
+                File.Copy(targetPath, backupPath, overwrite: true);
+            }
+
             File.WriteAllText(targetPath, content, Encoding.UTF8);
             return new CopyResult
             {

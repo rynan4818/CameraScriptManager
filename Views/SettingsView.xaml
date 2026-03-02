@@ -72,6 +72,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -118,10 +119,20 @@
                         <Run Text="※ {FileName} はJSONファイル名、{CameraScriptAuthorName} は作成者（入力値）を指します。"/>
                     </TextBlock>
                 </StackPanel>
+
+                <!-- Backup Setting -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="その他の設定:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,15,10,5"/>
+                <Border Grid.Row="3" Grid.Column="1" BorderBrush="LightGray" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,15,0,5">
+                    <StackPanel>
+                        <CheckBox Content="Copier上書き時にバックアップ(.bak)を作成する" 
+                                  IsChecked="{Binding CreateBackup}" 
+                                  Margin="0,0,0,5"/>
+                        <TextBlock Text="※ONの場合、古いファイルに日時(yyyyMMdd_HHmmss.bak)を付与して退避します" 
+                                   Foreground="Gray" FontSize="11" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
             </Grid>
         </GroupBox>
-
-
 
     </Grid>
 </UserControl>
