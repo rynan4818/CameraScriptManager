@@ -130,7 +130,11 @@ public class CameraScriptItemViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _bpm, value))
+            {
                 MarkModified();
+                OnPropertyChanged(nameof(DurationDiffBeat));
+                OnPropertyChanged(nameof(DurationDiffBeatText));
+            }
         }
     }
 
@@ -145,6 +149,9 @@ public class CameraScriptItemViewModel : ViewModelBase
 
     public string ScriptDurationText => FormatDuration(ScriptDuration);
     public string OggDurationText => FormatDuration(OggDuration);
+
+    public double DurationDiffBeat => (ScriptDuration / 60.0 * Bpm) - (OggDuration / 60.0 * Bpm);
+    public string DurationDiffBeatText => DurationDiffBeat.ToString("F2");
 
     private static string FormatDuration(double seconds)
     {

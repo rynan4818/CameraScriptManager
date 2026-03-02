@@ -132,6 +132,7 @@
                 <DataGridTextColumn Header="BPM" Binding="{Binding Bpm, UpdateSourceTrigger=LostFocus}" Width="50" CellStyle="{StaticResource ModifiedCellStyle}"/>
                 <DataGridTextColumn Header="曲長(egg)" Binding="{Binding OggDurationText, Mode=OneWay}" Width="70" IsReadOnly="True" />
                 <DataGridTextColumn Header="ｽｸﾘﾌﾟﾄ長" Binding="{Binding ScriptDurationText, Mode=OneWay}" Width="70" IsReadOnly="True" />
+                <DataGridTextColumn Header="差分(beat)" Binding="{Binding DurationDiffBeatText, Mode=OneWay}" Width="70" IsReadOnly="True" />
 
                 <!-- File info (read-only, no BG color change) -->
                 <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="140" IsReadOnly="True"/>
