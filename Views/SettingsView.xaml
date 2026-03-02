@@ -49,17 +49,17 @@
                 <Separator Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10"/>
 
                 <!-- OriginalScript 1 -->
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="元データ検索(ZIP/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding OriginalScriptPath1, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="3" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}" Margin="5"/>
 
                 <!-- OriginalScript 2 -->
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="元データ検索(ZIP/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OriginalScriptPath2, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="4" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}" Margin="5"/>
 
                 <!-- OriginalScript 3 -->
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(ZIP/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"/>
             </Grid>

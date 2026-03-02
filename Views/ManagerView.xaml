@@ -61,7 +61,7 @@
                     <Separator/>
                     <MenuItem Header="エクスプローラーで開く">
                         <MenuItem Header="譜面フォルダ" Click="OpenMapFolder_Click"/>
-                        <MenuItem Header="元データ(ZIP/JSON) フォルダ" Click="OpenOriginalFolder_Click"/>
+                        <MenuItem Header="元データ(アーカイブ/JSON) フォルダ" Click="OpenOriginalFolder_Click"/>
                     </MenuItem>
                 </ContextMenu>
             </DataGrid.ContextMenu>
@@ -138,7 +138,7 @@
                 <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="140" IsReadOnly="True"/>
                 <DataGridTextColumn Header="フォルダ" Binding="{Binding FolderName}" Width="200" IsReadOnly="True"/>
                 <DataGridTextColumn Header="ソース" Binding="{Binding SourceType}" Width="110" IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="元データ(ZIP/JSON)" Width="250" IsReadOnly="True">
+                <DataGridTemplateColumn Header="元データ(アーカイブ/JSON)" Width="250" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ListBox ItemsSource="{Binding OriginalSourceFiles}" 

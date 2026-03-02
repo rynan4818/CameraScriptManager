@@ -1,24 +1,36 @@
 using System.IO;
-using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using CameraScriptManager.Models;
+using SharpCompress.Archives;
+using SharpCompress.Common;
+using SharpCompress.Readers;
 
 namespace CameraScriptManager.Services;
 
-public class ZipImportService
+public class ArchiveImportService
 {
-    private static readonly string[] SkipFileNames = { "General_SongScript.json" };
+    private static readonly string[] SkipFileNames = { "General_SongScript.json", "info.dat", "BPMInfo.dat", "cinema-video.json", "AudioData.dat" };
+    private static readonly string[] SupportedExtensions = { ".zip", ".7z", ".rar", ".tar", ".tar.gz", ".gz" };
 
     public List<SongScriptEntry> ImportFile(string filePath)
     {
         string ext = Path.GetExtension(filePath).ToLowerInvariant();
-        return ext switch
+        
+        // Handle .tar.gz specifically if needed, but Path.GetExtension gets the last dot.
+        if (filePath.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+            ext = ".tar.gz";
+
+        if (ext == ".json")
         {
-            ".zip" => ImportZip(filePath),
-            ".json" => ImportJson(filePath),
-            _ => new List<SongScriptEntry>()
-        };
+            return ImportJson(filePath);
+        }
+        else if (SupportedExtensions.Contains(ext))
+        {
+            return ImportArchive(filePath);
+        }
+        
+        return new List<SongScriptEntry>();
     }
 
     private List<SongScriptEntry> ImportJson(string filePath)
@@ -52,28 +64,36 @@ public class ZipImportService
         return results;
     }
 
-    private List<SongScriptEntry> ImportZip(string zipPath)
+    private List<SongScriptEntry> ImportArchive(string archivePath)
     {
         var results = new List<SongScriptEntry>();
-        string zipFileName = Path.GetFileName(zipPath);
+        string archiveFileName = Path.GetFileName(archivePath);
 
         try
         {
-            // Detect best encoding: try UTF-8 first, fallback to cp932
-            Encoding encoding = DetectZipEncoding(zipPath);
+            var readerOptions = new ReaderOptions
+            {
+                ArchiveEncoding = new ArchiveEncoding()
+                {
+                    Default = Encoding.GetEncoding(932)
+                }
+            };
 
-            using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read, encoding);
+            using var fileStream = File.OpenRead(archivePath);
+            using var archive = ArchiveFactory.OpenArchive(fileStream, readerOptions);
             foreach (var entry in archive.Entries)
             {
-                if (string.IsNullOrEmpty(entry.Name)) continue; // Directory
-                if (!entry.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
-                if (SkipFileNames.Contains(entry.Name, StringComparer.OrdinalIgnoreCase)) continue;
+                if (entry.IsDirectory || string.IsNullOrEmpty(entry.Key)) continue;
+                if (!entry.Key.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+                
+                string fileName = Path.GetFileName(entry.Key);
+                if (SkipFileNames.Contains(fileName, StringComparer.OrdinalIgnoreCase)) continue;
 
                 try
                 {
                     string content;
-                    using (var stream = entry.Open())
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    using (var entryStream = entry.OpenEntryStream())
+                    using (var reader = new StreamReader(entryStream))
                     {
                         content = reader.ReadToEnd();
                     }
@@ -82,12 +102,13 @@ public class ZipImportService
                         continue;
 
                     // Extract hex ID from path segments
-                    string[] segments = entry.FullName.Replace('\\', '/').Split('/');
+                    string keyStr = entry.Key ?? "";
+                    string[] segments = keyStr.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
                     string? hexId = null;
                     string songName = "";
 
-                    if (entry.Name.Equals("SongScript.json", StringComparison.OrdinalIgnoreCase)
-                        || entry.Name.Equals("_SongScript.json", StringComparison.OrdinalIgnoreCase))
+                    if (fileName.Equals("SongScript.json", StringComparison.OrdinalIgnoreCase)
+                        || fileName.Equals("_SongScript.json", StringComparison.OrdinalIgnoreCase))
                     {
                         // Look at parent folder names (innermost first)
                         for (int i = segments.Length - 2; i >= 0; i--)
@@ -103,7 +124,7 @@ public class ZipImportService
                     else
                     {
                         // Renamed JSON file
-                        string baseName = Path.GetFileNameWithoutExtension(entry.Name);
+                        string baseName = Path.GetFileNameWithoutExtension(fileName);
                         hexId = HexIdExtractor.ExtractHexId(baseName);
                         if (hexId != null)
                         {
@@ -124,15 +145,13 @@ public class ZipImportService
                         }
                     }
 
-                    // IDが見つからなくてもリストに追加する（ID欄は空）
-
                     results.Add(new SongScriptEntry
                     {
                         HexId = hexId ?? "",
                         SongName = songName,
                         SourceSongName = songName,
-                        SourceFileName = entry.FullName,
-                        SourceZipName = zipFileName,
+                        SourceFileName = entry.Key ?? "",
+                        SourceZipName = archiveFileName,
                         JsonContent = content,
                         ScriptDuration = CalculateScriptDuration(content)
                     });
@@ -145,36 +164,10 @@ public class ZipImportService
         }
         catch
         {
-            // Skip invalid zip files
+            // Skip invalid archive files
         }
 
         return results;
-    }
-
-    /// <summary>
-    /// Zipファイルのエントリ名エンコーディングを検出する。
-    /// UTF-8を先に試し、置換文字(U+FFFD)が含まれる場合はcp932にフォールバックする。
-    /// </summary>
-    private static Encoding DetectZipEncoding(string zipPath)
-    {
-        try
-        {
-            using var testArchive = ZipFile.Open(zipPath, ZipArchiveMode.Read, Encoding.UTF8);
-            bool hasReplacementChar = testArchive.Entries.Any(e => e.FullName.Contains('\uFFFD'));
-            if (!hasReplacementChar)
-                return Encoding.UTF8;
-        }
-        catch { }
-
-        // UTF-8で読めない場合はcp932にフォールバック
-        try
-        {
-            return Encoding.GetEncoding(932);
-        }
-        catch
-        {
-            return Encoding.UTF8;
-        }
     }
 
     /// <summary>

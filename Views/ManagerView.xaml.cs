@@ -118,11 +118,16 @@ public partial class ManagerView : UserControl
             if (string.IsNullOrWhiteSpace(targetPath))
                 continue;
             
-            // If the path contains a .zip, we navigate to the folder containing the .zip
-            int zipIdx = targetPath.IndexOf(".zip", StringComparison.OrdinalIgnoreCase);
-            if (zipIdx >= 0)
+            // If the path contains a supported archive extension, we navigate to the folder containing it
+            string[] archiveExts = { ".zip", ".7z", ".rar", ".tar", ".gz" };
+            foreach (var ext in archiveExts)
             {
-                targetPath = targetPath.Substring(0, zipIdx + 4);
+                int idx = targetPath.IndexOf(ext, StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0)
+                {
+                    targetPath = targetPath.Substring(0, idx + ext.Length);
+                    break;
+                }
             }
 
             var folderPath = System.IO.Path.GetDirectoryName(targetPath);

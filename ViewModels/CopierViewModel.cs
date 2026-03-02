@@ -12,14 +12,14 @@ namespace CameraScriptManager.ViewModels;
 public class CopierViewModel : ViewModelBase
 {
     private readonly BeatMapScanner _scanner = new();
-    private readonly ZipImportService _importService = new();
+    private readonly OggDurationService _oggDurationService;
+    private readonly ArchiveImportService _importService = new();
     private readonly BeatSaverApiClient _apiClient = new();
     private readonly SongScriptCopyService _copyService;
     private readonly SettingsService _settingsService = new();
 
     private Dictionary<string, List<BeatMapFolder>> _customLevelsFolders = new();
     private Dictionary<string, List<BeatMapFolder>> _customWIPLevelsFolders = new();
-    private readonly OggDurationService _oggDurationService;
 
     public CopierViewModel()
     {
@@ -160,8 +160,8 @@ public class CopierViewModel : ViewModelBase
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "SongScriptファイルを選択",
-            Filter = "サポートされるファイル (*.json;*.zip)|*.json;*.zip|JSON ファイル (*.json)|*.json|ZIP ファイル (*.zip)|*.zip|すべてのファイル (*.*)|*.*",
+            DefaultExt = ".json",
+            Filter = "サポートされるファイル (*.json;*.zip;*.7z;*.rar;*.tar;*.gz)|*.json;*.zip;*.7z;*.rar;*.tar;*.gz|JSON ファイル (*.json)|*.json|アーカイブ (*.zip;*.7z;*.rar;*.tar;*.gz)|*.zip;*.7z;*.rar;*.tar;*.gz|すべてのファイル (*.*)|*.*",
             Multiselect = true
         };
 

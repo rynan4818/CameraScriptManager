@@ -1,7 +1,10 @@
 using System.IO;
-using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
 using CameraScriptManager.Models;
+using SharpCompress.Archives;
+using SharpCompress.Common;
+using SharpCompress.Readers;
 
 namespace CameraScriptManager.Services;
 
@@ -41,15 +44,15 @@ public class OriginalScriptMatchService
             if (currentFile % 10 == 0 || currentFile == totalFiles)
                 _progressCallback?.Invoke($"元データ照合中... ({currentFile}/{totalFiles})", (double)currentFile / totalFiles * 100);
 
-            bool isZip = sourceFile.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+            bool isArchive = !sourceFile.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
 
             await Task.Run(() =>
             {
                 try
                 {
-                    if (isZip)
+                    if (isArchive)
                     {
-                        ProcessZipFile(sourceFile, targetEntries);
+                        ProcessArchiveFile(sourceFile, targetEntries);
                     }
                     else
                     {
@@ -68,8 +71,10 @@ public class OriginalScriptMatchService
     {
         try
         {
-            sourceFiles.AddRange(Directory.GetFiles(path, "*.json", SearchOption.AllDirectories));
-            sourceFiles.AddRange(Directory.GetFiles(path, "*.zip", SearchOption.AllDirectories));
+            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".json", ".zip", ".7z", ".rar", ".tar", ".gz" };
+            var files = Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
+                .Where(f => extensions.Contains(Path.GetExtension(f)) || f.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase));
+            sourceFiles.AddRange(files);
         }
         catch
         {
@@ -89,33 +94,47 @@ public class OriginalScriptMatchService
         CheckAndApplyMatch(targetEntries, sourceInfo, fileName, folderName, Path.GetFullPath(jsonFilePath));
     }
 
-    private void ProcessZipFile(string zipFilePath, IReadOnlyList<CameraScriptEntry> targetEntries)
+    private void ProcessArchiveFile(string archiveFilePath, IReadOnlyList<CameraScriptEntry> targetEntries)
     {
-        using var archive = ZipFile.OpenRead(zipFilePath);
-        string zipFileName = Path.GetFileName(zipFilePath);
-
-        foreach (var entry in archive.Entries.Where(e => e.FullName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+        var readerOptions = new ReaderOptions
         {
-            // Skip typical junk files
-            if (entry.Name.Equals("info.dat", StringComparison.OrdinalIgnoreCase) ||
-                entry.Name.Equals("cinema-video.json", StringComparison.OrdinalIgnoreCase))
-                continue;
+            ArchiveEncoding = new ArchiveEncoding()
+            {
+                Default = Encoding.GetEncoding(932)
+            }
+        };
 
-            using var stream = entry.Open();
-            using var reader = new StreamReader(stream);
-            var content = reader.ReadToEnd();
+        try
+        {
+            using var fileStream = File.OpenRead(archiveFilePath);
+            using var archive = ArchiveFactory.OpenArchive(fileStream, readerOptions);
+            string archiveFileName = Path.GetFileName(archiveFilePath);
 
-            var sourceInfo = ParseCameraScriptInfo(content);
-            if (sourceInfo == null) continue;
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory && !string.IsNullOrEmpty(e.Key) && e.Key.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+            {
+                string fileName = Path.GetFileName(entry.Key) ?? "";
 
-            string folderName = Path.GetDirectoryName(entry.FullName)?.Replace('\\', '/') ?? "";
-            
-            // Generate full path representing the file inside the zip for UI copy/paste reference
-            string fullZipPath = Path.GetFullPath(zipFilePath);
-            string displayName = string.IsNullOrEmpty(folderName) ? $"{fullZipPath}\\{entry.Name}" : $"{fullZipPath}\\{folderName.Replace('/', '\\')}\\{entry.Name}";
+                if (string.IsNullOrEmpty(fileName) ||
+                    fileName.Equals("info.dat", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.Equals("cinema-video.json", StringComparison.OrdinalIgnoreCase))
+                    continue;
 
-            CheckAndApplyMatch(targetEntries, sourceInfo, entry.Name, string.IsNullOrEmpty(folderName) ? zipFileName : folderName, displayName);
+                using var entryStream = entry.OpenEntryStream();
+                using var reader = new StreamReader(entryStream);
+                var content = reader.ReadToEnd();
+
+                var sourceInfo = ParseCameraScriptInfo(content);
+                if (sourceInfo == null) continue;
+
+                string folderName = Path.GetDirectoryName(entry.Key)?.Replace('\\', '/') ?? "";
+                
+                string fullArchivePath = Path.GetFullPath(archiveFilePath);
+                string displayName = string.IsNullOrEmpty(folderName) ? $"{fullArchivePath}\\{fileName}" : $"{fullArchivePath}\\{folderName.Replace('/', '\\')}\\{fileName}";
+
+                CheckAndApplyMatch(targetEntries, sourceInfo, fileName, string.IsNullOrEmpty(folderName) ? archiveFileName : folderName, displayName);
+            }
         }
+        catch { }
     }
 
     private void CheckAndApplyMatch(
