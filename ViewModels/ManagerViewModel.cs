@@ -222,8 +222,27 @@ public class ManagerViewModel : ViewModelBase
             }
             else
             {
-                folderName = ZipExportService.SanitizeFileName(
-                    $"{selected.MapId}_{selected.SongName}_{selected.LevelAuthorName}");
+                var settings = _settingsService.Load();
+                if (settings.ManagerZipNamingMode == "Custom")
+                {
+                    var tags = new Dictionary<string, string>
+                    {
+                        { "MapId", selected.MapId },
+                        { "SongName", selected.SongName },
+                        { "SongSubName", selected.SongSubName },
+                        { "SongAuthorName", selected.SongAuthorName },
+                        { "LevelAuthorName", selected.LevelAuthorName },
+                        { "CameraScriptAuthorName", selected.CameraScriptAuthorName },
+                        { "FileName", selected.FileName },
+                        { "Bpm", selected.Bpm.ToString() }
+                    };
+                    folderName = NamingEngine.ReplaceTags(settings.ManagerZipCustomFormat, tags);
+                }
+                else
+                {
+                    folderName = NamingEngine.SanitizeFileName(
+                        $"{selected.MapId}_{selected.SongName}_{selected.LevelAuthorName}");
+                }
             }
 
             string content = selected.IsModified

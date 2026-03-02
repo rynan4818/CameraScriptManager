@@ -18,8 +18,17 @@ public class SettingsViewModel : ViewModelBase
         BrowseOriginalScript1Command = new RelayCommand(BrowseOriginalScript1);
         BrowseOriginalScript2Command = new RelayCommand(BrowseOriginalScript2);
         BrowseOriginalScript3Command = new RelayCommand(BrowseOriginalScript3);
+        CopyTagCommand = new RelayCommand(CopyTag);
 
         LoadSettings();
+    }
+
+    private void CopyTag(object? parameter)
+    {
+        if (parameter is string tag && !string.IsNullOrEmpty(tag))
+        {
+            System.Windows.Clipboard.SetText($"{{{tag}}}");
+        }
     }
 
     private string _customLevelsPath = "";
@@ -92,6 +101,78 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    // Manager Zip Naming
+    private bool _isManagerZipNamingDefault = true;
+    public bool IsManagerZipNamingDefault
+    {
+        get => _isManagerZipNamingDefault;
+        set
+        {
+            if (SetProperty(ref _isManagerZipNamingDefault, value))
+            {
+                OnPropertyChanged(nameof(IsManagerZipNamingCustom));
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    public bool IsManagerZipNamingCustom
+    {
+        get => !IsManagerZipNamingDefault;
+        set => IsManagerZipNamingDefault = !value;
+    }
+
+    private string _managerZipCustomFormat = "";
+    public string ManagerZipCustomFormat
+    {
+        get => _managerZipCustomFormat;
+        set
+        {
+            if (SetProperty(ref _managerZipCustomFormat, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    // Copier Rename Naming
+    private bool _isCopierRenameNamingDefault = true;
+    public bool IsCopierRenameNamingDefault
+    {
+        get => _isCopierRenameNamingDefault;
+        set
+        {
+            if (SetProperty(ref _isCopierRenameNamingDefault, value))
+            {
+                OnPropertyChanged(nameof(IsCopierRenameNamingCustom));
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    public bool IsCopierRenameNamingCustom
+    {
+        get => !IsCopierRenameNamingDefault;
+        set => IsCopierRenameNamingDefault = !value;
+    }
+
+    private string _copierRenameCustomFormat = "";
+    public string CopierRenameCustomFormat
+    {
+        get => _copierRenameCustomFormat;
+        set
+        {
+            if (SetProperty(ref _copierRenameCustomFormat, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
 
 
     public event EventHandler? SettingsChanged;
@@ -106,16 +187,36 @@ public class SettingsViewModel : ViewModelBase
     public ICommand BrowseOriginalScript1Command { get; }
     public ICommand BrowseOriginalScript2Command { get; }
     public ICommand BrowseOriginalScript3Command { get; }
+    public ICommand CopyTagCommand { get; }
 
     private void LoadSettings()
     {
         var settings = _settingsService.Load();
-        _customLevelsPath = settings.CustomLevelsPath;
-        _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _originalScriptPath1 = settings.OriginalScriptPath1;
         _originalScriptPath2 = settings.OriginalScriptPath2;
         _originalScriptPath3 = settings.OriginalScriptPath3;
+
+        _isManagerZipNamingDefault = settings.ManagerZipNamingMode != "Custom";
+        _managerZipCustomFormat = string.IsNullOrEmpty(settings.ManagerZipCustomFormat)
+            ? "{MapId}_{SongName}_{LevelAuthorName}"
+            : settings.ManagerZipCustomFormat;
+
+        _isCopierRenameNamingDefault = settings.CopierRenameNamingMode != "Custom";
+        _copierRenameCustomFormat = string.IsNullOrEmpty(settings.CopierRenameCustomFormat)
+            ? "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript"
+            : settings.CopierRenameCustomFormat;
+
+        OnPropertyChanged(nameof(CustomLevelsPath));
+        OnPropertyChanged(nameof(CustomWIPLevelsPath));
+        OnPropertyChanged(nameof(OriginalScriptPath1));
+        OnPropertyChanged(nameof(OriginalScriptPath2));
         OnPropertyChanged(nameof(OriginalScriptPath3));
+        OnPropertyChanged(nameof(IsManagerZipNamingDefault));
+        OnPropertyChanged(nameof(IsManagerZipNamingCustom));
+        OnPropertyChanged(nameof(ManagerZipCustomFormat));
+        OnPropertyChanged(nameof(IsCopierRenameNamingDefault));
+        OnPropertyChanged(nameof(IsCopierRenameNamingCustom));
+        OnPropertyChanged(nameof(CopierRenameCustomFormat));
     }
 
     private void SaveSettings()
@@ -126,7 +227,11 @@ public class SettingsViewModel : ViewModelBase
             CustomWIPLevelsPath = CustomWIPLevelsPath,
             OriginalScriptPath1 = OriginalScriptPath1,
             OriginalScriptPath2 = OriginalScriptPath2,
-            OriginalScriptPath3 = OriginalScriptPath3
+            OriginalScriptPath3 = OriginalScriptPath3,
+            ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom",
+            ManagerZipCustomFormat = ManagerZipCustomFormat,
+            CopierRenameNamingMode = IsCopierRenameNamingDefault ? "Default" : "Custom",
+            CopierRenameCustomFormat = CopierRenameCustomFormat
         });
     }
 

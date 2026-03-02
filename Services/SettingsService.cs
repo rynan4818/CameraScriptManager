@@ -13,6 +13,12 @@ public class AppSettings
     public bool AddMetadata { get; set; } = true;
     public string DefaultRenameOption { get; set; } = "SongScript";
     public bool? DefaultRenameToAuthorIdSongName { get; set; }
+
+    // Naming settings
+    public string ManagerZipNamingMode { get; set; } = "Default"; // Default or Custom
+    public string ManagerZipCustomFormat { get; set; } = "{MapId}_{SongName}_{LevelAuthorName}";
+    public string CopierRenameNamingMode { get; set; } = "Default"; // Default or Custom
+    public string CopierRenameCustomFormat { get; set; } = "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript";
 }
 
 public class SettingsService

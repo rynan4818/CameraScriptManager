@@ -8,6 +8,7 @@ namespace CameraScriptManager.ViewModels;
 public class SongScriptEntryViewModel : ViewModelBase
 {
     private readonly SongScriptEntry _model;
+    private readonly SettingsService _settingsService = new();
 
     /// <summary>HexId変更時に呼ばれるコールバック（MainViewModelから設定される）</summary>
     public Func<SongScriptEntryViewModel, Task>? OnHexIdChanged { get; set; }
@@ -223,6 +224,27 @@ public class SongScriptEntryViewModel : ViewModelBase
         {
             if (!string.IsNullOrEmpty(_model.CustomFileName))
                 return _model.CustomFileName;
+
+            var settings = _settingsService.Load();
+            if (settings.CopierRenameNamingMode == "Custom")
+            {
+                var tags = new Dictionary<string, string>
+                {
+                    { "MapId", _model.HexId },
+                    { "SongName", _model.SongName },
+                    { "SongSubName", _model.Metadata?.SongSubName ?? "" },
+                    { "SongAuthorName", _model.Metadata?.SongAuthorName ?? "" },
+                    { "LevelAuthorName", _model.Metadata?.LevelAuthorName ?? "" },
+                    { "CameraScriptAuthorName", CameraScriptAuthorName },
+                    { "FileName", Path.GetFileName(_model.SourceFileName) },
+                    { "Bpm", _model.Metadata?.Bpm.ToString() ?? "" }
+                };
+                string name = NamingEngine.ReplaceTags(settings.CopierRenameCustomFormat, tags);
+                if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    name += ".json";
+                return name;
+            }
+
             return _renameChoice switch
             {
                 RenameOption.None => System.IO.Path.GetFileName(_model.SourceFileName),

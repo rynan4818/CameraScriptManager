@@ -15,6 +15,7 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -61,6 +62,64 @@
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(ZIP/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Naming Configurations -->
+        <GroupBox Grid.Row="1" Header="命名規則設定" Margin="0,0,0,10">
+            <Grid Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Manager Zip Naming -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Manager ZIP出力フォルダ名:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,10"/>
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
+                    <RadioButton Content="デフォルト" GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <RadioButton Content="カスタム" GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingCustom}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox Text="{Binding ManagerZipCustomFormat, UpdateSourceTrigger=PropertyChanged}" 
+                             IsEnabled="{Binding IsManagerZipNamingCustom}" Width="300" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Copier Rename Naming -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Copier Rename命名:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,10"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
+                    <RadioButton Content="デフォルト" GroupName="CopierRenameNaming" IsChecked="{Binding IsCopierRenameNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <RadioButton Content="カスタム" GroupName="CopierRenameNaming" IsChecked="{Binding IsCopierRenameNamingCustom}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox Text="{Binding CopierRenameCustomFormat, UpdateSourceTrigger=PropertyChanged}" 
+                             IsEnabled="{Binding IsCopierRenameNamingCustom}" Width="300" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Tags Hint and Copy Buttons -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0">
+                    <TextBlock Text="使用可能なタグ (クリックでコピー):" FontWeight="Bold" Foreground="Gray" Margin="0,0,0,5"/>
+                    <WrapPanel>
+                        <WrapPanel.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Margin" Value="0,0,5,5"/>
+                                <Setter Property="Padding" Value="8,2"/>
+                                <Setter Property="Background" Value="#F0F0F0"/>
+                            </Style>
+                        </WrapPanel.Resources>
+                        <Button Content="{}{MapId}" Command="{Binding CopyTagCommand}" CommandParameter="MapId"/>
+                        <Button Content="{}{SongName}" Command="{Binding CopyTagCommand}" CommandParameter="SongName"/>
+                        <Button Content="{}{SongSubName}" Command="{Binding CopyTagCommand}" CommandParameter="SongSubName"/>
+                        <Button Content="{}{SongAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="SongAuthorName"/>
+                        <Button Content="{}{LevelAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="LevelAuthorName"/>
+                        <Button Content="{}{CameraScriptAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="CameraScriptAuthorName"/>
+                        <Button Content="{}{FileName}" Command="{Binding CopyTagCommand}" CommandParameter="FileName"/>
+                        <Button Content="{}{Bpm}" Command="{Binding CopyTagCommand}" CommandParameter="Bpm"/>
+                    </WrapPanel>
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11" Margin="0,5,0,0">
+                        <Run Text="※ {FileName} はJSONファイル名、{CameraScriptAuthorName} は作成者（入力値）を指します。"/>
+                    </TextBlock>
+                </StackPanel>
             </Grid>
         </GroupBox>
 
