@@ -30,6 +30,7 @@ public class ManagerViewModel : ViewModelBase
         AddMetadataCommand = new AsyncRelayCommand(AddMetadataAsync);
         ExportZipCommand = new AsyncRelayCommand(ExportZipAsync);
         FindOriginalScriptsCommand = new AsyncRelayCommand(FindOriginalScriptsAsync);
+        CreatePlaylistCommand = new AsyncRelayCommand(CreatePlaylistAsync);
 
         LoadSettings();
     }
@@ -46,6 +47,7 @@ public class ManagerViewModel : ViewModelBase
     public AsyncRelayCommand AddMetadataCommand { get; }
     public AsyncRelayCommand ExportZipCommand { get; }
     public AsyncRelayCommand FindOriginalScriptsCommand { get; }
+    public AsyncRelayCommand CreatePlaylistCommand { get; }
 
     private void LoadSettings()
     {
@@ -270,5 +272,41 @@ public class ManagerViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
+    private Task CreatePlaylistAsync()
+    {
+        var selectedItems = Items.Where(i => i.IsSelected).ToList();
+        if (selectedItems.Count == 0)
+        {
+            StatusText = "プレイリストを作成する項目を選択してください";
+            _dialogService.ShowMessageBox("プレイリストを作成する項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return Task.CompletedTask;
+        }
+
+        var vm = new CreatePlaylistViewModel();
+        if (_dialogService.ShowCreatePlaylistDialog(vm))
+        {
+            var defaultFileName = ZipExportService.SanitizeFileName(vm.Title) + ".bplist";
+            var savePath = _dialogService.ShowSaveFileDialog(defaultFileName, "BeatSaber Playlist (*.bplist)|*.bplist", "プレイリストの保存");
+            
+            if (!string.IsNullOrWhiteSpace(savePath))
+            {
+                StatusText = "プレイリスト作成中...";
+                try
+                {
+                    var entries = selectedItems.Select(i => i.Entry).ToList();
+                    PlaylistExportService.ExportToBplist(savePath, vm.Title, vm.Author, vm.Description, vm.CoverImagePath, entries);
+                    StatusText = $"プレイリスト作成完了: {Path.GetFileName(savePath)}";
+                    _dialogService.ShowMessageBox("プレイリストの作成が完了しました。", "完了", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    StatusText = $"プレイリスト作成エラー: {ex.Message}";
+                    _dialogService.ShowMessageBox($"プレイリストの作成中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        return Task.CompletedTask;
+    }
 
 }

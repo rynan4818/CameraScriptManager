@@ -44,4 +44,15 @@ public class DialogService : IDialogService
 
         dialog.ShowDialog();
     }
+
+    public bool ShowCreatePlaylistDialog(CameraScriptManager.ViewModels.CreatePlaylistViewModel viewModel)
+    {
+        var dialog = new CreatePlaylistDialog(viewModel);
+        if (Application.Current.MainWindow != null)
+        {
+            dialog.Owner = Application.Current.MainWindow;
+        }
+
+        return dialog.ShowDialog() == true;
+    }
 }

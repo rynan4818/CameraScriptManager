@@ -59,6 +59,8 @@
                     <Separator/>
                     <MenuItem Header="選択 ON/OFFを切り替え" Click="ToggleSelection_Click"/>
                     <Separator/>
+                    <MenuItem Header="プレイリストを作成" Command="{Binding CreatePlaylistCommand}"/>
+                    <Separator/>
                     <MenuItem Header="エクスプローラーで開く">
                         <MenuItem Header="譜面フォルダ" Click="OpenMapFolder_Click"/>
                         <MenuItem Header="元データ(アーカイブ/JSON) フォルダ" Click="OpenOriginalFolder_Click"/>

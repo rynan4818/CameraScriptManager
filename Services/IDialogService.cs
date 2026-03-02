@@ -8,4 +8,5 @@ public interface IDialogService
     MessageBoxResult ShowMessageBoxWithResult(string message, string title, MessageBoxButton button, MessageBoxImage image);
     string? ShowSaveFileDialog(string defaultFileName, string filter, string title);
     void ShowProgressDialog(string title, Func<Action<string, double?>, Task> action);
+    bool ShowCreatePlaylistDialog(CameraScriptManager.ViewModels.CreatePlaylistViewModel viewModel);
 }
