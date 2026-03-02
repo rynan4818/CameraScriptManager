@@ -10,6 +10,7 @@ public class InfoDatData
     public string SongAuthorName { get; set; } = "";
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
+    public List<string> BeatmapFilenames { get; set; } = new();
 }
 
 public static class InfoDatReader
@@ -79,6 +80,28 @@ public static class InfoDatReader
         if (root.TryGetProperty("_beatsPerMinute", out var bpm))
             data.Bpm = bpm.GetDouble();
 
+        // Extract beatmap filenames (v2/v3)
+        if (root.TryGetProperty("_difficultyBeatmapSets", out var sets) && sets.ValueKind == JsonValueKind.Array)
+        {
+            var filenames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var set in sets.EnumerateArray())
+            {
+                if (set.TryGetProperty("_difficultyBeatmaps", out var beatmaps) && beatmaps.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var diff in beatmaps.EnumerateArray())
+                    {
+                        if (diff.TryGetProperty("_beatmapFilename", out var filename))
+                        {
+                            var name = filename.GetString();
+                            if (!string.IsNullOrWhiteSpace(name))
+                                filenames.Add(name);
+                        }
+                    }
+                }
+            }
+            data.BeatmapFilenames = filenames.ToList();
+        }
+
         return data;
     }
 
@@ -108,8 +131,11 @@ public static class InfoDatReader
         if (root.TryGetProperty("difficultyBeatmaps", out var diffs) && diffs.ValueKind == JsonValueKind.Array)
         {
             var mappers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var filenames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var diff in diffs.EnumerateArray())
             {
+                // Mappers
                 if (diff.TryGetProperty("beatmapAuthors", out var authors))
                 {
                     if (authors.TryGetProperty("mappers", out var mappersArray) && mappersArray.ValueKind == JsonValueKind.Array)
@@ -122,8 +148,24 @@ public static class InfoDatReader
                         }
                     }
                 }
+
+                // Filenames
+                if (diff.TryGetProperty("beatmapDataFilename", out var beatmapDataFilename))
+                {
+                    var name = beatmapDataFilename.GetString();
+                    if (!string.IsNullOrWhiteSpace(name))
+                        filenames.Add(name);
+                }
+                
+                if (diff.TryGetProperty("lightshowDataFilename", out var lightshowDataFilename))
+                {
+                    var name = lightshowDataFilename.GetString();
+                    if (!string.IsNullOrWhiteSpace(name))
+                        filenames.Add(name);
+                }
             }
             data.LevelAuthorName = string.Join(", ", mappers);
+            data.BeatmapFilenames = filenames.ToList();
         }
 
         return data;

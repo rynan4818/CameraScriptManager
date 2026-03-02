@@ -171,6 +171,12 @@ public class CameraScriptScanner
                 supplemented = true;
             }
 
+            // Calculate Song Hash based on Info.dat and associated beatmap files
+            if (infoDat.BeatmapFilenames.Count > 0)
+            {
+                entry.Hash = HashCalculator.CalculateSongHash(folderPath, infoDat.BeatmapFilenames);
+            }
+
             // If no original metadata but Info.dat provided data, mark as needing metadata write
             if (!entry.HasOriginalMetadata && supplemented)
             {

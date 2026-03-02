@@ -150,6 +150,9 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+
+                <!-- Hash -->
+                <DataGridTextColumn Header="ハッシュ" Binding="{Binding Hash, Mode=OneWay}" Width="150" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
 

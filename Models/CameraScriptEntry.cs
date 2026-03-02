@@ -16,6 +16,7 @@ public class CameraScriptEntry
     public string SourceType { get; set; } = ""; // "CustomLevels" or "CustomWIPLevels"
     public string FullFilePath { get; set; } = "";
     public string JsonContent { get; set; } = "";
+    public string Hash { get; set; } = "";
     public bool HasOriginalMetadata { get; set; }
     public bool IsCameraScriptAuthorFromMetadata { get; set; }
     public double ScriptDuration { get; set; }

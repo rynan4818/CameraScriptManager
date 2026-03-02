@@ -160,6 +160,8 @@ public class CameraScriptItemViewModel : ViewModelBase
         return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
     }
 
+    public string Hash => _entry.Hash;
+
     public bool IsCameraScriptAuthorLocked
     {
         get => _isCameraScriptAuthorLocked;
