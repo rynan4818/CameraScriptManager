@@ -6,6 +6,10 @@
         <converters:ModifiedRowBackgroundConverter x:Key="ModifiedBgConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
         
+        <!-- 非フォーカス（InActive）時の選択状態色を通常時と同じにするためのシステムブラシの上書き -->
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="{x:Static SystemColors.HighlightTextColor}"/>
+
         <!-- Reusable CellStyle for Modified cells -->
         <Style x:Key="ModifiedCellStyle" TargetType="DataGridCell">
             <Style.Triggers>
@@ -46,7 +50,8 @@
                   RowHeaderWidth="0"
                   IsReadOnly="False"
                   VirtualizingPanel.IsVirtualizing="True"
-                  VirtualizingPanel.VirtualizationMode="Recycling">
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  PreviewMouseRightButtonDown="ScriptDataGrid_PreviewMouseRightButtonDown">
 
             <DataGrid.ContextMenu>
                 <ContextMenu>

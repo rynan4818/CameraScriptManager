@@ -26,6 +26,21 @@ public partial class CopierView : UserControl
         DataContext = _viewModel;
     }
 
+    private void EntryDataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var dependencyObject = e.OriginalSource as DependencyObject;
+        if (dependencyObject == null) return;
+
+        var row = FindAncestor<DataGridRow>(dependencyObject);
+        if (row != null)
+        {
+            if (!row.IsSelected)
+            {
+                EntryDataGrid.SelectedItem = row.Item;
+            }
+        }
+    }
+
     private void Window_DragOver(object sender, DragEventArgs e)
     {
         if (e.Data.GetDataPresent(DataFormats.FileDrop))

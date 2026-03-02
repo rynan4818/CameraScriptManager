@@ -14,6 +14,10 @@
                 <x:Type TypeName="models:RenameOption"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+
+        <!-- 非フォーカス（InActive）時の選択状態色を通常時と同じにするためのシステムブラシの上書き -->
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="{x:Static SystemColors.HighlightTextColor}"/>
     </UserControl.Resources>
 
     <Grid Margin="5">
@@ -56,7 +60,8 @@
                   VerticalScrollBarVisibility="Auto"
                   CanUserSortColumns="True"
                   GridLinesVisibility="All"
-                  AlternatingRowBackground="#F9F9F9">
+                  AlternatingRowBackground="#F9F9F9"
+                  PreviewMouseRightButtonDown="EntryDataGrid_PreviewMouseRightButtonDown">
 
             <!-- Context Menu -->
             <DataGrid.ContextMenu>

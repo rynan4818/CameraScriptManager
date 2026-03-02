@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using CameraScriptManager.ViewModels;
 
 namespace CameraScriptManager.Views;
@@ -12,6 +13,23 @@ public partial class ManagerView : UserControl
     {
         InitializeComponent();
         DataContext = new ManagerViewModel();
+    }
+
+    private void ScriptDataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var dependencyObject = e.OriginalSource as DependencyObject;
+        if (dependencyObject == null) return;
+
+        var row = FindAncestor<DataGridRow>(dependencyObject);
+        if (row != null)
+        {
+            // 右クリックされた行が現在選択されていない場合、その行だけを選択する
+            // 既に選択されている複数行のうちの1つの場合は、選択状態を維持する
+            if (!row.IsSelected)
+            {
+                ScriptDataGrid.SelectedItem = row.Item;
+            }
+        }
     }
 
     private async void FetchBeatSaver_Click(object sender, RoutedEventArgs e)
