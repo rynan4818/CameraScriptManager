@@ -6,7 +6,7 @@ using Microsoft.Win32;
 
 namespace CameraScriptManager.ViewModels;
 
-public class MainViewModel : ViewModelBase
+public class ManagerViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService = new();
     private readonly CameraScriptScanner _scanner = new();
@@ -18,7 +18,7 @@ public class MainViewModel : ViewModelBase
     private string _originalScriptPath3 = "";
     private string _statusText = "";
 
-    public MainViewModel()
+    public ManagerViewModel()
     {
         Items = new ObservableCollection<CameraScriptItemViewModel>();
 

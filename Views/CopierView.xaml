@@ -1,0 +1,288 @@
+<UserControl x:Class="CameraScriptManager.Views.CopierView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:CameraScriptManager.Converters"
+        xmlns:models="clr-namespace:CameraScriptManager.Models"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
+
+    <UserControl.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <ObjectDataProvider x:Key="RenameOptions" MethodName="GetValues" ObjectType="{x:Type models:RenameOption}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:RenameOption"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Settings Area -->
+        <GroupBox Grid.Row="0" Header="Settings" Margin="0,0,0,5">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="CustomLevels:" VerticalAlignment="Center" Margin="0,0,10,5"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CustomLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,5"/>
+                <Button Grid.Row="0" Grid.Column="2" Content="Browse..." Command="{Binding BrowseCustomLevelsCommand}" Width="80" Margin="0,0,0,5"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="CustomWIPLevels:" VerticalAlignment="Center" Margin="0,0,10,5"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CustomWIPLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,5"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Command="{Binding BrowseCustomWIPLevelsCommand}" Width="80" Margin="0,0,0,5"/>
+
+                <WrapPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,5,0,0">
+                    <CheckBox Content="metadataをSongScriptに追加" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                    <TextBlock Text="Rename:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <ComboBox SelectedItem="{Binding DefaultRenameOption, UpdateSourceTrigger=PropertyChanged}"
+                              ItemsSource="{Binding Source={StaticResource RenameOptions}}"
+                              IsEditable="False" Width="150" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                    <Button Content="Re-scan" Command="{Binding RescanCommand}" Width="80" Margin="0,0,5,0"/>
+                    <Button Content="Clear" Command="{Binding ClearEntriesCommand}" Width="60" Margin="0,0,5,0"/>
+                    <Button Content="コピー実行" Command="{Binding CopyCommand}" Width="100" FontWeight="Bold"
+                            Background="#4CAF50" Foreground="White"/>
+                </WrapPanel>
+            </Grid>
+        </GroupBox>
+
+        <!-- Drop Zone -->
+        <Border Grid.Row="1" MinHeight="50" BorderBrush="Gray" BorderThickness="2"
+                CornerRadius="5" Background="#F5F5F5" Margin="0,0,0,5"
+                AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Text=".json / .zip ファイルをここにドロップ"
+                           FontSize="14" Foreground="Gray" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                <Button Content="ファイルを選択..." Command="{Binding OpenFilesCommand}" Padding="10,5"/>
+            </StackPanel>
+        </Border>
+
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="2" x:Name="EntryDataGrid" ItemsSource="{Binding Entries}"
+                  AutoGenerateColumns="False" CanUserAddRows="False"
+                  SelectionMode="Extended" RowHeaderWidth="0"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto"
+                  CanUserSortColumns="True"
+                  GridLinesVisibility="All"
+                  AlternatingRowBackground="#F9F9F9">
+
+            <!-- Context Menu -->
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="選択行を削除" Click="ContextMenu_DeleteSelected"/>
+                    <Separator/>
+                    <MenuItem Header="選択したIDをコピー" Click="ContextMenu_CopyIds"/>
+                    <Separator/>
+                    <MenuItem Header="Rename">
+                        <MenuItem Header="Renameしない" Click="ContextMenu_RenameNone"/>
+                        <MenuItem Header="SongScript" Click="ContextMenu_RenameSongScript"/>
+                        <MenuItem Header="Author_ID_SongName" Click="ContextMenu_RenameAuthorIdSongName"/>
+                    </MenuItem>
+                    <MenuItem Header="Song Name">
+                        <MenuItem Header="Sourceから取得 (Default)" Click="ContextMenu_SongNameSource"/>
+                        <MenuItem Header="BeatSaverから取得 (songName)" Click="ContextMenu_SongNameBeatSaver"/>
+                        <MenuItem Header="BeatSaverから取得 (songName - levelAuthorName)" Click="ContextMenu_SongNameBeatSaverAndAuthor"/>
+                    </MenuItem>
+                    <MenuItem Header="CL チェック">
+                        <MenuItem Header="ON" Click="ContextMenu_CL_On"/>
+                        <MenuItem Header="OFF" Click="ContextMenu_CL_Off"/>
+                    </MenuItem>
+                    <MenuItem Header="WIP チェック">
+                        <MenuItem Header="ON" Click="ContextMenu_WIP_On"/>
+                        <MenuItem Header="OFF" Click="ContextMenu_WIP_Off"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="エクスプローラーで開く">
+                        <MenuItem Header="CustomLevels Folder" Click="ContextMenu_OpenExplorerCL"/>
+                        <MenuItem Header="CustomWIPLevels Folder" Click="ContextMenu_OpenExplorerWIP"/>
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+
+            <DataGrid.Columns>
+                <!-- Source Path (left-aligned, sortable) -->
+                <DataGridTextColumn Header="Source" Binding="{Binding SourceDisplayPath}" IsReadOnly="True" Width="200"
+                                    SortMemberPath="SourceDisplayPath"/>
+
+                <!-- Hex ID (editable) -->
+                <DataGridTextColumn Header="ID" Binding="{Binding HexId, UpdateSourceTrigger=LostFocus}" Width="60"/>
+
+                <!-- Song Name -->
+                <DataGridTextColumn Header="Song Name" Binding="{Binding SongName}" IsReadOnly="True" Width="200"/>
+
+                <!-- BeatSaver URL -->
+                <DataGridTemplateColumn Header="BeatSaver" Width="70">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Hyperlink NavigateUri="{Binding BeatSaverUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <Run Text="Open"/>
+                                </Hyperlink>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Author (sortable) -->
+                <DataGridTemplateColumn Header="Author" Width="100" SortMemberPath="CameraScriptAuthorName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                                <Border Width="6" Height="6" Background="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                        Cursor="Cross" Tag="{Binding}"
+                                        MouseLeftButtonDown="FillHandle_MouseLeftButtonDown"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- CustomLevels Checkbox -->
+                <DataGridTemplateColumn Header="CL" Width="35">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding CopyToCustomLevels, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEnabled="{Binding CanCopyToCustomLevels}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- CL Overwrite Warning -->
+                <DataGridTemplateColumn Header="!" Width="25">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="Red" CornerRadius="3" 
+                                    Width="18" Height="18"
+                                    Visibility="{Binding HasOverwriteWarningCL, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    ToolTip="このフォルダに同名ファイルが存在するため上書きされます"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="!" Foreground="White" FontWeight="Bold" FontSize="12"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- CL Folder Count (red if multiple) -->
+                <DataGridTemplateColumn Header="CL#" Width="35">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CustomLevelsFolderCount}"
+                                       Foreground="{Binding HasMultipleCustomLevels, Converter={StaticResource BoolToColorConverter}}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- CL Folder Selector (disabled if single, red if multiple) -->
+                <DataGridTemplateColumn Header="CustomLevels Folder" Width="250">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding CustomLevelsFolders}"
+                                      SelectedItem="{Binding SelectedCustomLevelsFolder, UpdateSourceTrigger=PropertyChanged}"
+                                      Visibility="{Binding CanCopyToCustomLevels, Converter={StaticResource BoolToVisibilityConverter}}"
+                                      Foreground="{Binding HasMultipleCustomLevels, Converter={StaticResource BoolToColorConverter}}"
+                                      IsEnabled="{Binding HasMultipleCustomLevels}"
+                                      DisplayMemberPath="FolderName" IsEditable="False"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- CustomWIPLevels Checkbox -->
+                <DataGridTemplateColumn Header="WIP" Width="40">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding CopyToCustomWIPLevels, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEnabled="{Binding CanCopyToCustomWIPLevels}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- WIP Overwrite Warning -->
+                <DataGridTemplateColumn Header="!" Width="25">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="Red" CornerRadius="3" 
+                                    Width="18" Height="18"
+                                    Visibility="{Binding HasOverwriteWarningWIP, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    ToolTip="このフォルダに同名ファイルが存在するため上書きされます"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="!" Foreground="White" FontWeight="Bold" FontSize="12"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- WIP Folder Count (red if multiple) -->
+                <DataGridTemplateColumn Header="WIP#" Width="40">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CustomWIPLevelsFolderCount}"
+                                       Foreground="{Binding HasMultipleCustomWIPLevels, Converter={StaticResource BoolToColorConverter}}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- WIP Folder Selector (disabled if single, red if multiple) -->
+                <DataGridTemplateColumn Header="CustomWIPLevels Folder" Width="250">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding CustomWIPLevelsFolders}"
+                                      SelectedItem="{Binding SelectedCustomWIPLevelsFolder, UpdateSourceTrigger=PropertyChanged}"
+                                      Visibility="{Binding CanCopyToCustomWIPLevels, Converter={StaticResource BoolToVisibilityConverter}}"
+                                      Foreground="{Binding HasMultipleCustomWIPLevels, Converter={StaticResource BoolToColorConverter}}"
+                                      IsEnabled="{Binding HasMultipleCustomWIPLevels}"
+                                      DisplayMemberPath="FolderName" IsEditable="False"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Rename Option -->
+                <DataGridTemplateColumn Header="Rename" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox SelectedItem="{Binding RenameChoice, UpdateSourceTrigger=PropertyChanged}"
+                                      ItemsSource="{Binding Source={StaticResource RenameOptions}}"
+                                      IsEditable="False"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Renamed FileName (editable) -->
+                <DataGridTextColumn Header="FileName" Binding="{Binding RenameDisplayName, UpdateSourceTrigger=LostFocus}" Width="200"/>
+
+                <!-- Script Duration (MovementsのDuration+Delay合計) -->
+                <DataGridTextColumn Header="Script" Binding="{Binding ScriptDuration, StringFormat=F1}" IsReadOnly="True" Width="55"/>
+
+                <!-- Ogg Duration -->
+                <DataGridTextColumn Header="Song" Binding="{Binding OggDuration, StringFormat=F0}" IsReadOnly="True" Width="50"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="3" Margin="0,5,0,0">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</UserControl>

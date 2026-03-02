@@ -10,6 +10,9 @@ public class AppSettings
     public string OriginalScriptPath1 { get; set; } = "";
     public string OriginalScriptPath2 { get; set; } = "";
     public string OriginalScriptPath3 { get; set; } = "";
+    public bool AddMetadata { get; set; } = true;
+    public string DefaultRenameOption { get; set; } = "SongScript";
+    public bool? DefaultRenameToAuthorIdSongName { get; set; }
 }
 
 public class SettingsService
