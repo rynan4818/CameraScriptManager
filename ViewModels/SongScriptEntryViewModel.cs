@@ -509,4 +509,25 @@ public class SongScriptEntryViewModel : ViewModelBase
 
         UpdateOverwriteWarnings();
     }
+
+    /// <summary>
+    /// SongDetailsCacheから取得したメタデータでUIの表示フィールドを補完する。
+    /// ロック状態にはしない（元JSONから読んだものではないため）。
+    /// </summary>
+    public void UpdateFromCacheMetadata(BeatSaverMetadata metadata)
+    {
+        if (!string.IsNullOrWhiteSpace(metadata.SongSubName) && string.IsNullOrWhiteSpace(_songSubName))
+            SongSubName = metadata.SongSubName;
+
+        if (!string.IsNullOrWhiteSpace(metadata.SongAuthorName) && string.IsNullOrWhiteSpace(_songAuthorName))
+            SongAuthorName = metadata.SongAuthorName;
+
+        if (!string.IsNullOrWhiteSpace(metadata.LevelAuthorName) && string.IsNullOrWhiteSpace(_levelAuthorName))
+            LevelAuthorName = metadata.LevelAuthorName;
+
+        if (metadata.Bpm > 0 && _bpm <= 0)
+            Bpm = metadata.Bpm;
+
+        UpdateSongName();
+    }
 }

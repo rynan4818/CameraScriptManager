@@ -27,9 +27,10 @@ public class SongScriptCopyService
             if (addMetadata && entry.Metadata == null)
             {
                 progress?.Report($"API取得中: {entry.HexId}...");
-                var apiResponse = await _apiClient.GetMapAsync(entry.HexId);
+                var (apiResponse, fromApi, _) = await _apiClient.GetMapAsync(entry.HexId);
                 entry.Metadata = apiResponse?.Metadata;
-                await Task.Delay(200); // Rate limiting
+                if (fromApi)
+                    await Task.Delay(200); // Rate limiting (API呼び出し時のみ)
             }
 
             string jsonToWrite = addMetadata ? PrepareJson(entry) : entry.JsonContent;

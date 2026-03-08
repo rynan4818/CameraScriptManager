@@ -20,6 +20,9 @@ public class AppSettings
     public string ManagerZipCustomFormat { get; set; } = "{MapId}_{SongName}_{LevelAuthorName}";
     public string CopierRenameNamingMode { get; set; } = "Default"; // Default or Custom
     public string CopierRenameCustomFormat { get; set; } = "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript";
+
+    // Copier column visibility
+    public bool ShowMetadataColumns { get; set; } = true;
 }
 
 public class SettingsService

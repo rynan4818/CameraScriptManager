@@ -10,6 +10,7 @@
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <local:NullableBoolToCacheColorConverter x:Key="NullableBoolToCacheColorConverter"/>
         <ObjectDataProvider x:Key="RenameOptions" MethodName="GetValues" ObjectType="{x:Type models:RenameOption}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="models:RenameOption"/>
@@ -31,6 +32,7 @@
 
         <!-- Settings & Action Buttons -->
         <WrapPanel Grid.Row="0" Margin="0,0,0,5" VerticalAlignment="Center">
+            <CheckBox Content="譜面metadataを表示" IsChecked="{Binding ShowMetadataColumns}" VerticalAlignment="Center" Margin="0,0,15,0"/>
             <CheckBox Content="metadataをSongScriptに追加" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"/>
             <TextBlock Text="リネーム:" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ComboBox SelectedItem="{Binding DefaultRenameOption, UpdateSourceTrigger=PropertyChanged}"
@@ -40,6 +42,22 @@
             <Button Content="再チェック" Command="{Binding RescanCommand}" Width="80" Margin="0,0,5,0"/>
             <Button Content="クリア" Command="{Binding ClearEntriesCommand}" Width="60" Margin="0,0,5,0"/>
             <Button Content="コピー実行" Command="{Binding CopyCommand}" Width="100" FontWeight="Bold" Background="#4CAF50" Foreground="White" Margin="0,0,5,0"/>
+
+            <!-- SongDetailsCache デバッグインジケータ -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                <TextBlock Text="Cache:" VerticalAlignment="Center" Foreground="Gray" Margin="0,0,4,0" FontSize="11"/>
+                <TextBlock Text="■" FontSize="14" VerticalAlignment="Center"
+                           Foreground="{Binding LastCacheLookupSuccess, Converter={StaticResource NullableBoolToCacheColorConverter}}"
+                           ToolTip="SongDetailsCache: 緑=ヒット, 赤=ミス, 灰=未実行"/>
+                <TextBlock VerticalAlignment="Center" Foreground="Gray" Margin="4,0,0,0" FontSize="11">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="Hit:{0} Miss:{1}">
+                            <Binding Path="CacheHitCount"/>
+                            <Binding Path="CacheMissCount"/>
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+            </StackPanel>
         </WrapPanel>
 
         <!-- Drop Zone -->
@@ -156,6 +174,19 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <!-- BeatSaver URL -->
+                <DataGridTemplateColumn Header="BeatSaver" Width="70">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Hyperlink NavigateUri="{Binding BeatSaverUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <Run Text="Open"/>
+                                </Hyperlink>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <!-- Song Name (lockable) -->
                 <DataGridTemplateColumn Header="songName" Width="200" SortMemberPath="SongName">
                     <DataGridTemplateColumn.CellTemplate>
@@ -175,19 +206,6 @@
                                     </Style>
                                 </TextBox.Style>
                             </TextBox>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- BeatSaver URL -->
-                <DataGridTemplateColumn Header="BeatSaver" Width="70">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock>
-                                <Hyperlink NavigateUri="{Binding BeatSaverUrl}" RequestNavigate="Hyperlink_RequestNavigate">
-                                    <Run Text="Open"/>
-                                </Hyperlink>
-                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -222,7 +240,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- songSubName (lockable) -->
-                <DataGridTemplateColumn Header="songSubName" Width="120" SortMemberPath="SongSubName">
+                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" SortMemberPath="SongSubName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}"
@@ -245,7 +263,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- songAuthorName (lockable) -->
-                <DataGridTemplateColumn Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName">
+                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}"
@@ -268,7 +286,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- levelAuthorName (lockable) -->
-                <DataGridTemplateColumn Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName">
+                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}"
@@ -291,7 +309,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- BPM (lockable) -->
-                <DataGridTemplateColumn Header="BPM" Width="50" SortMemberPath="Bpm">
+                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="50" SortMemberPath="Bpm">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}"

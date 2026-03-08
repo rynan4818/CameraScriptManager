@@ -10,7 +10,8 @@ public class ManagerViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService = new();
     private readonly CameraScriptScanner _scanner = new();
-    private readonly BeatSaverApiClient _apiClient = new();
+    private readonly SongDetailsCacheService _cacheService = new();
+    private readonly BeatSaverApiClient _apiClient;
     private readonly IDialogService _dialogService = new DialogService();
     private string _customLevelsPath = "";
     private string _customWIPLevelsPath = "";
@@ -24,6 +25,7 @@ public class ManagerViewModel : ViewModelBase
 
     public ManagerViewModel()
     {
+        _apiClient = new BeatSaverApiClient(_cacheService);
         Items = new ObservableCollection<CameraScriptItemViewModel>();
 
         ScanCommand = new AsyncRelayCommand(ScanAsync);
@@ -33,6 +35,9 @@ public class ManagerViewModel : ViewModelBase
         CreatePlaylistCommand = new AsyncRelayCommand(CreatePlaylistAsync);
 
         LoadSettings();
+
+        // SongDetailsCacheをバックグラウンドで初期化
+        _ = _cacheService.InitAsync();
     }
 
     public ObservableCollection<CameraScriptItemViewModel> Items { get; }
@@ -98,7 +103,7 @@ public class ManagerViewModel : ViewModelBase
 
         StatusText = $"BeatSaver API取得中: {item.MapId}...";
 
-        var response = await _apiClient.GetMapAsync(item.MapId);
+        var (response, _, _) = await _apiClient.GetMapAsync(item.MapId);
         if (response?.Metadata != null)
         {
             item.ApplyBeatSaverData(response);

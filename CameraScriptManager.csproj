@@ -13,4 +13,10 @@
     <PackageReference Include="SharpCompress" Version="0.46.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="SongDetailsCache">
+      <HintPath>DLL\SongDetailsCache.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

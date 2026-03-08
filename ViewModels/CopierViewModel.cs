@@ -14,7 +14,8 @@ public class CopierViewModel : ViewModelBase
     private readonly BeatMapScanner _scanner = new();
     private readonly OggDurationService _oggDurationService;
     private readonly ArchiveImportService _importService = new();
-    private readonly BeatSaverApiClient _apiClient = new();
+    private readonly SongDetailsCacheService _cacheService;
+    private readonly BeatSaverApiClient _apiClient;
     private readonly SongScriptCopyService _copyService;
     private readonly SettingsService _settingsService = new();
 
@@ -24,7 +25,12 @@ public class CopierViewModel : ViewModelBase
     public CopierViewModel()
     {
         _oggDurationService = new OggDurationService();
+        _cacheService = new SongDetailsCacheService();
+        _apiClient = new BeatSaverApiClient(_cacheService);
         _copyService = new SongScriptCopyService(_apiClient);
+
+        // SongDetailsCacheをバックグラウンドで初期化
+        _ = _cacheService.InitAsync();
 
         // Register encoding provider for cp932
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -34,6 +40,7 @@ public class CopierViewModel : ViewModelBase
         _customLevelsPath = settings.CustomLevelsPath;
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _addMetadata = settings.AddMetadata;
+        _showMetadataColumns = settings.ShowMetadataColumns;
 
         // 旧設定からのマイグレーション
         if (settings.DefaultRenameToAuthorIdSongName == true)
@@ -84,6 +91,17 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
+    private bool _showMetadataColumns = true;
+    public bool ShowMetadataColumns
+    {
+        get => _showMetadataColumns;
+        set
+        {
+            if (SetProperty(ref _showMetadataColumns, value))
+                SaveSettings();
+        }
+    }
+
     private RenameOption _defaultRenameOption = RenameOption.カスタム;
     public RenameOption DefaultRenameOption
     {
@@ -107,6 +125,28 @@ public class CopierViewModel : ViewModelBase
     {
         get => _isBusy;
         set => SetProperty(ref _isBusy, value);
+    }
+
+    // SongDetailsCache デバッグ用インジケータ
+    private bool? _lastCacheLookupSuccess;
+    public bool? LastCacheLookupSuccess
+    {
+        get => _lastCacheLookupSuccess;
+        set => SetProperty(ref _lastCacheLookupSuccess, value);
+    }
+
+    private int _cacheHitCount;
+    public int CacheHitCount
+    {
+        get => _cacheHitCount;
+        set => SetProperty(ref _cacheHitCount, value);
+    }
+
+    private int _cacheMissCount;
+    public int CacheMissCount
+    {
+        get => _cacheMissCount;
+        set => SetProperty(ref _cacheMissCount, value);
     }
 
     public ObservableCollection<SongScriptEntryViewModel> Entries { get; } = new();
@@ -142,6 +182,7 @@ public class CopierViewModel : ViewModelBase
         _customLevelsPath = settings.CustomLevelsPath;
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _addMetadata = settings.AddMetadata;
+        ShowMetadataColumns = settings.ShowMetadataColumns;
 
         if (settings.DefaultRenameToAuthorIdSongName == true)
             _defaultRenameOption = RenameOption.AuthorIdSongName;
@@ -195,6 +236,9 @@ public class CopierViewModel : ViewModelBase
     {
         int importedCount = 0;
         var importedVms = new List<SongScriptEntryViewModel>();
+#if DEBUG
+        DebugLog($"HandleDroppedFiles: cacheService.IsAvailable={_cacheService.IsAvailable}, files={filePaths.Length}");
+#endif
 
         foreach (var filePath in filePaths)
         {
@@ -222,12 +266,72 @@ public class CopierViewModel : ViewModelBase
                 var vm = new SongScriptEntryViewModel(entry);
                 vm.OnHexIdChanged = OnEntryHexIdChangedAsync;
                 UpdateOggDuration(vm);
+
+                // metadataがないエントリはSongDetailsCacheから即座に補完を試みる
+                if (!entry.HasOriginalMetadata && !string.IsNullOrEmpty(entry.HexId))
+                {
+#if DEBUG
+                    DebugLog($"HandleDroppedFiles: trying cache for HexId=\"{entry.HexId}\"");
+#endif
+                    if (_cacheService.TryGetByMapId(entry.HexId, out var cacheResponse) && cacheResponse.Metadata != null)
+                    {
+                        entry.Metadata = cacheResponse.Metadata;
+                        vm.UpdateFromCacheMetadata(cacheResponse.Metadata);
+                        LastCacheLookupSuccess = true;
+                        CacheHitCount++;
+                    }
+                    else
+                    {
+                        // キャッシュ未初期化 or ヒットしなかった場合、非同期補完リストに追加
+#if DEBUG
+                        DebugLog($"HandleDroppedFiles: cache MISS for HexId=\"{entry.HexId}\", queued for async fallback");
+#endif
+                        LastCacheLookupSuccess = false;
+                        CacheMissCount++;
+                        importedVms.Add(vm);
+                    }
+                }
+
                 Entries.Add(vm);
                 importedCount++;
             }
         }
 
         StatusMessage = $"{importedCount} 件のSongScriptを読み込みました";
+
+        // キャッシュでカバーできなかったエントリを非同期でBeatSaver APIから補完
+        if (importedVms.Count > 0)
+        {
+#if DEBUG
+            DebugLog($"HandleDroppedFiles: {importedVms.Count} cache misses, starting PopulateMetadataAsync");
+#endif
+            _ = PopulateMetadataAsync(importedVms);
+        }
+    }
+
+    private async Task PopulateMetadataAsync(List<SongScriptEntryViewModel> entries)
+    {
+        // キャッシュの初期化完了を待機してから問い合わせを開始
+        // （HandleDroppedFiles時点では初期化未完了でキャッシュミスになるため）
+#if DEBUG
+        DebugLog($"PopulateMetadataAsync: waiting for cache init... IsAvailable={_cacheService.IsAvailable}");
+#endif
+        await _cacheService.EnsureInitializedAsync();
+#if DEBUG
+        DebugLog($"PopulateMetadataAsync: cache init done. IsAvailable={_cacheService.IsAvailable}. Processing {entries.Count} entries...");
+#endif
+
+        foreach (var vm in entries)
+        {
+            if (!vm.Model.HasOriginalMetadata && !string.IsNullOrEmpty(vm.HexId) && vm.Model.Metadata == null)
+            {
+                await FetchApiDataAsync(vm);
+                if (vm.Model.Metadata != null)
+                {
+                    vm.UpdateFromCacheMetadata(vm.Model.Metadata);
+                }
+            }
+        }
     }
 
     private async Task OnEntryHexIdChangedAsync(SongScriptEntryViewModel entry)
@@ -250,7 +354,15 @@ public class CopierViewModel : ViewModelBase
         try
         {
             StatusMessage = $"API取得中: {hexId}...";
-            var apiResponse = await _apiClient.GetMapAsync(hexId);
+            var (apiResponse, fromApi, cacheHit) = await _apiClient.GetMapAsync(hexId);
+            if (cacheHit.HasValue)
+            {
+                LastCacheLookupSuccess = cacheHit.Value;
+                if (cacheHit.Value)
+                    CacheHitCount++;
+                else
+                    CacheMissCount++;
+            }
             if (apiResponse != null)
             {
                 entry.Model.Metadata = apiResponse.Metadata;
@@ -443,6 +555,25 @@ public class CopierViewModel : ViewModelBase
         var currentSettings = _settingsService.Load();
         currentSettings.AddMetadata = AddMetadata;
         currentSettings.DefaultRenameOption = DefaultRenameOption.ToString();
+        currentSettings.ShowMetadataColumns = ShowMetadataColumns;
         _settingsService.Save(currentSettings);
     }
+
+#if DEBUG
+    private static void DebugLog(string message)
+    {
+        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [CopierVM] {message}";
+        System.Diagnostics.Debug.WriteLine(line);
+        try
+        {
+            var logDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData");
+            if (!System.IO.Directory.Exists(logDir))
+                System.IO.Directory.CreateDirectory(logDir);
+            System.IO.File.AppendAllText(
+                System.IO.Path.Combine(logDir, "debug_songdetails.log"),
+                line + Environment.NewLine);
+        }
+        catch { }
+    }
+#endif
 }

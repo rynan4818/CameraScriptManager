@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -12,7 +13,7 @@ namespace CameraScriptManager.Views;
 
 public partial class CopierView : UserControl
 {
-    private readonly CopierViewModel _viewModel;
+    private CopierViewModel? _viewModel;
 
     // ドラッグコピー用の状態保持変数
     private bool _isDraggingFillHandle;
@@ -22,8 +23,45 @@ public partial class CopierView : UserControl
     public CopierView()
     {
         InitializeComponent();
-        _viewModel = new CopierViewModel();
-        DataContext = _viewModel;
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        // 旧ViewModelの購読解除
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        }
+
+        _viewModel = e.NewValue as CopierViewModel;
+
+        // 新ViewModelの購読
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            UpdateColumnVisibility();
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(CopierViewModel.ShowMetadataColumns):
+                UpdateColumnVisibility();
+                break;
+        }
+    }
+
+    private void UpdateColumnVisibility()
+    {
+        if (_viewModel == null) return;
+        var vis = _viewModel.ShowMetadataColumns ? Visibility.Visible : Visibility.Collapsed;
+        ColSongSubName.Visibility = vis;
+        ColSongAuthorName.Visibility = vis;
+        ColLevelAuthorName.Visibility = vis;
+        ColBpm.Visibility = vis;
     }
 
     private void EntryDataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -56,7 +94,7 @@ public partial class CopierView : UserControl
 
     private void Window_Drop(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        if (_viewModel != null && e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             var files = (string[])e.Data.GetData(DataFormats.FileDrop);
             _viewModel.HandleDroppedFiles(files);
