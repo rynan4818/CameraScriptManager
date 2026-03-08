@@ -332,7 +332,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- AvatarHeight (lockable) -->
-                <DataGridTemplateColumn Header="AvatarHeight" Width="90" SortMemberPath="AvatarHeight">
+                <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding AvatarHeight, UpdateSourceTrigger=LostFocus}"

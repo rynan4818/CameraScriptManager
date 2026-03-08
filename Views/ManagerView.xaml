@@ -200,7 +200,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="AvatarHeight" Width="90" SortMemberPath="AvatarHeight" CellStyle="{StaticResource ModifiedCellStyle}">
+                <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding AvatarHeight, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsAvatarHeightLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
