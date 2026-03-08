@@ -9,6 +9,7 @@
     <UserControl.Resources>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <ObjectDataProvider x:Key="RenameOptions" MethodName="GetValues" ObjectType="{x:Type models:RenameOption}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="models:RenameOption"/>
@@ -113,6 +114,9 @@
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                     <Separator/>
+                    <MenuItem Header="対象セルの項目をロック" Click="LockCell_Click"/>
+                    <MenuItem Header="対象セルの項目をロック解除" Click="UnlockCell_Click"/>
+                    <Separator/>
                     <MenuItem Header="エクスプローラーで開く">
                         <MenuItem Header="CustomLevels Folder" 
                                   Command="{Binding PlacementTarget.DataContext.OpenExplorerCLCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
@@ -129,11 +133,51 @@
                 <DataGridTextColumn Header="ソース" Binding="{Binding SourceDisplayPath}" IsReadOnly="True" Width="200"
                                     SortMemberPath="SourceDisplayPath"/>
 
-                <!-- Hex ID (editable) -->
-                <DataGridTextColumn Header="ID" Binding="{Binding HexId, UpdateSourceTrigger=LostFocus}" Width="60"/>
+                <!-- Hex ID (editable, lockable) -->
+                <DataGridTemplateColumn Header="ID" Width="60" SortMemberPath="HexId">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding HexId, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsHexIdLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsHexIdLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
-                <!-- Song Name -->
-                <DataGridTextColumn Header="songName" Binding="{Binding SongName}" IsReadOnly="True" Width="200"/>
+                <!-- Song Name (lockable) -->
+                <DataGridTemplateColumn Header="songName" Width="200" SortMemberPath="SongName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding SongName, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsSongNameLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSongNameLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
                 <!-- BeatSaver URL -->
                 <DataGridTemplateColumn Header="BeatSaver" Width="70">
@@ -148,16 +192,169 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <!-- Author (sortable) -->
+                <!-- Author (sortable, lockable) -->
                 <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="100" SortMemberPath="CameraScriptAuthorName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>
-                                <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=PropertyChanged}"
+                                         IsReadOnly="{Binding IsCameraScriptAuthorLocked}"
+                                         BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCameraScriptAuthorLocked}" Value="True">
+                                                    <Setter Property="Background" Value="#DDDDDD"/>
+                                                    <Setter Property="Foreground" Value="#555555"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
                                 <Border Width="6" Height="6" Background="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                         Cursor="Cross" Tag="{Binding}"
-                                        MouseLeftButtonDown="FillHandle_MouseLeftButtonDown"/>
+                                        MouseLeftButtonDown="FillHandle_MouseLeftButtonDown"
+                                        Visibility="{Binding IsCameraScriptAuthorLocked, Converter={StaticResource InverseBoolConverter}, ConverterParameter=Visibility}"/>
                             </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- songSubName (lockable) -->
+                <DataGridTemplateColumn Header="songSubName" Width="120" SortMemberPath="SongSubName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsSongSubNameLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSongSubNameLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- songAuthorName (lockable) -->
+                <DataGridTemplateColumn Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsSongAuthorNameLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSongAuthorNameLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- levelAuthorName (lockable) -->
+                <DataGridTemplateColumn Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsLevelAuthorNameLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLevelAuthorNameLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- BPM (lockable) -->
+                <DataGridTemplateColumn Header="BPM" Width="50" SortMemberPath="Bpm">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsBpmLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBpmLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- AvatarHeight (lockable) -->
+                <DataGridTemplateColumn Header="AvatarHeight" Width="90" SortMemberPath="AvatarHeight">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding AvatarHeight, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsAvatarHeightLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAvatarHeightLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Description (lockable) -->
+                <DataGridTemplateColumn Header="Description" Width="150" SortMemberPath="Description">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsDescriptionLocked}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDescriptionLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

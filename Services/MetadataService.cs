@@ -16,7 +16,9 @@ public static class MetadataService
         string songName,
         string songSubName,
         string songAuthorName,
-        string levelAuthorName)
+        string levelAuthorName,
+        double avatarHeight = 0,
+        string description = "")
     {
         try
         {
@@ -37,6 +39,8 @@ public static class MetadataService
             writer.WriteString("songSubName", songSubName);
             writer.WriteString("songAuthorName", songAuthorName);
             writer.WriteString("levelAuthorName", levelAuthorName);
+            writer.WriteNumber("avatarHeight", avatarHeight);
+            writer.WriteString("description", description);
             writer.WriteEndObject();
 
             // Copy all other properties, skipping old metadata/legacy fields

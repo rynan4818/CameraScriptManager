@@ -76,17 +76,31 @@ public class SongScriptCopyService
                 writer.WriteString("songSubName", entry.Metadata.SongSubName ?? "");
                 writer.WriteString("songAuthorName", entry.Metadata.SongAuthorName ?? "");
                 writer.WriteString("levelAuthorName", entry.Metadata.LevelAuthorName ?? "");
+                writer.WriteNumber("avatarHeight", entry.AvatarHeight);
+                writer.WriteString("description", entry.Description ?? "");
                 writer.WriteEndObject();
             }
             else
             {
-                // metadataがない場合でもmapIdとcameraScriptAuthorNameはmetadata内に書く
+                // metadataがない場合でもモデルに保持されているフィールドをmetadata内に書く
                 writer.WritePropertyName("metadata");
                 writer.WriteStartObject();
                 writer.WriteString("mapId", entry.HexId);
                 writer.WriteString("cameraScriptAuthorName", entry.CameraScriptAuthorName ?? "");
+                if (entry.Bpm > 0)
+                    writer.WriteNumber("bpm", entry.Bpm);
                 if (entry.OggDuration > 0)
                     writer.WriteNumber("duration", entry.OggDuration);
+                if (!string.IsNullOrWhiteSpace(entry.SongName))
+                    writer.WriteString("songName", entry.SongName);
+                if (!string.IsNullOrWhiteSpace(entry.SongSubName))
+                    writer.WriteString("songSubName", entry.SongSubName);
+                if (!string.IsNullOrWhiteSpace(entry.SongAuthorName))
+                    writer.WriteString("songAuthorName", entry.SongAuthorName);
+                if (!string.IsNullOrWhiteSpace(entry.LevelAuthorName))
+                    writer.WriteString("levelAuthorName", entry.LevelAuthorName);
+                writer.WriteNumber("avatarHeight", entry.AvatarHeight);
+                writer.WriteString("description", entry.Description ?? "");
                 writer.WriteEndObject();
             }
 

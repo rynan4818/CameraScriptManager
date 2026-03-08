@@ -100,7 +100,10 @@ public class CameraScriptScanner
                 entry.HasOriginalMetadata = true;
 
                 if (metadata.TryGetProperty("mapId", out var mapId))
+                {
                     entry.MapId = mapId.GetString() ?? "";
+                    entry.IsMapIdFromMetadata = !string.IsNullOrWhiteSpace(entry.MapId);
+                }
 
                 if (metadata.TryGetProperty("cameraScriptAuthorName", out var author))
                 {
@@ -109,23 +112,51 @@ public class CameraScriptScanner
                 }
 
                 if (metadata.TryGetProperty("bpm", out var bpm))
+                {
                     entry.Bpm = bpm.GetDouble();
+                    entry.IsBpmFromMetadata = entry.Bpm > 0;
+                }
 
                 if (metadata.TryGetProperty("duration", out var duration))
                     entry.Duration = duration.GetDouble();
 
                 if (metadata.TryGetProperty("songName", out var songName))
+                {
                     entry.SongName = songName.GetString() ?? "";
+                    entry.IsSongNameFromMetadata = !string.IsNullOrWhiteSpace(entry.SongName);
+                }
 
                 if (metadata.TryGetProperty("songSubName", out var songSubName))
+                {
                     entry.SongSubName = songSubName.GetString() ?? "";
+                    entry.IsSongSubNameFromMetadata = true; // SubName can be empty sometimes, but if it exists, it's locked. Check if property is there
+                }
 
                 if (metadata.TryGetProperty("songAuthorName", out var songAuthor))
+                {
                     entry.SongAuthorName = songAuthor.GetString() ?? "";
+                    entry.IsSongAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(entry.SongAuthorName);
+                }
 
                 if (metadata.TryGetProperty("levelAuthorName", out var levelAuthor))
+                {
                     entry.LevelAuthorName = levelAuthor.GetString() ?? "";
+                    entry.IsLevelAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(entry.LevelAuthorName);
+                }
+
+                if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))
+                {
+                    entry.AvatarHeight = avatarHeight.GetDouble();
+                    entry.IsAvatarHeightFromMetadata = entry.AvatarHeight > 0;
+                }
+
+                if (metadata.TryGetProperty("description", out var descriptionProp))
+                {
+                    entry.Description = descriptionProp.GetString() ?? "";
+                    entry.IsDescriptionFromMetadata = true;
+                }
             }
+
         }
         catch { }
 

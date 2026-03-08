@@ -25,8 +25,25 @@ public class SongScriptEntryViewModel : ViewModelBase
         _selectedCustomLevelsFolder = model.SelectedCustomLevelsFolder;
         _selectedCustomWIPLevelsFolder = model.SelectedCustomWIPLevelsFolder;
         _cameraScriptAuthorName = model.CameraScriptAuthorName;
+        _songSubName = model.SongSubName;
+        _songAuthorName = model.SongAuthorName;
+        _levelAuthorName = model.LevelAuthorName;
+        _bpm = model.Bpm;
+        _avatarHeight = model.AvatarHeight;
+        _description = model.Description;
         _renameChoice = model.RenameChoice;
         _hexId = model.HexId;
+
+        // メタデータからのロック状態を初期化
+        _isHexIdLocked = model.IsHexIdFromMetadata;
+        _isSongNameLocked = model.IsSongNameFromMetadata;
+        _isCameraScriptAuthorLocked = model.IsCameraScriptAuthorFromMetadata;
+        _isSongSubNameLocked = model.IsSongSubNameFromMetadata;
+        _isSongAuthorNameLocked = model.IsSongAuthorNameFromMetadata;
+        _isLevelAuthorNameLocked = model.IsLevelAuthorNameFromMetadata;
+        _isBpmLocked = model.IsBpmFromMetadata;
+        _isAvatarHeightLocked = model.IsAvatarHeightFromMetadata;
+        _isDescriptionLocked = model.IsDescriptionFromMetadata;
 
         UpdateOverwriteWarnings();
     }
@@ -113,6 +130,185 @@ public class SongScriptEntryViewModel : ViewModelBase
                 UpdateOverwriteWarnings();
             }
         }
+    }
+
+    private string _songSubName = "";
+    public string SongSubName
+    {
+        get => _songSubName;
+        set
+        {
+            if (SetProperty(ref _songSubName, value))
+                _model.SongSubName = value;
+        }
+    }
+
+    private string _songAuthorName = "";
+    public string SongAuthorName
+    {
+        get => _songAuthorName;
+        set
+        {
+            if (SetProperty(ref _songAuthorName, value))
+                _model.SongAuthorName = value;
+        }
+    }
+
+    private string _levelAuthorName = "";
+    public string LevelAuthorName
+    {
+        get => _levelAuthorName;
+        set
+        {
+            if (SetProperty(ref _levelAuthorName, value))
+                _model.LevelAuthorName = value;
+        }
+    }
+
+    private double _bpm;
+    public double Bpm
+    {
+        get => _bpm;
+        set
+        {
+            if (SetProperty(ref _bpm, value))
+                _model.Bpm = value;
+        }
+    }
+
+    private double _avatarHeight;
+    public double AvatarHeight
+    {
+        get => _avatarHeight;
+        set
+        {
+            if (SetProperty(ref _avatarHeight, value))
+                _model.AvatarHeight = value;
+        }
+    }
+
+    private string _description = "";
+    public string Description
+    {
+        get => _description;
+        set
+        {
+            if (SetProperty(ref _description, value))
+                _model.Description = value;
+        }
+    }
+
+    // ロック状態
+    private bool _isHexIdLocked;
+    public bool IsHexIdLocked
+    {
+        get => _isHexIdLocked;
+        set
+        {
+            if (SetProperty(ref _isHexIdLocked, value))
+                _model.IsHexIdFromMetadata = value;
+        }
+    }
+
+    private bool _isSongNameLocked;
+    public bool IsSongNameLocked
+    {
+        get => _isSongNameLocked;
+        set
+        {
+            if (SetProperty(ref _isSongNameLocked, value))
+                _model.IsSongNameFromMetadata = value;
+        }
+    }
+
+    private bool _isCameraScriptAuthorLocked;
+    public bool IsCameraScriptAuthorLocked
+    {
+        get => _isCameraScriptAuthorLocked;
+        set
+        {
+            if (SetProperty(ref _isCameraScriptAuthorLocked, value))
+                _model.IsCameraScriptAuthorFromMetadata = value;
+        }
+    }
+
+    private bool _isSongSubNameLocked;
+    public bool IsSongSubNameLocked
+    {
+        get => _isSongSubNameLocked;
+        set
+        {
+            if (SetProperty(ref _isSongSubNameLocked, value))
+                _model.IsSongSubNameFromMetadata = value;
+        }
+    }
+
+    private bool _isSongAuthorNameLocked;
+    public bool IsSongAuthorNameLocked
+    {
+        get => _isSongAuthorNameLocked;
+        set
+        {
+            if (SetProperty(ref _isSongAuthorNameLocked, value))
+                _model.IsSongAuthorNameFromMetadata = value;
+        }
+    }
+
+    private bool _isLevelAuthorNameLocked;
+    public bool IsLevelAuthorNameLocked
+    {
+        get => _isLevelAuthorNameLocked;
+        set
+        {
+            if (SetProperty(ref _isLevelAuthorNameLocked, value))
+                _model.IsLevelAuthorNameFromMetadata = value;
+        }
+    }
+
+    private bool _isBpmLocked;
+    public bool IsBpmLocked
+    {
+        get => _isBpmLocked;
+        set
+        {
+            if (SetProperty(ref _isBpmLocked, value))
+                _model.IsBpmFromMetadata = value;
+        }
+    }
+
+    private bool _isAvatarHeightLocked;
+    public bool IsAvatarHeightLocked
+    {
+        get => _isAvatarHeightLocked;
+        set
+        {
+            if (SetProperty(ref _isAvatarHeightLocked, value))
+                _model.IsAvatarHeightFromMetadata = value;
+        }
+    }
+
+    private bool _isDescriptionLocked;
+    public bool IsDescriptionLocked
+    {
+        get => _isDescriptionLocked;
+        set
+        {
+            if (SetProperty(ref _isDescriptionLocked, value))
+                _model.IsDescriptionFromMetadata = value;
+        }
+    }
+
+    public void LockAll()
+    {
+        IsHexIdLocked = true;
+        IsSongNameLocked = true;
+        IsCameraScriptAuthorLocked = true;
+        IsSongSubNameLocked = true;
+        IsSongAuthorNameLocked = true;
+        IsLevelAuthorNameLocked = true;
+        IsBpmLocked = true;
+        IsAvatarHeightLocked = true;
+        IsDescriptionLocked = true;
     }
 
     /// <summary>JSONのMovements内のDuration+Delayの合計値（秒）</summary>

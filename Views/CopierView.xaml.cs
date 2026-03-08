@@ -73,6 +73,64 @@ public partial class CopierView : UserControl
     // --- コンテキストメニュー ---
     // (CommandBindingへ移行したため削除済)
 
+    private void LockCell_Click(object sender, RoutedEventArgs e)
+    {
+        SetLockOnCurrentColumn(true);
+    }
+
+    private void UnlockCell_Click(object sender, RoutedEventArgs e)
+    {
+        SetLockOnCurrentColumn(false);
+    }
+
+    private void SetLockOnCurrentColumn(bool isLocked)
+    {
+        var col = EntryDataGrid.CurrentColumn;
+        if (col == null) return;
+
+        var selectedItems = EntryDataGrid.SelectedItems
+            .OfType<SongScriptEntryViewModel>()
+            .ToList();
+
+        if (selectedItems.Count == 0) return;
+
+        string header = col.Header?.ToString() ?? "";
+
+        foreach (var item in selectedItems)
+        {
+            switch (header)
+            {
+                case "ID":
+                    item.IsHexIdLocked = isLocked;
+                    break;
+                case "songName":
+                    item.IsSongNameLocked = isLocked;
+                    break;
+                case "cameraScriptAuthorName":
+                    item.IsCameraScriptAuthorLocked = isLocked;
+                    break;
+                case "songSubName":
+                    item.IsSongSubNameLocked = isLocked;
+                    break;
+                case "songAuthorName":
+                    item.IsSongAuthorNameLocked = isLocked;
+                    break;
+                case "levelAuthorName":
+                    item.IsLevelAuthorNameLocked = isLocked;
+                    break;
+                case "BPM":
+                    item.IsBpmLocked = isLocked;
+                    break;
+                case "AvatarHeight":
+                    item.IsAvatarHeightLocked = isLocked;
+                    break;
+                case "Description":
+                    item.IsDescriptionLocked = isLocked;
+                    break;
+            }
+        }
+    }
+
     // --- ドラッグ（フィルハンドル）コピーの実装 ---
 
     private void FillHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -99,8 +157,8 @@ public partial class CopierView : UserControl
                 var row = FindAncestor<DataGridRow>(hit.VisualHit);
                 if (row != null && row.Item is SongScriptEntryViewModel targetEntry)
                 {
-                    // ドラッグ元と異なる行の上を通過した場合、値をコピーする
-                    if (targetEntry != _dragSourceEntry)
+                    // ドラッグ元と異なる行の上を通過した場合、値をコピーする (ロックされていない場合のみ)
+                    if (targetEntry != _dragSourceEntry && !targetEntry.IsCameraScriptAuthorLocked)
                     {
                         targetEntry.CameraScriptAuthorName = _dragSourceEntry.CameraScriptAuthorName;
                     }

@@ -15,7 +15,17 @@ public class CameraScriptItemViewModel : ViewModelBase
     private string _levelAuthorName = "";
     private double _bpm;
     private double _duration;
+    private double _avatarHeight;
+    private string _description = "";
     private bool _isCameraScriptAuthorLocked;
+    private bool _isMapIdLocked;
+    private bool _isSongNameLocked;
+    private bool _isSongSubNameLocked;
+    private bool _isSongAuthorNameLocked;
+    private bool _isLevelAuthorNameLocked;
+    private bool _isBpmLocked;
+    private bool _isAvatarHeightLocked;
+    private bool _isDescriptionLocked;
     private bool _suppressModifiedTracking;
     private string? _selectedOriginalSourceFile;
 
@@ -32,7 +42,17 @@ public class CameraScriptItemViewModel : ViewModelBase
         _levelAuthorName = entry.LevelAuthorName;
         _bpm = entry.Bpm;
         _duration = entry.Duration;
+        _avatarHeight = entry.AvatarHeight;
+        _description = entry.Description;
         _isCameraScriptAuthorLocked = entry.IsCameraScriptAuthorFromMetadata;
+        _isMapIdLocked = entry.IsMapIdFromMetadata;
+        _isSongNameLocked = entry.IsSongNameFromMetadata;
+        _isSongSubNameLocked = entry.IsSongSubNameFromMetadata;
+        _isSongAuthorNameLocked = entry.IsSongAuthorNameFromMetadata;
+        _isLevelAuthorNameLocked = entry.IsLevelAuthorNameFromMetadata;
+        _isBpmLocked = entry.IsBpmFromMetadata;
+        _isAvatarHeightLocked = entry.IsAvatarHeightFromMetadata;
+        _isDescriptionLocked = entry.IsDescriptionFromMetadata;
         
         OriginalSourceFiles = new System.Collections.ObjectModel.ObservableCollection<string>(entry.OriginalSourceFiles);
         _selectedOriginalSourceFile = OriginalSourceFiles.FirstOrDefault();
@@ -144,6 +164,26 @@ public class CameraScriptItemViewModel : ViewModelBase
         set => SetProperty(ref _duration, value);
     }
 
+    public double AvatarHeight
+    {
+        get => _avatarHeight;
+        set
+        {
+            if (SetProperty(ref _avatarHeight, value))
+                MarkModified();
+        }
+    }
+
+    public string Description
+    {
+        get => _description;
+        set
+        {
+            if (SetProperty(ref _description, value))
+                MarkModified();
+        }
+    }
+
     public double ScriptDuration => _entry.ScriptDuration;
     public double OggDuration => _entry.OggDuration;
 
@@ -165,7 +205,91 @@ public class CameraScriptItemViewModel : ViewModelBase
     public bool IsCameraScriptAuthorLocked
     {
         get => _isCameraScriptAuthorLocked;
-        set => SetProperty(ref _isCameraScriptAuthorLocked, value);
+        set
+        {
+            if (SetProperty(ref _isCameraScriptAuthorLocked, value))
+                _entry.IsCameraScriptAuthorFromMetadata = value;
+        }
+    }
+
+    public bool IsMapIdLocked
+    {
+        get => _isMapIdLocked;
+        set
+        {
+            if (SetProperty(ref _isMapIdLocked, value))
+                _entry.IsMapIdFromMetadata = value;
+        }
+    }
+
+    public bool IsSongNameLocked
+    {
+        get => _isSongNameLocked;
+        set
+        {
+            if (SetProperty(ref _isSongNameLocked, value))
+                _entry.IsSongNameFromMetadata = value;
+        }
+    }
+
+    public bool IsSongSubNameLocked
+    {
+        get => _isSongSubNameLocked;
+        set
+        {
+            if (SetProperty(ref _isSongSubNameLocked, value))
+                _entry.IsSongSubNameFromMetadata = value;
+        }
+    }
+
+    public bool IsSongAuthorNameLocked
+    {
+        get => _isSongAuthorNameLocked;
+        set
+        {
+            if (SetProperty(ref _isSongAuthorNameLocked, value))
+                _entry.IsSongAuthorNameFromMetadata = value;
+        }
+    }
+
+    public bool IsLevelAuthorNameLocked
+    {
+        get => _isLevelAuthorNameLocked;
+        set
+        {
+            if (SetProperty(ref _isLevelAuthorNameLocked, value))
+                _entry.IsLevelAuthorNameFromMetadata = value;
+        }
+    }
+
+    public bool IsBpmLocked
+    {
+        get => _isBpmLocked;
+        set
+        {
+            if (SetProperty(ref _isBpmLocked, value))
+                _entry.IsBpmFromMetadata = value;
+        }
+    }
+
+    public bool IsAvatarHeightLocked
+    {
+        get => _isAvatarHeightLocked;
+        set
+        {
+            if (SetProperty(ref _isAvatarHeightLocked, value))
+                _entry.IsAvatarHeightFromMetadata = value;
+        }
+    }
+
+    public bool IsDescriptionLocked
+    {
+        get => _isDescriptionLocked;
+        set
+        {
+            if (SetProperty(ref _isDescriptionLocked, value))
+                _entry.IsDescriptionFromMetadata = value;
+        }
     }
 
     public string? SelectedOriginalSourceFile
@@ -195,7 +319,9 @@ public class CameraScriptItemViewModel : ViewModelBase
                 SongName,
                 SongSubName,
                 SongAuthorName,
-                LevelAuthorName);
+                LevelAuthorName,
+                AvatarHeight,
+                Description);
         }
         return _entry.JsonContent;
     }
@@ -238,5 +364,18 @@ public class CameraScriptItemViewModel : ViewModelBase
     {
         if (!_suppressModifiedTracking)
             IsModified = true;
+    }
+
+    public void LockAll()
+    {
+        IsCameraScriptAuthorLocked = true;
+        IsMapIdLocked = true;
+        IsSongNameLocked = true;
+        IsSongSubNameLocked = true;
+        IsSongAuthorNameLocked = true;
+        IsLevelAuthorNameLocked = true;
+        IsBpmLocked = true;
+        IsAvatarHeightLocked = true;
+        IsDescriptionLocked = true;
     }
 }

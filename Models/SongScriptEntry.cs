@@ -14,6 +14,23 @@ public class SongScriptEntry
     public string BeatSaverUrl => $"https://beatsaver.com/maps/{HexId}";
     public BeatSaverMetadata? Metadata { get; set; }
     public string CameraScriptAuthorName { get; set; } = "";
+    public string SongSubName { get; set; } = "";
+    public string SongAuthorName { get; set; } = "";
+    public string LevelAuthorName { get; set; } = "";
+    public double Bpm { get; set; }
+    public double AvatarHeight { get; set; }
+    public string Description { get; set; } = "";
+    /// <summary>既読metadataがある場合のロック情報</summary>
+    public bool HasOriginalMetadata { get; set; }
+    public bool IsHexIdFromMetadata { get; set; }
+    public bool IsSongNameFromMetadata { get; set; }
+    public bool IsCameraScriptAuthorFromMetadata { get; set; }
+    public bool IsSongSubNameFromMetadata { get; set; }
+    public bool IsSongAuthorNameFromMetadata { get; set; }
+    public bool IsLevelAuthorNameFromMetadata { get; set; }
+    public bool IsBpmFromMetadata { get; set; }
+    public bool IsAvatarHeightFromMetadata { get; set; }
+    public bool IsDescriptionFromMetadata { get; set; }
     /// <summary>JSONのMovements内のDuration+Delayの合計値（秒）</summary>
     public double ScriptDuration { get; set; }
     /// <summary>譜面フォルダの.egg/.oggファイルから算出したDuration（秒）</summary>

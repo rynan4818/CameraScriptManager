@@ -144,7 +144,9 @@ public class ManagerViewModel : ViewModelBase
                 item.SongName,
                 item.SongSubName,
                 item.SongAuthorName,
-                item.LevelAuthorName);
+                item.LevelAuthorName,
+                item.AvatarHeight,
+                item.Description);
 
             files.Add((item.FullFilePath, item.Entry.JsonContent, newJson, item.SourceType));
         }
@@ -158,6 +160,7 @@ public class ManagerViewModel : ViewModelBase
             {
                 item.Entry.JsonContent = File.ReadAllText(item.FullFilePath);
                 item.Entry.HasOriginalMetadata = true;
+                item.LockAll();
                 item.IsModified = false;
             }
 

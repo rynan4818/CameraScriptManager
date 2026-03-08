@@ -56,6 +56,8 @@ public class ArchiveImportService
                 JsonContent = content,
                 ScriptDuration = CalculateScriptDuration(content)
             });
+
+            ApplyMetadataFromJson(results[^1], content);
         }
         catch
         {
@@ -155,6 +157,8 @@ public class ArchiveImportService
                         JsonContent = content,
                         ScriptDuration = CalculateScriptDuration(content)
                     });
+
+                    ApplyMetadataFromJson(results[^1], content);
                 }
                 catch
                 {
@@ -195,5 +199,105 @@ public class ArchiveImportService
         {
             return 0;
         }
+    }
+
+    /// <summary>
+    /// JSONコンテンツからmetadataブロックを読み取り、SongScriptEntryに適用する。
+    /// metadataに含まれるIDやsongNameはファイル名/フォルダ名からの推定より優先される。
+    /// </summary>
+    private static void ApplyMetadataFromJson(SongScriptEntry entry, string jsonContent)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonContent);
+            var root = doc.RootElement;
+
+            if (!root.TryGetProperty("metadata", out var metadata))
+                return;
+
+            entry.HasOriginalMetadata = true;
+
+            // mapId: metadataにあればファイル名推定より優先
+            if (metadata.TryGetProperty("mapId", out var mapId))
+            {
+                var val = mapId.GetString() ?? "";
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    entry.HexId = val;
+                    entry.IsHexIdFromMetadata = true;
+                }
+            }
+
+            // songName: metadataにあればファイル名推定より優先
+            if (metadata.TryGetProperty("songName", out var songName))
+            {
+                var val = songName.GetString() ?? "";
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    entry.SongName = val;
+                    entry.SourceSongName = val;
+                    entry.IsSongNameFromMetadata = true;
+                }
+            }
+
+            if (metadata.TryGetProperty("cameraScriptAuthorName", out var author))
+            {
+                var val = author.GetString() ?? "";
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    entry.CameraScriptAuthorName = val;
+                    entry.IsCameraScriptAuthorFromMetadata = true;
+                }
+            }
+
+            if (metadata.TryGetProperty("songSubName", out var songSubName))
+            {
+                var val = songSubName.GetString() ?? "";
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    entry.SongSubName = val;
+                    entry.IsSongSubNameFromMetadata = true;
+                }
+            }
+
+            if (metadata.TryGetProperty("songAuthorName", out var songAuthorName))
+            {
+                var val = songAuthorName.GetString() ?? "";
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    entry.SongAuthorName = val;
+                    entry.IsSongAuthorNameFromMetadata = true;
+                }
+            }
+
+            if (metadata.TryGetProperty("levelAuthorName", out var levelAuthorName))
+            {
+                var val = levelAuthorName.GetString() ?? "";
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    entry.LevelAuthorName = val;
+                    entry.IsLevelAuthorNameFromMetadata = true;
+                }
+            }
+
+            if (metadata.TryGetProperty("bpm", out var bpm))
+            {
+                entry.Bpm = bpm.GetDouble();
+                entry.IsBpmFromMetadata = entry.Bpm > 0;
+            }
+
+            if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))
+            {
+                entry.AvatarHeight = avatarHeight.GetDouble();
+                entry.IsAvatarHeightFromMetadata = entry.AvatarHeight > 0;
+            }
+
+            if (metadata.TryGetProperty("description", out var description))
+            {
+                entry.Description = description.GetString() ?? "";
+                entry.IsDescriptionFromMetadata = true;
+            }
+        }
+        catch { }
     }
 }

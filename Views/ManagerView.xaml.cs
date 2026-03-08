@@ -44,27 +44,61 @@ public partial class ManagerView : UserControl
         }
     }
 
-    private void LockAuthor_Click(object sender, RoutedEventArgs e)
+    private void LockCell_Click(object sender, RoutedEventArgs e)
     {
-        var selectedItems = ScriptDataGrid.SelectedItems
-            .OfType<CameraScriptItemViewModel>()
-            .ToList();
-
-        foreach (var item in selectedItems)
-        {
-            item.IsCameraScriptAuthorLocked = true;
-        }
+        SetLockOnCurrentColumn(true);
     }
 
-    private void UnlockAuthor_Click(object sender, RoutedEventArgs e)
+    private void UnlockCell_Click(object sender, RoutedEventArgs e)
     {
+        SetLockOnCurrentColumn(false);
+    }
+
+    private void SetLockOnCurrentColumn(bool isLocked)
+    {
+        var col = ScriptDataGrid.CurrentColumn;
+        if (col == null) return;
+
         var selectedItems = ScriptDataGrid.SelectedItems
             .OfType<CameraScriptItemViewModel>()
             .ToList();
 
+        if (selectedItems.Count == 0) return;
+
+        string header = col.Header?.ToString() ?? "";
+
         foreach (var item in selectedItems)
         {
-            item.IsCameraScriptAuthorLocked = false;
+            switch (header)
+            {
+                case "ID":
+                    item.IsMapIdLocked = isLocked;
+                    break;
+                case "cameraScriptAuthorName":
+                    item.IsCameraScriptAuthorLocked = isLocked;
+                    break;
+                case "songName":
+                    item.IsSongNameLocked = isLocked;
+                    break;
+                case "songSubName":
+                    item.IsSongSubNameLocked = isLocked;
+                    break;
+                case "songAuthorName":
+                    item.IsSongAuthorNameLocked = isLocked;
+                    break;
+                case "levelAuthorName":
+                    item.IsLevelAuthorNameLocked = isLocked;
+                    break;
+                case "BPM":
+                    item.IsBpmLocked = isLocked;
+                    break;
+                case "AvatarHeight":
+                    item.IsAvatarHeightLocked = isLocked;
+                    break;
+                case "Description":
+                    item.IsDescriptionLocked = isLocked;
+                    break;
+            }
         }
     }
 
