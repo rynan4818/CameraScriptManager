@@ -30,6 +30,12 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
     private bool _isDurationLocked;
     private bool _isAvatarHeightLocked;
     private bool _isDescriptionLocked;
+    private string _customLevelsFoldersDisplay = "";
+    private string _customWipLevelsFoldersDisplay = "";
+    private bool _canDownloadMissingBeatmap;
+    private string _missingBeatmapMapId = "";
+
+    public Action<SongScriptsManagerItemViewModel>? OnLevelReferenceChanged { get; set; }
 
     public SongScriptsManagerItemViewModel(SongScriptsManagerEntry model)
     {
@@ -52,6 +58,11 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
         {
             LockAll();
         }
+
+        _customLevelsFoldersDisplay = BuildFoldersDisplay(model.MatchedCustomLevels);
+        _customWipLevelsFoldersDisplay = BuildFoldersDisplay(model.MatchedCustomWIPLevels);
+        _missingBeatmapMapId = model.MissingBeatmapMapId ?? "";
+        _canDownloadMissingBeatmap = !string.IsNullOrEmpty(_missingBeatmapMapId);
 
         _suppressModifiedTracking = false;
     }
@@ -82,6 +93,7 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
             {
                 _model.MapId = value;
                 MarkModified();
+                NotifyLevelReferenceChanged();
             }
         }
     }
@@ -95,6 +107,7 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
             {
                 _model.Hash = value;
                 MarkModified();
+                NotifyLevelReferenceChanged();
             }
         }
     }
@@ -282,6 +295,30 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
         set => SetProperty(ref _isDescriptionLocked, value);
     }
 
+    public string CustomLevelsFoldersDisplay
+    {
+        get => _customLevelsFoldersDisplay;
+        private set => SetProperty(ref _customLevelsFoldersDisplay, value);
+    }
+
+    public string CustomWipLevelsFoldersDisplay
+    {
+        get => _customWipLevelsFoldersDisplay;
+        private set => SetProperty(ref _customWipLevelsFoldersDisplay, value);
+    }
+
+    public bool CanDownloadMissingBeatmap
+    {
+        get => _canDownloadMissingBeatmap;
+        private set => SetProperty(ref _canDownloadMissingBeatmap, value);
+    }
+
+    public string MissingBeatmapMapId
+    {
+        get => _missingBeatmapMapId;
+        private set => SetProperty(ref _missingBeatmapMapId, value);
+    }
+
     public void LockAll()
     {
         IsMapIdLocked = true;
@@ -334,9 +371,25 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
         {
             IsModified = true;
             IsSaveChecked = true;
+            NotifyLevelReferenceChanged();
         }
 
         return updated;
+    }
+
+    public void UpdateBeatmapMatchState(
+        IReadOnlyList<SongScriptsMatchedBeatmapFolder> matchedCustomLevels,
+        IReadOnlyList<SongScriptsMatchedBeatmapFolder> matchedCustomWipLevels,
+        string? missingBeatmapMapId)
+    {
+        _model.MatchedCustomLevels = matchedCustomLevels.ToList();
+        _model.MatchedCustomWIPLevels = matchedCustomWipLevels.ToList();
+        _model.MissingBeatmapMapId = missingBeatmapMapId;
+
+        CustomLevelsFoldersDisplay = BuildFoldersDisplay(matchedCustomLevels);
+        CustomWipLevelsFoldersDisplay = BuildFoldersDisplay(matchedCustomWipLevels);
+        MissingBeatmapMapId = missingBeatmapMapId ?? "";
+        CanDownloadMissingBeatmap = !string.IsNullOrEmpty(MissingBeatmapMapId);
     }
 
     private void MarkModified()
@@ -366,5 +419,24 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
 
         apply(newValue);
         return true;
+    }
+
+    private void NotifyLevelReferenceChanged()
+    {
+        if (_suppressModifiedTracking)
+            return;
+
+        OnLevelReferenceChanged?.Invoke(this);
+    }
+
+    private static string BuildFoldersDisplay(IEnumerable<SongScriptsMatchedBeatmapFolder> folders)
+    {
+        var names = folders
+            .Select(folder => folder.DisplayName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return names.Count == 0 ? string.Empty : string.Join(" | ", names);
     }
 }

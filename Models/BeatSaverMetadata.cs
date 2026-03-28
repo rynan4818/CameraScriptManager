@@ -12,6 +12,9 @@ public class BeatSaverApiResponse
 
     [JsonPropertyName("metadata")]
     public BeatSaverMetadata? Metadata { get; set; }
+
+    [JsonPropertyName("versions")]
+    public List<BeatSaverVersion> Versions { get; set; } = new();
 }
 
 public class BeatSaverMetadata
@@ -33,4 +36,13 @@ public class BeatSaverMetadata
 
     [JsonPropertyName("levelAuthorName")]
     public string LevelAuthorName { get; set; } = "";
+}
+
+public class BeatSaverVersion
+{
+    [JsonPropertyName("hash")]
+    public string Hash { get; set; } = "";
+
+    [JsonPropertyName("downloadURL")]
+    public string DownloadUrl { get; set; } = "";
 }

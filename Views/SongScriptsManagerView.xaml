@@ -4,6 +4,7 @@
              xmlns:converters="clr-namespace:CameraScriptManager.Converters">
     <UserControl.Resources>
         <converters:ModifiedRowBackgroundConverter x:Key="ModifiedBgConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
 
         <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>
@@ -23,6 +24,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -35,12 +37,24 @@
 
         <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
             <StackPanel>
+                <TextBlock Text="{Binding HashScanStatusText}" TextWrapping="Wrap"/>
+                <ProgressBar Minimum="0"
+                             Maximum="100"
+                             Height="8"
+                             Margin="0,6,0,0"
+                             Value="{Binding HashScanProgressValue, Mode=OneWay}"
+                             Visibility="{Binding IsHashScanRunning, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
+            <StackPanel>
                 <TextBlock Text="{Binding SongScriptsFolderDisplayPath, StringFormat=SongScripts: {0}}" TextWrapping="Wrap"/>
                 <TextBlock Text="{Binding BackupFolderDisplayPath, StringFormat=Backup: {0}}" TextWrapping="Wrap" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
-        <DataGrid Grid.Row="2"
+        <DataGrid Grid.Row="3"
                   x:Name="SongScriptsDataGrid"
                   ItemsSource="{Binding Items}"
                   AutoGenerateColumns="False"
@@ -321,12 +335,41 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="CustomLevelsフォルダ" Width="220" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CustomLevelsFoldersDisplay}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="CustomWIPLevelsフォルダ" Width="220" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CustomWipLevelsFoldersDisplay}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="取得" Width="60" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="取得"
+                                    Padding="8,2"
+                                    Visibility="{Binding CanDownloadMissingBeatmap, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    IsEnabled="{Binding CanDownloadMissingBeatmap}"
+                                    Command="{Binding DataContext.DownloadMissingBeatmapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTextColumn Header="ソース" Binding="{Binding SourceDisplayPath}" Width="260" IsReadOnly="True"/>
                 <DataGridTextColumn Header="形式" Binding="{Binding SourceType}" Width="55" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <StatusBar Grid.Row="3" Margin="0,4,0,0">
+        <StatusBar Grid.Row="4" Margin="0,4,0,0">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
             </StatusBarItem>

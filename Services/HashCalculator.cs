@@ -9,38 +9,52 @@ public static class HashCalculator
 {
     /// <summary>
     /// SongCore互換のSHA1ハッシュを計算します。
-    /// 指定されたinfo.datとそれに付随する各.datファイルのバイト列を結合してハッシュ化します。
+    /// 指定されたInfo.datの生文字列と、SongCoreが対象にする追加ファイルを同順でハッシュ化します。
     /// </summary>
-    public static string CalculateSongHash(string folderPath, IEnumerable<string> beatmapFilenames)
+    public static string CalculateSongHash(string folderPath, string infoDatContent, IEnumerable<string> hashInputFileNames)
     {
-        var infoDatPath = Path.Combine(folderPath, "info.dat");
-        if (!File.Exists(infoDatPath))
-            infoDatPath = Path.Combine(folderPath, "Info.dat");
-
-        if (!File.Exists(infoDatPath))
+        if (string.IsNullOrWhiteSpace(infoDatContent))
             return string.Empty;
 
         try
         {
-            IEnumerable<byte> combinedBytes = File.ReadAllBytes(infoDatPath);
+            using var sha1 = SHA1.Create();
+            byte[] prependBytes = Encoding.UTF8.GetBytes(infoDatContent);
+            if (prependBytes.Length > 0)
+            {
+                sha1.TransformBlock(prependBytes, 0, prependBytes.Length, null, 0);
+            }
 
-            foreach (var filename in beatmapFilenames)
+            foreach (var filename in hashInputFileNames)
             {
                 if (string.IsNullOrWhiteSpace(filename)) continue;
 
                 var beatmapPath = Path.Combine(folderPath, filename);
                 if (File.Exists(beatmapPath))
                 {
-                    combinedBytes = combinedBytes.Concat(File.ReadAllBytes(beatmapPath));
+                    byte[] bytes = File.ReadAllBytes(beatmapPath);
+                    if (bytes.Length > 0)
+                    {
+                        sha1.TransformBlock(bytes, 0, bytes.Length, null, 0);
+                    }
                 }
             }
 
-            return CreateSha1FromBytes(combinedBytes.ToArray());
+            sha1.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            return ByteToHexBitFiddle(sha1.Hash ?? Array.Empty<byte>());
         }
         catch
         {
             return string.Empty;
         }
+    }
+
+    public static string CalculateSongHash(string folderPath, InfoDatData infoDatData)
+    {
+        if (infoDatData == null)
+            return string.Empty;
+
+        return CalculateSongHash(folderPath, infoDatData.RawInfoDatContent, infoDatData.BeatmapFilenames);
     }
 
     // SongCoreのByteToHexBitFiddleブラックマジック実装
@@ -58,10 +72,4 @@ public static class HashCalculator
         return new string(c);
     }
 
-    private static string CreateSha1FromBytes(byte[] input)
-    {
-        using var sha1 = SHA1.Create();
-        var hashBytes = sha1.ComputeHash(input);
-        return ByteToHexBitFiddle(hashBytes);
-    }
 }

@@ -9,6 +9,8 @@ public class SongScriptsManagerEntry
     public string FileName { get; set; } = "";
     public string JsonContent { get; set; } = "";
     public bool HasMetadataBlock { get; set; }
+    public string MetadataMapId { get; set; } = "";
+    public string PathMapId { get; set; } = "";
     public string MapId { get; set; } = "";
     public string Hash { get; set; } = "";
     public string CameraScriptAuthorName { get; set; } = "";
@@ -20,6 +22,9 @@ public class SongScriptsManagerEntry
     public double Duration { get; set; }
     public double AvatarHeight { get; set; }
     public string Description { get; set; } = "";
+    public List<SongScriptsMatchedBeatmapFolder> MatchedCustomLevels { get; set; } = new();
+    public List<SongScriptsMatchedBeatmapFolder> MatchedCustomWIPLevels { get; set; } = new();
+    public string? MissingBeatmapMapId { get; set; }
 
     public bool IsZipEntry => !string.IsNullOrEmpty(ZipEntryName);
 }

@@ -37,9 +37,11 @@ public class DialogService : IDialogService
     {
         var dialog = new ProgressDialog(title, action);
 
-        if (Application.Current.MainWindow != null)
+        if (Application.Current?.MainWindow is Window owner &&
+            owner.IsLoaded &&
+            owner.IsVisible)
         {
-            dialog.Owner = Application.Current.MainWindow;
+            dialog.Owner = owner;
         }
 
         dialog.ShowDialog();

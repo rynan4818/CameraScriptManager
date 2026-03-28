@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using CameraScriptManager.Models;
 using CameraScriptManager.Services;
@@ -13,30 +14,45 @@ public class SongScriptsManagerViewModel : ViewModelBase
     private readonly SongScriptsSaveService _saveService = new();
     private readonly SongDetailsCacheService _cacheService = new();
     private readonly BeatSaverApiClient _apiClient;
+    private readonly CameraSongScriptCompatibleBeatmapIndexService _beatmapIndexService;
+    private readonly SongScriptsMissingBeatmapDownloadService _missingBeatmapDownloadService;
     private readonly IDialogService _dialogService = new DialogService();
+    private readonly SemaphoreSlim _scanSemaphore = new(1, 1);
 
     private string _songScriptsFolderPath = "";
     private string _songScriptsBackupFolderPath = "";
+    private string _customLevelsPath = "";
+    private string _customWipLevelsPath = "";
     private string _statusText = "";
     private string _songScriptsFolderDisplayPath = "";
     private string _backupFolderDisplayPath = "";
+    private string _hashScanStatusText = "hash検索: 未実行";
+    private bool _isHashScanRunning;
+    private double _hashScanProgressValue;
+    private CameraSongScriptCompatibleBeatmapIndex _beatmapIndex = new();
+    private CancellationTokenSource? _hashScanCancellationTokenSource;
+    private bool _isBeatmapMatchFinalized = true;
+    private int _scanGeneration;
 
     public SongScriptsManagerViewModel()
     {
         _apiClient = new BeatSaverApiClient(_cacheService);
+        _beatmapIndexService = new CameraSongScriptCompatibleBeatmapIndexService(_cacheService);
+        _missingBeatmapDownloadService = new SongScriptsMissingBeatmapDownloadService(_apiClient);
         Items = new ObservableCollection<SongScriptsManagerItemViewModel>();
         ScanCommand = new AsyncRelayCommand(ScanAsync);
         SaveCheckedCommand = new AsyncRelayCommand(SaveCheckedAsync);
+        DownloadMissingBeatmapCommand = new AsyncRelayCommand(DownloadMissingBeatmapAsync);
 
         LoadSettings();
         _ = _cacheService.InitAsync();
-        _ = ScanCoreAsync(showProgressDialog: false);
     }
 
     public ObservableCollection<SongScriptsManagerItemViewModel> Items { get; }
 
     public AsyncRelayCommand ScanCommand { get; }
     public AsyncRelayCommand SaveCheckedCommand { get; }
+    public AsyncRelayCommand DownloadMissingBeatmapCommand { get; }
 
     public string SongScriptsFolderDisplayPath
     {
@@ -56,14 +72,39 @@ public class SongScriptsManagerViewModel : ViewModelBase
         private set => SetProperty(ref _statusText, value);
     }
 
+    public string HashScanStatusText
+    {
+        get => _hashScanStatusText;
+        private set => SetProperty(ref _hashScanStatusText, value);
+    }
+
+    public bool IsHashScanRunning
+    {
+        get => _isHashScanRunning;
+        private set => SetProperty(ref _isHashScanRunning, value);
+    }
+
+    public double HashScanProgressValue
+    {
+        get => _hashScanProgressValue;
+        private set => SetProperty(ref _hashScanProgressValue, value);
+    }
+
     public void ReloadSettings()
     {
         LoadSettings();
     }
 
+    public Task InitializeAsync()
+    {
+        return ScanCoreAsync(showProgressDialog: true);
+    }
+
     private void LoadSettings()
     {
         var settings = _settingsService.Load();
+        _customLevelsPath = settings.CustomLevelsPath;
+        _customWipLevelsPath = settings.CustomWIPLevelsPath;
         _songScriptsFolderPath = SongScriptsPathResolver.ResolveSongScriptsFolderPath(settings);
         _songScriptsBackupFolderPath = SongScriptsPathResolver.ResolveSongScriptsBackupFolderPath(settings);
 
@@ -80,45 +121,100 @@ public class SongScriptsManagerViewModel : ViewModelBase
 
     private async Task ScanCoreAsync(bool showProgressDialog)
     {
-        LoadSettings();
-
-        if (string.IsNullOrWhiteSpace(_songScriptsFolderPath))
+        await _scanSemaphore.WaitAsync();
+        try
         {
-            StatusText = "SongScriptsフォルダが設定されていません";
-            Items.Clear();
-            return;
-        }
+            int scanGeneration = BeginBeatmapLookup();
+            LoadSettings();
 
-        if (!Directory.Exists(_songScriptsFolderPath))
-        {
-            StatusText = $"SongScriptsフォルダが見つかりません: {_songScriptsFolderPath}";
-            Items.Clear();
-            return;
-        }
-
-        StatusText = "SongScriptsをスキャン中...";
-        var scannedEntries = new List<SongScriptsManagerEntry>();
-
-        if (showProgressDialog)
-        {
-            _dialogService.ShowProgressDialog("SongScriptsを読込中...", async progress =>
+            if (string.IsNullOrWhiteSpace(_songScriptsFolderPath))
             {
-                scannedEntries = await Task.Run(() =>
-                    _scanner.Scan(_songScriptsFolderPath, (message, percent) => progress(message, percent)));
-            });
-        }
-        else
-        {
-            scannedEntries = await Task.Run(() => _scanner.Scan(_songScriptsFolderPath));
-        }
+                _beatmapIndex = new CameraSongScriptCompatibleBeatmapIndex();
+                _isBeatmapMatchFinalized = true;
+                Items.Clear();
+                SetHashScanIdle("hash検索: 未実行");
+                StatusText = "SongScriptsフォルダが設定されていません";
+                return;
+            }
 
-        Items.Clear();
-        foreach (var entry in scannedEntries)
-        {
-            Items.Add(new SongScriptsManagerItemViewModel(entry));
-        }
+            if (!Directory.Exists(_songScriptsFolderPath))
+            {
+                _beatmapIndex = new CameraSongScriptCompatibleBeatmapIndex();
+                _isBeatmapMatchFinalized = true;
+                Items.Clear();
+                SetHashScanIdle("hash検索: 未実行");
+                StatusText = $"SongScriptsフォルダが見つかりません: {_songScriptsFolderPath}";
+                return;
+            }
 
-        StatusText = $"SongScripts読込完了: {Items.Count} 件";
+            StatusText = "SongDetailsCacheを確認中...";
+            await _cacheService.EnsureInitializedAsync();
+
+            StatusText = "SongScriptsをスキャン中...";
+            var scannedEntries = new List<SongScriptsManagerEntry>();
+            CameraSongScriptCompatibleBeatmapIndex? beatmapIndex = null;
+
+            if (showProgressDialog)
+            {
+                _dialogService.ShowProgressDialog("SongScriptsを読込中...", async progress =>
+                {
+                    await Task.Run(() =>
+                    {
+                        scannedEntries = _scanner.Scan(_songScriptsFolderPath, (message, percent) =>
+                            progress(message, percent.HasValue ? percent.Value * 0.7 : null));
+
+                        beatmapIndex = _beatmapIndexService.ScanByMapId(
+                            _customLevelsPath,
+                            _customWipLevelsPath,
+                            (message, percent) =>
+                            {
+                                double? scaledPercent = percent.HasValue
+                                    ? 70 + (percent.Value * 0.3)
+                                    : null;
+                                progress(message, scaledPercent);
+                            });
+                    });
+                });
+            }
+            else
+            {
+                scannedEntries = await Task.Run(() => _scanner.Scan(_songScriptsFolderPath));
+                beatmapIndex = await Task.Run(() => _beatmapIndexService.ScanByMapId(_customLevelsPath, _customWipLevelsPath));
+            }
+
+            if (scanGeneration != _scanGeneration)
+            {
+                return;
+            }
+
+            _beatmapIndex = beatmapIndex ?? new CameraSongScriptCompatibleBeatmapIndex();
+            _isBeatmapMatchFinalized = false;
+
+            Items.Clear();
+            foreach (var entry in scannedEntries)
+            {
+                var item = new SongScriptsManagerItemViewModel(entry)
+                {
+                    OnLevelReferenceChanged = UpdateBeatmapMatchState
+                };
+                ApplyBeatmapMatchState(item);
+                Items.Add(item);
+            }
+
+            if (_beatmapIndex.BeatmapFolders.Count == 0)
+            {
+                CompleteHashScan(scanGeneration, _beatmapIndex, "hash検索: 対象なし", 100);
+                return;
+            }
+
+            StatusText = $"SongScripts読込完了: {Items.Count} 件 (ID検索結果を表示中)";
+            SetHashScanPending(_beatmapIndex.BeatmapFolders.Count);
+            StartHashScan(scanGeneration);
+        }
+        finally
+        {
+            _scanSemaphore.Release();
+        }
     }
 
     private async Task SaveCheckedAsync()
@@ -199,6 +295,7 @@ public class SongScriptsManagerViewModel : ViewModelBase
         if (response?.Metadata != null)
         {
             bool updated = item.ApplyBeatSaverData(response);
+            ApplyBeatmapMatchState(item);
             StatusText = updated
                 ? $"BeatSaverメタデータ取得完了: {item.MapId}"
                 : $"BeatSaverメタデータ取得完了(更新なし): {item.MapId}";
@@ -207,5 +304,354 @@ public class SongScriptsManagerViewModel : ViewModelBase
         {
             StatusText = $"BeatSaverメタデータが見つかりませんでした: {item.MapId}";
         }
+    }
+
+    private async Task DownloadMissingBeatmapAsync(object? parameter)
+    {
+        if (parameter is not SongScriptsManagerItemViewModel item)
+        {
+            return;
+        }
+
+        string mapId = item.MissingBeatmapMapId;
+        if (string.IsNullOrWhiteSpace(mapId))
+        {
+            return;
+        }
+
+        StatusText = $"譜面取得中: {mapId}...";
+        SongScriptsMissingBeatmapDownloadResult result = await _missingBeatmapDownloadService.DownloadMissingBeatmapAsync(
+            mapId,
+            _beatmapIndex,
+            _customLevelsPath);
+
+        if (result.Success)
+        {
+            await RefreshBeatmapIndexAsync(showProgressDialog: false);
+            return;
+        }
+
+        if (result.IsUnavailableOnBeatSaver || result.IsAlreadyLoadedLatestHash)
+        {
+            StatusText = result.ErrorMessage;
+            ApplyBeatmapMatchState(item);
+            return;
+        }
+
+        StatusText = $"譜面取得失敗: {mapId}";
+        _dialogService.ShowMessageBox(
+            $"譜面取得に失敗しました。\n{result.ErrorMessage}",
+            "譜面取得エラー",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+    }
+
+    private async Task RefreshBeatmapIndexAsync(bool showProgressDialog)
+    {
+        await _scanSemaphore.WaitAsync();
+        try
+        {
+            int scanGeneration = BeginBeatmapLookup();
+            LoadSettings();
+
+            StatusText = "SongDetailsCacheを確認中...";
+            await _cacheService.EnsureInitializedAsync();
+
+            CameraSongScriptCompatibleBeatmapIndex? beatmapIndex = null;
+            if (showProgressDialog)
+            {
+                _dialogService.ShowProgressDialog("譜面フォルダを再読込中...", async progress =>
+                {
+                    beatmapIndex = await Task.Run(() => _beatmapIndexService.ScanByMapId(_customLevelsPath, _customWipLevelsPath, progress));
+                });
+            }
+            else
+            {
+                beatmapIndex = await Task.Run(() => _beatmapIndexService.ScanByMapId(_customLevelsPath, _customWipLevelsPath));
+            }
+
+            if (scanGeneration != _scanGeneration)
+            {
+                return;
+            }
+
+            _beatmapIndex = beatmapIndex ?? new CameraSongScriptCompatibleBeatmapIndex();
+            _isBeatmapMatchFinalized = false;
+
+            foreach (var item in Items)
+            {
+                ApplyBeatmapMatchState(item);
+            }
+
+            if (_beatmapIndex.BeatmapFolders.Count == 0)
+            {
+                CompleteHashScan(scanGeneration, _beatmapIndex, "hash検索: 対象なし", 100);
+                return;
+            }
+
+            StatusText = $"譜面参照更新完了: {Items.Count} 件 (ID検索結果を表示中)";
+            SetHashScanPending(_beatmapIndex.BeatmapFolders.Count);
+            StartHashScan(scanGeneration);
+        }
+        finally
+        {
+            _scanSemaphore.Release();
+        }
+    }
+
+    private void UpdateBeatmapMatchState(SongScriptsManagerItemViewModel item)
+    {
+        ApplyBeatmapMatchState(item);
+
+        if (!_isBeatmapMatchFinalized)
+        {
+            StatusText = IsHashScanRunning
+                ? "譜面参照更新: ID検索結果を反映中 (hash検索中)"
+                : "譜面参照更新: ID検索結果のみ反映";
+            return;
+        }
+
+        int missingCount = Items.Count(entry => entry.CanDownloadMissingBeatmap);
+        StatusText = $"譜面参照更新: 未取得候補 {missingCount} 件";
+    }
+
+    private void ApplyBeatmapMatchState(SongScriptsManagerItemViewModel item)
+    {
+        var matchedFolders = new Dictionary<string, CameraSongScriptCompatibleBeatmapIndexService.CompatibleBeatmapFolder>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string mapId in GetSongScriptMapIdLookupKeys(item.Model))
+        {
+            if (_beatmapIndex.ByMapId.TryGetValue(mapId, out var beatmapFolders))
+            {
+                AddMatchedFolders(matchedFolders, beatmapFolders);
+            }
+        }
+
+        string hash = NormalizeHash(item.Hash);
+        if (!string.IsNullOrEmpty(hash) && _beatmapIndex.ByHash.TryGetValue(hash, out var hashMatchedFolders))
+        {
+            AddMatchedFolders(matchedFolders, hashMatchedFolders);
+        }
+
+        var matchedCustomLevels = matchedFolders.Values
+            .Where(folder => folder.IsCustomLevels)
+            .OrderBy(folder => folder.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(folder => folder.ToMatchedFolder())
+            .ToList();
+        var matchedCustomWipLevels = matchedFolders.Values
+            .Where(folder => !folder.IsCustomLevels)
+            .OrderBy(folder => folder.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(folder => folder.ToMatchedFolder())
+            .ToList();
+
+        string? missingBeatmapMapId = _isBeatmapMatchFinalized
+            ? ResolveMissingBeatmapMapId(item, matchedCustomLevels.Count + matchedCustomWipLevels.Count > 0)
+            : null;
+        item.UpdateBeatmapMatchState(matchedCustomLevels, matchedCustomWipLevels, missingBeatmapMapId);
+    }
+
+    private string? ResolveMissingBeatmapMapId(SongScriptsManagerItemViewModel item, bool hasMatchedBeatmap)
+    {
+        if (!_cacheService.IsAvailable || hasMatchedBeatmap)
+        {
+            return null;
+        }
+
+        foreach (string mapId in GetSongScriptMapIdLookupKeys(item.Model))
+        {
+            if (_beatmapIndex.InstalledMapIds.Contains(mapId) || _missingBeatmapDownloadService.IsDownloadBlocked(mapId))
+            {
+                continue;
+            }
+
+            return mapId;
+        }
+
+        return null;
+    }
+
+    private void StartHashScan(int scanGeneration)
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        _hashScanCancellationTokenSource = cancellationTokenSource;
+        IsHashScanRunning = true;
+        HashScanProgressValue = 0;
+        HashScanStatusText = $"hash検索中... 0 / {_beatmapIndex.BeatmapFolders.Count}";
+        _ = RunHashScanAsync(scanGeneration, cancellationTokenSource);
+    }
+
+    private async Task RunHashScanAsync(int scanGeneration, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            CameraSongScriptCompatibleBeatmapIndex finalIndex = await Task.Run(() => _beatmapIndexService.Scan(
+                _customLevelsPath,
+                _customWipLevelsPath,
+                (message, percent) => UpdateHashScanProgress(scanGeneration, message, percent),
+                cancellationTokenSource.Token),
+                cancellationTokenSource.Token);
+
+            if (cancellationTokenSource.IsCancellationRequested || scanGeneration != _scanGeneration)
+            {
+                return;
+            }
+
+            if (Application.Current == null)
+            {
+                return;
+            }
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                CompleteHashScan(scanGeneration, finalIndex, "hash検索: 完了", 100);
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            if (scanGeneration != _scanGeneration || Application.Current == null)
+            {
+                return;
+            }
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                IsHashScanRunning = false;
+                HashScanStatusText = $"hash検索エラー: {ex.Message}";
+                HashScanProgressValue = 0;
+                StatusText = $"SongScripts読込完了: {Items.Count} 件 (hash検索失敗)";
+            });
+        }
+        finally
+        {
+            if (ReferenceEquals(_hashScanCancellationTokenSource, cancellationTokenSource))
+            {
+                _hashScanCancellationTokenSource = null;
+            }
+
+            cancellationTokenSource.Dispose();
+        }
+    }
+
+    private void UpdateHashScanProgress(int scanGeneration, string message, double? percent)
+    {
+        if (scanGeneration != _scanGeneration || Application.Current == null)
+        {
+            return;
+        }
+
+        _ = Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            if (scanGeneration != _scanGeneration)
+            {
+                return;
+            }
+
+            HashScanStatusText = message;
+            HashScanProgressValue = percent ?? 0;
+        });
+    }
+
+    private void CompleteHashScan(
+        int scanGeneration,
+        CameraSongScriptCompatibleBeatmapIndex beatmapIndex,
+        string hashStatusText,
+        double progressValue)
+    {
+        if (scanGeneration != _scanGeneration)
+        {
+            return;
+        }
+
+        _beatmapIndex = beatmapIndex;
+        _isBeatmapMatchFinalized = true;
+        IsHashScanRunning = false;
+        HashScanStatusText = hashStatusText;
+        HashScanProgressValue = progressValue;
+
+        foreach (var item in Items)
+        {
+            ApplyBeatmapMatchState(item);
+        }
+
+        int missingCount = Items.Count(item => item.CanDownloadMissingBeatmap);
+        StatusText = $"SongScripts読込完了: {Items.Count} 件 (未取得候補 {missingCount} 件)";
+    }
+
+    private int BeginBeatmapLookup()
+    {
+        CancelHashScan();
+        _scanGeneration++;
+        _isBeatmapMatchFinalized = false;
+        SetHashScanIdle("hash検索: 準備中");
+        return _scanGeneration;
+    }
+
+    private void CancelHashScan()
+    {
+        var cancellationTokenSource = _hashScanCancellationTokenSource;
+        _hashScanCancellationTokenSource = null;
+        cancellationTokenSource?.Cancel();
+    }
+
+    private void SetHashScanPending(int totalCount)
+    {
+        SetHashScanIdle($"hash検索: 開始待ち (0 / {totalCount})");
+    }
+
+    private void SetHashScanIdle(string statusText, double progressValue = 0)
+    {
+        IsHashScanRunning = false;
+        HashScanStatusText = statusText;
+        HashScanProgressValue = progressValue;
+    }
+
+    private static IEnumerable<string> GetSongScriptMapIdLookupKeys(SongScriptsManagerEntry entry)
+    {
+        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var orderedKeys = new List<string>();
+        AddMapIdKey(keys, orderedKeys, entry.MapId);
+        AddMapIdKey(keys, orderedKeys, entry.PathMapId);
+        return orderedKeys;
+    }
+
+    private static void AddMapIdKey(ISet<string> keys, ICollection<string> orderedKeys, string? mapId)
+    {
+        string normalized = NormalizeMapId(mapId);
+        if (!string.IsNullOrEmpty(normalized) && keys.Add(normalized))
+        {
+            orderedKeys.Add(normalized);
+        }
+    }
+
+    private static void AddMatchedFolders(
+        IDictionary<string, CameraSongScriptCompatibleBeatmapIndexService.CompatibleBeatmapFolder> target,
+        IEnumerable<CameraSongScriptCompatibleBeatmapIndexService.CompatibleBeatmapFolder> source)
+    {
+        foreach (var folder in source)
+        {
+            if (string.IsNullOrWhiteSpace(folder.FullPath))
+            {
+                continue;
+            }
+
+            target[folder.FullPath] = folder;
+        }
+    }
+
+    private static string NormalizeMapId(string? mapId)
+    {
+        return string.IsNullOrWhiteSpace(mapId)
+            ? string.Empty
+            : mapId.Trim().ToLowerInvariant();
+    }
+
+    private static string NormalizeHash(string? hash)
+    {
+        return string.IsNullOrWhiteSpace(hash)
+            ? string.Empty
+            : hash.Trim().ToLowerInvariant();
     }
 }

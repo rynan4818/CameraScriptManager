@@ -5,11 +5,16 @@ namespace CameraScriptManager.Services;
 
 public class InfoDatData
 {
+    public string InfoDatPath { get; set; } = "";
+    public string RawInfoDatContent { get; set; } = "";
+    public bool IsVersion4 { get; set; }
     public string SongName { get; set; } = "";
     public string SongSubName { get; set; } = "";
     public string SongAuthorName { get; set; } = "";
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
+    public string SongFileName { get; set; } = "";
+    public string AudioDataFileName { get; set; } = "";
     public List<string> BeatmapFilenames { get; set; } = new();
 }
 
@@ -42,6 +47,11 @@ public static class InfoDatReader
             var json = File.ReadAllText(infoDatPath);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
+            var data = new InfoDatData
+            {
+                InfoDatPath = infoDatPath,
+                RawInfoDatContent = json
+            };
 
             // Detect version
             string version = "";
@@ -51,9 +61,16 @@ public static class InfoDatReader
                 version = v4ver.GetString() ?? "";
 
             if (version.StartsWith("4"))
-                return ReadV4(root);
+            {
+                data.IsVersion4 = true;
+                ReadV4(root, data);
+            }
             else
-                return ReadV2(root);
+            {
+                ReadV2(root, data);
+            }
+
+            return data;
         }
         catch
         {
@@ -61,10 +78,8 @@ public static class InfoDatReader
         }
     }
 
-    private static InfoDatData ReadV2(JsonElement root)
+    private static void ReadV2(JsonElement root, InfoDatData data)
     {
-        var data = new InfoDatData();
-
         if (root.TryGetProperty("_songName", out var songName))
             data.SongName = songName.GetString() ?? "";
 
@@ -80,10 +95,13 @@ public static class InfoDatReader
         if (root.TryGetProperty("_beatsPerMinute", out var bpm))
             data.Bpm = bpm.GetDouble();
 
-        // Extract beatmap filenames (v2/v3)
+        if (root.TryGetProperty("_songFilename", out var songFileName))
+            data.SongFileName = songFileName.GetString() ?? "";
+
+        // Preserve SongCore hash input order, including duplicates.
         if (root.TryGetProperty("_difficultyBeatmapSets", out var sets) && sets.ValueKind == JsonValueKind.Array)
         {
-            var filenames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var filenames = new List<string>();
             foreach (var set in sets.EnumerateArray())
             {
                 if (set.TryGetProperty("_difficultyBeatmaps", out var beatmaps) && beatmaps.ValueKind == JsonValueKind.Array)
@@ -99,16 +117,12 @@ public static class InfoDatReader
                     }
                 }
             }
-            data.BeatmapFilenames = filenames.ToList();
+            data.BeatmapFilenames = filenames;
         }
-
-        return data;
     }
 
-    private static InfoDatData ReadV4(JsonElement root)
+    private static void ReadV4(JsonElement root, InfoDatData data)
     {
-        var data = new InfoDatData();
-
         if (root.TryGetProperty("song", out var song))
         {
             if (song.TryGetProperty("title", out var title))
@@ -125,13 +139,22 @@ public static class InfoDatReader
         {
             if (audio.TryGetProperty("bpm", out var bpm))
                 data.Bpm = bpm.GetDouble();
+
+            if (audio.TryGetProperty("songFilename", out var songFilename))
+                data.SongFileName = songFilename.GetString() ?? "";
+
+            if (audio.TryGetProperty("audioDataFilename", out var audioDataFilename))
+                data.AudioDataFileName = audioDataFilename.GetString() ?? "";
         }
 
-        // levelAuthorName: collect mappers from all difficultyBeatmaps
+        var filenames = new List<string>();
+        if (!string.IsNullOrWhiteSpace(data.AudioDataFileName))
+            filenames.Add(data.AudioDataFileName);
+
+        // Preserve SongCore hash input order, including duplicates.
         if (root.TryGetProperty("difficultyBeatmaps", out var diffs) && diffs.ValueKind == JsonValueKind.Array)
         {
             var mappers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var filenames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var diff in diffs.EnumerateArray())
             {
@@ -165,9 +188,7 @@ public static class InfoDatReader
                 }
             }
             data.LevelAuthorName = string.Join(", ", mappers);
-            data.BeatmapFilenames = filenames.ToList();
         }
-
-        return data;
+        data.BeatmapFilenames = filenames;
     }
 }

@@ -91,5 +91,36 @@ public class BeatSaverApiClient : IDisposable
         }
     }
 
+    public async Task<BeatSaverApiResponse?> GetMapFromApiAsync(string hexId)
+    {
+        string key = hexId.ToLowerInvariant();
+        try
+        {
+            var response = await _client.GetAsync($"maps/id/{key}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<BeatSaverApiResponse>(json);
+            if (result != null)
+            {
+                _cache[key] = result;
+            }
+
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public Task<byte[]> DownloadBytesAsync(string url)
+    {
+        return _client.GetByteArrayAsync(url);
+    }
+
     public void Dispose() => _client?.Dispose();
 }
