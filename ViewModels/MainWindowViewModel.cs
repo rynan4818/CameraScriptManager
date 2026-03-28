@@ -6,12 +6,14 @@ public class MainWindowViewModel : ViewModelBase
 {
     public ManagerViewModel ManagerViewModel { get; }
     public CopierViewModel CopierViewModel { get; }
+    public SongScriptsManagerViewModel SongScriptsManagerViewModel { get; }
     public SettingsViewModel SettingsViewModel { get; }
 
     public MainWindowViewModel()
     {
         ManagerViewModel = new ManagerViewModel();
         CopierViewModel = new CopierViewModel();
+        SongScriptsManagerViewModel = new SongScriptsManagerViewModel();
         SettingsViewModel = new SettingsViewModel();
 
         SettingsViewModel.SettingsChanged += OnSettingsChanged;
@@ -21,5 +23,6 @@ public class MainWindowViewModel : ViewModelBase
     {
         ManagerViewModel.ReloadSettings();
         CopierViewModel.ReloadSettings();
+        SongScriptsManagerViewModel.ReloadSettings();
     }
 }

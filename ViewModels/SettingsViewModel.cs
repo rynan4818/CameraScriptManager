@@ -18,6 +18,8 @@ public class SettingsViewModel : ViewModelBase
         BrowseOriginalScript1Command = new RelayCommand(BrowseOriginalScript1);
         BrowseOriginalScript2Command = new RelayCommand(BrowseOriginalScript2);
         BrowseOriginalScript3Command = new RelayCommand(BrowseOriginalScript3);
+        BrowseSongScriptsFolderCommand = new RelayCommand(BrowseSongScriptsFolder);
+        BrowseSongScriptsBackupFolderCommand = new RelayCommand(BrowseSongScriptsBackupFolder);
         CopyTagCommand = new RelayCommand(CopyTag);
 
         LoadSettings();
@@ -94,6 +96,34 @@ public class SettingsViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _originalScriptPath3, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    private string _songScriptsFolderPath = "";
+    public string SongScriptsFolderPath
+    {
+        get => _songScriptsFolderPath;
+        set
+        {
+            if (SetProperty(ref _songScriptsFolderPath, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    private string _songScriptsBackupFolderPath = "";
+    public string SongScriptsBackupFolderPath
+    {
+        get => _songScriptsBackupFolderPath;
+        set
+        {
+            if (SetProperty(ref _songScriptsBackupFolderPath, value))
             {
                 SaveSettings();
                 OnSettingsChanged();
@@ -179,6 +209,8 @@ public class SettingsViewModel : ViewModelBase
     public ICommand BrowseOriginalScript1Command { get; }
     public ICommand BrowseOriginalScript2Command { get; }
     public ICommand BrowseOriginalScript3Command { get; }
+    public ICommand BrowseSongScriptsFolderCommand { get; }
+    public ICommand BrowseSongScriptsBackupFolderCommand { get; }
     public ICommand CopyTagCommand { get; }
 
     private void LoadSettings()
@@ -189,6 +221,8 @@ public class SettingsViewModel : ViewModelBase
         _originalScriptPath1 = settings.OriginalScriptPath1;
         _originalScriptPath2 = settings.OriginalScriptPath2;
         _originalScriptPath3 = settings.OriginalScriptPath3;
+        _songScriptsFolderPath = settings.SongScriptsFolderPath;
+        _songScriptsBackupFolderPath = settings.SongScriptsBackupFolderPath;
 
         _isManagerZipNamingDefault = settings.ManagerZipNamingMode != "Custom";
         _managerZipCustomFormat = string.IsNullOrEmpty(settings.ManagerZipCustomFormat)
@@ -207,6 +241,8 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(OriginalScriptPath1));
         OnPropertyChanged(nameof(OriginalScriptPath2));
         OnPropertyChanged(nameof(OriginalScriptPath3));
+        OnPropertyChanged(nameof(SongScriptsFolderPath));
+        OnPropertyChanged(nameof(SongScriptsBackupFolderPath));
         OnPropertyChanged(nameof(IsManagerZipNamingDefault));
         OnPropertyChanged(nameof(IsManagerZipNamingCustom));
         OnPropertyChanged(nameof(ManagerZipCustomFormat));
@@ -217,19 +253,20 @@ public class SettingsViewModel : ViewModelBase
 
     private void SaveSettings()
     {
-        _settingsService.Save(new AppSettings
-        {
-            CustomLevelsPath = CustomLevelsPath,
-            CustomWIPLevelsPath = CustomWIPLevelsPath,
-            OriginalScriptPath1 = OriginalScriptPath1,
-            OriginalScriptPath2 = OriginalScriptPath2,
-            OriginalScriptPath3 = OriginalScriptPath3,
-            ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom",
-            ManagerZipCustomFormat = ManagerZipCustomFormat,
-            CopierRenameNamingMode = "Custom",
-            CopierRenameCustomFormat = CopierRenameCustomFormat,
-            CreateBackup = CreateBackup
-        });
+        var currentSettings = _settingsService.Load();
+        currentSettings.CustomLevelsPath = CustomLevelsPath;
+        currentSettings.CustomWIPLevelsPath = CustomWIPLevelsPath;
+        currentSettings.OriginalScriptPath1 = OriginalScriptPath1;
+        currentSettings.OriginalScriptPath2 = OriginalScriptPath2;
+        currentSettings.OriginalScriptPath3 = OriginalScriptPath3;
+        currentSettings.SongScriptsFolderPath = SongScriptsFolderPath;
+        currentSettings.SongScriptsBackupFolderPath = SongScriptsBackupFolderPath;
+        currentSettings.ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom";
+        currentSettings.ManagerZipCustomFormat = ManagerZipCustomFormat;
+        currentSettings.CopierRenameNamingMode = "Custom";
+        currentSettings.CopierRenameCustomFormat = CopierRenameCustomFormat;
+        currentSettings.CreateBackup = CreateBackup;
+        _settingsService.Save(currentSettings);
     }
 
     private void BrowseCustomLevels()
@@ -265,6 +302,20 @@ public class SettingsViewModel : ViewModelBase
         var path = BrowseFolder("元データ検索フォルダ3を選択", OriginalScriptPath3);
         if (path != null)
             OriginalScriptPath3 = path;
+    }
+
+    private void BrowseSongScriptsFolder()
+    {
+        var path = BrowseFolder("SongScriptsフォルダを選択", SongScriptsFolderPath);
+        if (path != null)
+            SongScriptsFolderPath = path;
+    }
+
+    private void BrowseSongScriptsBackupFolder()
+    {
+        var path = BrowseFolder("SongScriptsバックアップフォルダを選択", SongScriptsBackupFolderPath);
+        if (path != null)
+            SongScriptsBackupFolderPath = path;
     }
 
     private static string? BrowseFolder(string description, string currentPath)

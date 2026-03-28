@@ -14,6 +14,11 @@
 
     <Grid>
         <TabControl Margin="5">
+            <!-- SongScripts Tab -->
+            <TabItem Header="SongScripts">
+                <local:SongScriptsManagerView DataContext="{Binding SongScriptsManagerViewModel}" />
+            </TabItem>
+
             <!-- Manager Tab -->
             <TabItem Header="Manager">
                 <local:ManagerView DataContext="{Binding ManagerViewModel}" />

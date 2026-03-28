@@ -34,6 +34,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- CustomLevels -->
@@ -62,6 +64,16 @@
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"/>
+
+                <!-- SongScripts -->
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="SongScripts:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SongScriptsFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="6" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsFolderCommand}" Margin="5"/>
+
+                <!-- SongScripts Backup -->
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="SongScripts Backup:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding SongScriptsBackupFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="7" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsBackupFolderCommand}" Margin="5"/>
             </Grid>
         </GroupBox>
 

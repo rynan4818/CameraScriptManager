@@ -10,6 +10,8 @@ public class AppSettings
     public string OriginalScriptPath1 { get; set; } = "";
     public string OriginalScriptPath2 { get; set; } = "";
     public string OriginalScriptPath3 { get; set; } = "";
+    public string SongScriptsFolderPath { get; set; } = @"UserData\CameraSongScript\SongScripts";
+    public string SongScriptsBackupFolderPath { get; set; } = "";
     public bool AddMetadata { get; set; } = true;
     public bool CreateBackup { get; set; } = true;
     public string DefaultRenameOption { get; set; } = "SongScript";
