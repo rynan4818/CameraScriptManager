@@ -12,7 +12,7 @@ public class AppSettings
     public string OriginalScriptPath3 { get; set; } = "";
     public string SongScriptsFolderPath { get; set; } = "";
     public string BackupRootPath { get; set; } = "";
-    public bool AddMetadata { get; set; } = true;
+    public bool AddMetadata { get; set; } = false;
     public bool EnableMapScriptsBackup { get; set; } = true;
     public bool EnableSongScriptsBackup { get; set; } = true;
     public bool EnableCopierBackup { get; set; } = true;
@@ -29,7 +29,7 @@ public class AppSettings
     public string CopierRenameCustomFormat { get; set; } = "{MapId}_{CameraScriptAuthorName}_{SongName}_SongScript";
 
     // Copier column visibility
-    public bool ShowMetadataColumns { get; set; } = true;
+    public bool ShowMetadataColumns { get; set; } = false;
     public Dictionary<string, Dictionary<string, double>> ColumnWidths { get; set; } = new();
 }
 

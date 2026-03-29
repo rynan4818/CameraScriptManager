@@ -29,7 +29,7 @@ public class SongScriptsManagerViewModel : ViewModelBase
     private string _hashScanStatusText = "hash検索: 未実行";
     private bool _isHashScanRunning;
     private double _hashScanProgressValue;
-    private bool _showMetadataColumns = true;
+    private bool _showMetadataColumns = false;
     private bool _enableSongScriptsBackup;
     private CameraSongScriptCompatibleBeatmapIndex _beatmapIndex = new();
     private CancellationTokenSource? _hashScanCancellationTokenSource;

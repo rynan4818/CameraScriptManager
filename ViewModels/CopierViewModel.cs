@@ -85,7 +85,7 @@ public class CopierViewModel : ViewModelBase
     private string _customLevelsPath = "";
     private string _customWIPLevelsPath = "";
 
-    private bool _addMetadata = true;
+    private bool _addMetadata = false;
     public bool AddMetadata
     {
         get => _addMetadata;
@@ -96,7 +96,7 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
-    private bool _showMetadataColumns = true;
+    private bool _showMetadataColumns = false;
     public bool ShowMetadataColumns
     {
         get => _showMetadataColumns;
