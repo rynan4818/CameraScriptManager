@@ -36,6 +36,8 @@
                     ToolTip="選択行の ID を使って BeatSaver から metadata を取得します"/>
             <Button Content="保存チェックを保存" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"
                     ToolTip="保存チェックが ON の行を元ファイルへ保存します"/>
+            <Button Content="プレイリストを作成" Click="CreatePlaylist_Click" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="選択中の SongScripts から Beat Saber 用プレイリストを作成します"/>
             <CheckBox Content="譜面metadataを表示"
                       IsChecked="{Binding ShowMetadataColumns}"
                       ToolTip="songSubName などの譜面 metadata 列を表示します"
@@ -93,7 +95,7 @@
             </DataGrid.ContextMenu>
 
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="保存" Width="45" CanUserSort="False" views:DataGridColumnWidthPersistence.ColumnKey="save">
+                <DataGridTemplateColumn Header="選択" Width="45" CanUserSort="False" views:DataGridColumnWidthPersistence.ColumnKey="save">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsSaveChecked, UpdateSourceTrigger=PropertyChanged}"

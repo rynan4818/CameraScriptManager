@@ -88,39 +88,104 @@ public static class PlaylistExportService
 
         foreach (var entry in entries)
         {
-            var song = new LegacyPlaylistSongData();
-            
-            // Prefer Hash, then Key
-            bool hasValidIdentity = false;
-            
-            if (!string.IsNullOrWhiteSpace(entry.Hash))
-            {
-                song.Hash = entry.Hash;
-                hasValidIdentity = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(entry.MapId))
-            {
-                song.Key = entry.MapId;
-                hasValidIdentity = true;
-            }
-
-            if (!hasValidIdentity)
-            {
-                // Skip entries that don't have a hash or a key, 
-                // as they cannot be reliably identified in the game.
-                continue;
-            }
-
-            if (!string.IsNullOrWhiteSpace(entry.SongName))
-                song.SongName = entry.SongName;
-
-            if (!string.IsNullOrWhiteSpace(entry.LevelAuthorName))
-                song.LevelAuthorName = entry.LevelAuthorName;
-
-            playlist.Songs.Add(song);
+            AddSongIfValid(
+                playlist.Songs,
+                entry.Hash,
+                entry.MapId,
+                entry.SongName,
+                entry.LevelAuthorName);
         }
 
+        WritePlaylist(savePath, playlist);
+    }
+
+    public static void ExportToBplist(
+        string savePath,
+        string title,
+        string author,
+        string description,
+        string coverImagePath,
+        IEnumerable<SongScriptsManagerEntry> entries)
+    {
+        var playlist = new LegacyPlaylistData
+        {
+            PlaylistTitle = title,
+            PlaylistAuthor = string.IsNullOrWhiteSpace(author) ? null : author,
+            PlaylistDescription = string.IsNullOrWhiteSpace(description) ? null : description
+        };
+
+        if (!string.IsNullOrWhiteSpace(coverImagePath) && File.Exists(coverImagePath))
+        {
+            try
+            {
+                var bytes = File.ReadAllBytes(coverImagePath);
+                var base64 = Convert.ToBase64String(bytes);
+
+                var ext = Path.GetExtension(coverImagePath).ToLowerInvariant();
+                var mimeType = ext switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    _ => "image/png"
+                };
+                playlist.Image = $"data:{mimeType};base64,{base64}";
+            }
+            catch
+            {
+            }
+        }
+
+        foreach (var entry in entries)
+        {
+            AddSongIfValid(
+                playlist.Songs,
+                entry.Hash,
+                entry.MapId,
+                entry.SongName,
+                entry.LevelAuthorName);
+        }
+
+        WritePlaylist(savePath, playlist);
+    }
+
+    private static void AddSongIfValid(
+        ICollection<LegacyPlaylistSongData> songs,
+        string? hash,
+        string? mapId,
+        string? songName,
+        string? levelAuthorName)
+    {
+        var song = new LegacyPlaylistSongData();
+        bool hasValidIdentity = false;
+
+        if (!string.IsNullOrWhiteSpace(hash))
+        {
+            song.Hash = hash;
+            hasValidIdentity = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(mapId))
+        {
+            song.Key = mapId;
+            hasValidIdentity = true;
+        }
+
+        if (!hasValidIdentity)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(songName))
+            song.SongName = songName;
+
+        if (!string.IsNullOrWhiteSpace(levelAuthorName))
+            song.LevelAuthorName = levelAuthorName;
+
+        songs.Add(song);
+    }
+
+    private static void WritePlaylist(string savePath, LegacyPlaylistData playlist)
+    {
         var json = JsonSerializer.Serialize(playlist, new JsonSerializerOptions
         {
             WriteIndented = true,

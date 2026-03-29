@@ -23,5 +23,6 @@ public partial class MainWindow : Window
 
         _isSongScriptsInitialized = true;
         await viewModel.SongScriptsManagerViewModel.InitializeAsync();
+        await viewModel.CheckForUpdatesOnStartupAsync();
     }
 }

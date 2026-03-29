@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:models="clr-namespace:CameraScriptManager.Models"
-             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase">
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+             xmlns:navigation="clr-namespace:System.Windows.Navigation;assembly=PresentationFramework">
 
     <UserControl.Resources>
         <ObjectDataProvider x:Key="RenameOptions" MethodName="GetValues" ObjectType="{x:Type models:RenameOption}">
@@ -196,6 +197,42 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2" Header="アプリ情報">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="現在のバージョン:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentVersion}" VerticalAlignment="Center" Margin="5"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="リリースURL:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Margin="5" VerticalAlignment="Center"
+                           ToolTip="クリックすると CameraScriptManager の最新版リリースページを開きます">
+                    <Hyperlink NavigateUri="{Binding ReleaseUrl, Mode=OneWay}" navigation:RequestNavigate="ReleaseUrl_RequestNavigate">
+                        <Run Text="{Binding ReleaseUrl, Mode=OneWay}"/>
+                    </Hyperlink>
+                </TextBlock>
+
+                <CheckBox Grid.Row="2" Grid.Column="1"
+                          Content="自動アップデートチェック"
+                          IsChecked="{Binding EnableAutoUpdateCheck}"
+                          Margin="5,8,5,0"
+                          ToolTip="起動時に 1 日 1 回以下で最新版を確認します"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="1" Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="5,4,5,0">
+                    <Run Text="※ ON の場合、起動時に release_info.json を確認し、新しいバージョンがあればリリース URL を表示します。"/>
+                </TextBlock>
             </Grid>
         </GroupBox>
 

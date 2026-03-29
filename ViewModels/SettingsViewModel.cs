@@ -264,6 +264,23 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    private bool _enableAutoUpdateCheck = true;
+    public bool EnableAutoUpdateCheck
+    {
+        get => _enableAutoUpdateCheck;
+        set
+        {
+            if (SetProperty(ref _enableAutoUpdateCheck, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    public string CurrentVersion => AppUpdateCheckService.GetCurrentVersionString();
+    public string ReleaseUrl => AppUpdateCheckService.ReleasePageUrl;
+
     public event EventHandler? SettingsChanged;
 
     private void OnSettingsChanged()
@@ -323,6 +340,7 @@ public class SettingsViewModel : ViewModelBase
         _enableMapScriptsBackup = settings.EnableMapScriptsBackup;
         _enableSongScriptsBackup = settings.EnableSongScriptsBackup;
         _enableCopierBackup = settings.EnableCopierBackup;
+        _enableAutoUpdateCheck = settings.EnableAutoUpdateCheck;
 
         OnPropertyChanged(nameof(CustomLevelsPath));
         OnPropertyChanged(nameof(CustomWIPLevelsPath));
@@ -342,6 +360,9 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(EnableMapScriptsBackup));
         OnPropertyChanged(nameof(EnableSongScriptsBackup));
         OnPropertyChanged(nameof(EnableCopierBackup));
+        OnPropertyChanged(nameof(EnableAutoUpdateCheck));
+        OnPropertyChanged(nameof(CurrentVersion));
+        OnPropertyChanged(nameof(ReleaseUrl));
     }
 
     private void SaveSettings()
@@ -362,6 +383,7 @@ public class SettingsViewModel : ViewModelBase
         currentSettings.EnableMapScriptsBackup = EnableMapScriptsBackup;
         currentSettings.EnableSongScriptsBackup = EnableSongScriptsBackup;
         currentSettings.EnableCopierBackup = EnableCopierBackup;
+        currentSettings.EnableAutoUpdateCheck = EnableAutoUpdateCheck;
         _settingsService.Save(currentSettings);
     }
 

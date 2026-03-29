@@ -16,6 +16,9 @@ public class AppSettings
     public bool EnableMapScriptsBackup { get; set; } = true;
     public bool EnableSongScriptsBackup { get; set; } = true;
     public bool EnableCopierBackup { get; set; } = true;
+    public bool EnableAutoUpdateCheck { get; set; } = true;
+    public DateTime? LastUpdateCheckUtc { get; set; }
+    public string LastKnownLatestCameraScriptManagerVersion { get; set; } = "";
     public string DefaultRenameOption { get; set; } = "IdAuthorSongName";
 
     // Naming settings

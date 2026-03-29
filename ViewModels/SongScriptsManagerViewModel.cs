@@ -61,6 +61,50 @@ public class SongScriptsManagerViewModel : ViewModelBase
         return DownloadMissingBeatmapsCoreAsync(items);
     }
 
+    public async Task CreatePlaylistAsync(IEnumerable<SongScriptsManagerItemViewModel> sourceItems)
+    {
+        var selectedItems = sourceItems.ToList();
+        if (selectedItems.Count == 0)
+        {
+            StatusText = "プレイリストを作成する項目を選択してください";
+            _dialogService.ShowMessageBox("プレイリストを作成する項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var vm = new CreatePlaylistViewModel();
+        if (!_dialogService.ShowCreatePlaylistDialog(vm))
+        {
+            return;
+        }
+
+        string defaultFileName = ZipExportService.SanitizeFileName(vm.Title) + ".bplist";
+        string? savePath = _dialogService.ShowSaveFileDialog(defaultFileName, "BeatSaber Playlist (*.bplist)|*.bplist", "プレイリストの保存");
+        if (string.IsNullOrWhiteSpace(savePath))
+        {
+            return;
+        }
+
+        StatusText = "プレイリスト作成中...";
+        try
+        {
+            PlaylistExportService.ExportToBplist(
+                savePath,
+                vm.Title,
+                vm.Author,
+                vm.Description,
+                vm.CoverImagePath,
+                selectedItems.Select(item => item.Model));
+
+            StatusText = $"プレイリスト作成完了: {Path.GetFileName(savePath)}";
+            _dialogService.ShowMessageBox("プレイリストの作成が完了しました。", "完了", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"プレイリスト作成エラー: {ex.Message}";
+            _dialogService.ShowMessageBox($"プレイリストの作成中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     public string SongScriptsFolderDisplayPath
     {
         get => _songScriptsFolderDisplayPath;
