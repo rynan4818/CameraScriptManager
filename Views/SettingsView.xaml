@@ -94,7 +94,9 @@
                 <!-- Manager Zip Naming -->
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Manager ZIP出力名:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,10"/>
                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
-                    <RadioButton Content="デフォルト({MapId}_{SongName}_{LevelAuthorName})" GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <RadioButton GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <TextBlock Text="デフォルト({MapId}_{SongName}_{LevelAuthorName})"/>
+                    </RadioButton>
                     <RadioButton Content="カスタム" GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingCustom}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBox Text="{Binding ManagerZipCustomFormat, UpdateSourceTrigger=PropertyChanged}" 
                              IsEnabled="{Binding IsManagerZipNamingCustom}" Width="300" VerticalAlignment="Center"/>

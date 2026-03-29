@@ -100,8 +100,8 @@
                         <MenuItem Header="SongScript" 
                                   Command="{Binding PlacementTarget.DataContext.RenameSongScriptCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                        <MenuItem Header="Author_ID_SongName" 
-                                  Command="{Binding PlacementTarget.DataContext.RenameAuthorIdSongNameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        <MenuItem Header="ID_Author_SongName" 
+                                  Command="{Binding PlacementTarget.DataContext.RenameIdAuthorSongNameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                   CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </MenuItem>
                     <MenuItem Header="Song Name">

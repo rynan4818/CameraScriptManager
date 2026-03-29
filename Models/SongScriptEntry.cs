@@ -94,7 +94,7 @@ public class SongScriptEntry
         {
             RenameOption.無し => Path.GetFileName(SourceFileName),
             RenameOption.SongScript => "SongScript.json",
-            RenameOption.AuthorIdSongName => $"{cameraScriptAuthor}_{HexId}_{SongName}_SongScript.json",
+            RenameOption.IdAuthorSongName => $"{HexId}_{cameraScriptAuthor}_{SongName}_SongScript.json",
             _ => "SongScript.json"
         };
     }

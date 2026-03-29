@@ -154,8 +154,8 @@ public class SongScriptCopyService
         {
             RenameOption.無し =>
                 SanitizeFileName(Path.GetFileName(entry.SourceFileName)),
-            RenameOption.AuthorIdSongName =>
-                SanitizeFileName($"{entry.CameraScriptAuthorName}_{entry.HexId}_{entry.SongName}_SongScript.json"),
+            RenameOption.IdAuthorSongName =>
+                SanitizeFileName($"{entry.HexId}_{entry.CameraScriptAuthorName}_{entry.SongName}_SongScript.json"),
             _ => "SongScript.json"
         };
     }

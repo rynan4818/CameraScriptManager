@@ -14,14 +14,14 @@ public class AppSettings
     public string SongScriptsBackupFolderPath { get; set; } = "";
     public bool AddMetadata { get; set; } = true;
     public bool CreateBackup { get; set; } = true;
-    public string DefaultRenameOption { get; set; } = "SongScript";
+    public string DefaultRenameOption { get; set; } = "IdAuthorSongName";
     public bool? DefaultRenameToAuthorIdSongName { get; set; }
 
     // Naming settings
     public string ManagerZipNamingMode { get; set; } = "Default"; // Default or Custom
     public string ManagerZipCustomFormat { get; set; } = "{MapId}_{SongName}_{LevelAuthorName}";
     public string CopierRenameNamingMode { get; set; } = "Default"; // Default or Custom
-    public string CopierRenameCustomFormat { get; set; } = "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript";
+    public string CopierRenameCustomFormat { get; set; } = "{MapId}_{CameraScriptAuthorName}_{SongName}_SongScript";
 
     // Copier column visibility
     public bool ShowMetadataColumns { get; set; } = true;

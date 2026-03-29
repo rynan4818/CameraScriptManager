@@ -4,6 +4,6 @@ public enum RenameOption
 {
     無し,
     SongScript,
-    AuthorIdSongName,
+    IdAuthorSongName,
     カスタム
 }

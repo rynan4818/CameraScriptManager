@@ -231,7 +231,7 @@ public class SettingsViewModel : ViewModelBase
 
 
         _copierRenameCustomFormat = string.IsNullOrEmpty(settings.CopierRenameCustomFormat)
-            ? "{CameraScriptAuthorName}_{MapId}_{SongName}_SongScript"
+            ? "{MapId}_{CameraScriptAuthorName}_{SongName}_SongScript"
             : settings.CopierRenameCustomFormat;
 
         _createBackup = settings.CreateBackup;

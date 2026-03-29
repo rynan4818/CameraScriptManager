@@ -43,12 +43,7 @@ public class CopierViewModel : ViewModelBase
         _showMetadataColumns = settings.ShowMetadataColumns;
 
         // 旧設定からのマイグレーション
-        if (settings.DefaultRenameToAuthorIdSongName == true)
-            _defaultRenameOption = RenameOption.AuthorIdSongName;
-        else if (Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed))
-            _defaultRenameOption = parsed;
-        else
-            _defaultRenameOption = RenameOption.カスタム;
+        _defaultRenameOption = ParseDefaultRenameOption(settings);
 
         // Commands
         RescanCommand = new RelayCommand(RescanFolders);
@@ -61,7 +56,7 @@ public class CopierViewModel : ViewModelBase
         CopyIdsCommand = new RelayCommand(ExecuteCopyIds);
         RenameNoneCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.無し));
         RenameSongScriptCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.SongScript));
-        RenameAuthorIdSongNameCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.AuthorIdSongName));
+        RenameIdAuthorSongNameCommand = new RelayCommand(p => ExecuteRenameOption(p, RenameOption.IdAuthorSongName));
         CustomLevelsOnCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "CL", true));
         CustomLevelsOffCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "CL", false));
         CustomWipLevelsOnCommand = new RelayCommand(p => ExecuteSettingsToggle(p, "WIP", true));
@@ -102,7 +97,7 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
-    private RenameOption _defaultRenameOption = RenameOption.カスタム;
+    private RenameOption _defaultRenameOption = RenameOption.IdAuthorSongName;
     public RenameOption DefaultRenameOption
     {
         get => _defaultRenameOption;
@@ -162,7 +157,7 @@ public class CopierViewModel : ViewModelBase
     public ICommand CopyIdsCommand { get; }
     public ICommand RenameNoneCommand { get; }
     public ICommand RenameSongScriptCommand { get; }
-    public ICommand RenameAuthorIdSongNameCommand { get; }
+    public ICommand RenameIdAuthorSongNameCommand { get; }
     public ICommand CustomLevelsOnCommand { get; }
     public ICommand CustomLevelsOffCommand { get; }
     public ICommand CustomWipLevelsOnCommand { get; }
@@ -184,12 +179,7 @@ public class CopierViewModel : ViewModelBase
         _addMetadata = settings.AddMetadata;
         ShowMetadataColumns = settings.ShowMetadataColumns;
 
-        if (settings.DefaultRenameToAuthorIdSongName == true)
-            _defaultRenameOption = RenameOption.AuthorIdSongName;
-        else if (Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed))
-            _defaultRenameOption = parsed;
-        else
-            _defaultRenameOption = RenameOption.カスタム;
+        _defaultRenameOption = ParseDefaultRenameOption(settings);
 
         if (pathChanged)
         {
@@ -230,6 +220,19 @@ public class CopierViewModel : ViewModelBase
             entry.UpdateMatchedFolders(_customLevelsFolders, _customWIPLevelsFolders);
             UpdateOggDuration(entry);
         }
+    }
+
+    private static RenameOption ParseDefaultRenameOption(AppSettings settings)
+    {
+        if (settings.DefaultRenameToAuthorIdSongName == true)
+            return RenameOption.IdAuthorSongName;
+
+        if (string.Equals(settings.DefaultRenameOption, "AuthorIdSongName", StringComparison.Ordinal))
+            return RenameOption.IdAuthorSongName;
+
+        return Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed)
+            ? parsed
+            : RenameOption.IdAuthorSongName;
     }
 
     public void HandleDroppedFiles(string[] filePaths)
