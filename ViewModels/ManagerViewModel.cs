@@ -18,6 +18,8 @@ public class ManagerViewModel : ViewModelBase
     private string _originalScriptPath1 = "";
     private string _originalScriptPath2 = "";
     private string _originalScriptPath3 = "";
+    private string _backupRootPath = "";
+    private bool _enableMapScriptsBackup;
     private string _statusText = "";
 
     public string CustomLevelsPath => _customLevelsPath;
@@ -62,6 +64,8 @@ public class ManagerViewModel : ViewModelBase
         _originalScriptPath1 = settings.OriginalScriptPath1;
         _originalScriptPath2 = settings.OriginalScriptPath2;
         _originalScriptPath3 = settings.OriginalScriptPath3;
+        _backupRootPath = BackupPathResolver.ResolveBackupRootPath(settings);
+        _enableMapScriptsBackup = settings.EnableMapScriptsBackup;
     }
 
     public void ReloadSettings()
@@ -125,8 +129,12 @@ public class ManagerViewModel : ViewModelBase
             return Task.CompletedTask;
         }
 
+        string backupMessage = _enableMapScriptsBackup
+            ? $"変更前のファイルは {BackupPathResolver.GetMapScriptsBackupDirectory(_backupRootPath)} にバックアップされます。"
+            : "バックアップは作成されません。";
+
         var result = _dialogService.ShowMessageBoxWithResult(
-            $"選択された {targetItems.Count} 件のカメラスクリプトにメタデータを追加します。\n変更前のファイルはバックアップされます。\nよろしいですか？",
+            $"選択された {targetItems.Count} 件のカメラスクリプトにメタデータを追加します。\n{backupMessage}\nよろしいですか？",
             "メタ情報追加",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -159,7 +167,12 @@ public class ManagerViewModel : ViewModelBase
 
         try
         {
-            MetadataService.CreateBackupAndWriteMetadata(files, _customLevelsPath, _customWIPLevelsPath);
+            MetadataService.CreateBackupAndWriteMetadata(
+                files,
+                _customLevelsPath,
+                _customWIPLevelsPath,
+                _backupRootPath,
+                _enableMapScriptsBackup);
 
             // Update internal state after writing
             foreach (var item in targetItems)

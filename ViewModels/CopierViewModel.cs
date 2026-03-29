@@ -23,6 +23,8 @@ public class CopierViewModel : ViewModelBase
 
     private Dictionary<string, List<BeatMapFolder>> _customLevelsFolders = new();
     private Dictionary<string, List<BeatMapFolder>> _customWIPLevelsFolders = new();
+    private string _backupRootPath = "";
+    private bool _enableCopierBackup = true;
 
     public CopierViewModel()
     {
@@ -45,8 +47,9 @@ public class CopierViewModel : ViewModelBase
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _addMetadata = settings.AddMetadata;
         _showMetadataColumns = settings.ShowMetadataColumns;
+        _backupRootPath = BackupPathResolver.ResolveBackupRootPath(settings);
+        _enableCopierBackup = settings.EnableCopierBackup;
 
-        // 旧設定からのマイグレーション
         _defaultRenameOption = ParseDefaultRenameOption(settings);
 
         // Commands
@@ -184,6 +187,8 @@ public class CopierViewModel : ViewModelBase
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
         _addMetadata = settings.AddMetadata;
         ShowMetadataColumns = settings.ShowMetadataColumns;
+        _backupRootPath = BackupPathResolver.ResolveBackupRootPath(settings);
+        _enableCopierBackup = settings.EnableCopierBackup;
 
         _defaultRenameOption = ParseDefaultRenameOption(settings);
 
@@ -231,12 +236,6 @@ public class CopierViewModel : ViewModelBase
 
     private static RenameOption ParseDefaultRenameOption(AppSettings settings)
     {
-        if (settings.DefaultRenameToAuthorIdSongName == true)
-            return RenameOption.IdAuthorSongName;
-
-        if (string.Equals(settings.DefaultRenameOption, "AuthorIdSongName", StringComparison.Ordinal))
-            return RenameOption.IdAuthorSongName;
-
         return Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed)
             ? parsed
             : RenameOption.IdAuthorSongName;
@@ -588,8 +587,14 @@ public class CopierViewModel : ViewModelBase
         try
         {
             var progress = new Progress<string>(msg => StatusMessage = msg);
-            var settings = _settingsService.Load();
-            var results = await _copyService.CopyAllAsync(entriesToCopy, _addMetadata, settings.CreateBackup, progress);
+            var results = await _copyService.CopyAllAsync(
+                entriesToCopy,
+                _addMetadata,
+                _enableCopierBackup,
+                _backupRootPath,
+                _customLevelsPath,
+                _customWIPLevelsPath,
+                progress);
 
             int successCount = results.Count(r => r.Success);
             int failCount = results.Count(r => !r.Success);

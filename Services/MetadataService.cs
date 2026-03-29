@@ -65,19 +65,20 @@ public static class MetadataService
     public static void CreateBackupAndWriteMetadata(
         IList<(string fullFilePath, string originalJson, string newJson, string sourceType)> files,
         string customLevelsPath,
-        string customWIPLevelsPath)
+        string customWIPLevelsPath,
+        string backupRootPath,
+        bool enableBackup)
     {
-        var exeDir = AppDomain.CurrentDomain.BaseDirectory;
-        var backupDir = Path.Combine(exeDir, "backup");
-        Directory.CreateDirectory(backupDir);
-
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var zipPath = Path.Combine(backupDir, $"backup_{timestamp}.zip");
-
-        // Create backup zip with all original files
-        using (var zipStream = File.Create(zipPath))
-        using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+        if (enableBackup)
         {
+            string backupDir = BackupPathResolver.GetMapScriptsBackupDirectory(backupRootPath);
+            Directory.CreateDirectory(backupDir);
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string zipPath = Path.Combine(backupDir, $"backup_{timestamp}.zip");
+
+            using var zipStream = File.Create(zipPath);
+            using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create);
             foreach (var (fullFilePath, originalJson, _, sourceType) in files)
             {
                 string basePath = sourceType == "CustomLevels" ? customLevelsPath : customWIPLevelsPath;
@@ -101,7 +102,6 @@ public static class MetadataService
             }
         }
 
-        // Write updated JSON files
         foreach (var (fullFilePath, _, newJson, _) in files)
         {
             File.WriteAllText(fullFilePath, newJson, Encoding.UTF8);

@@ -70,10 +70,10 @@
                 <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SongScriptsFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="6" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsFolderCommand}" Margin="5"/>
 
-                <!-- SongScripts Backup -->
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="SongScripts Backup:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
-                <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding SongScriptsBackupFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="7" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsBackupFolderCommand}" Margin="5"/>
+                <!-- Backup Root -->
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="バックアップルート:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding BackupRootPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="7" Grid.Column="2" Content="参照..." Command="{Binding BrowseBackupRootCommand}" Margin="5"/>
             </Grid>
         </GroupBox>
 
@@ -91,8 +91,8 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Manager Zip Naming -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Manager ZIP出力名:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,10"/>
+                <!-- MapScripts Zip Naming -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="MapScripts ZIP出力名:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,10"/>
                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
                     <RadioButton GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0">
                         <TextBlock Text="デフォルト({MapId}_{SongName}_{LevelAuthorName})"/>
@@ -138,11 +138,18 @@
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="その他の設定:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,15,10,5"/>
                 <Border Grid.Row="3" Grid.Column="1" BorderBrush="LightGray" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,15,0,5">
                     <StackPanel>
-                        <CheckBox Content="Copier上書き時にバックアップ(.bak)を作成する" 
-                                  IsChecked="{Binding CreateBackup}" 
+                        <CheckBox Content="MapScripts更新時にバックアップを作成する"
+                                  IsChecked="{Binding EnableMapScriptsBackup}"
                                   Margin="0,0,0,5"/>
-                        <TextBlock Text="※ONの場合、古いファイルに日時(yyyyMMdd_HHmmss.bak)を付与して退避します" 
-                                   Foreground="Gray" FontSize="11" TextWrapping="Wrap"/>
+                        <CheckBox Content="SongScripts保存時にバックアップを作成する"
+                                  IsChecked="{Binding EnableSongScriptsBackup}"
+                                  Margin="0,0,0,5"/>
+                        <CheckBox Content="Copier上書き時にバックアップを作成する"
+                                  IsChecked="{Binding EnableCopierBackup}"
+                                  Margin="0,0,0,5"/>
+                        <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap">
+                            <Run Text="※バックアップルートが空欄の場合は CameraScriptManager.exe 配下の backup フォルダを使用します。"/>
+                        </TextBlock>
                     </StackPanel>
                 </Border>
             </Grid>

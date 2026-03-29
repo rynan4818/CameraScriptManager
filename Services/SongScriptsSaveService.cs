@@ -11,15 +11,17 @@ public class SongScriptsSaveService
         IList<SongScriptsManagerEntry> entries,
         string songScriptsRootPath,
         string backupRootPath,
+        bool enableBackup,
         IProgress<string>? progress = null)
     {
-        return Task.Run(() => Save(entries, songScriptsRootPath, backupRootPath, progress));
+        return Task.Run(() => Save(entries, songScriptsRootPath, backupRootPath, enableBackup, progress));
     }
 
     private List<SongScriptsSaveResult> Save(
         IList<SongScriptsManagerEntry> entries,
         string songScriptsRootPath,
         string backupRootPath,
+        bool enableBackup,
         IProgress<string>? progress)
     {
         var results = new List<SongScriptsSaveResult>();
@@ -36,8 +38,8 @@ public class SongScriptsSaveService
             progress?.Report($"保存中... {sourceLabel} ({index + 1}/{groups.Count})");
 
             SongScriptsSaveResult result = groupEntries[0].IsZipEntry
-                ? SaveZipGroup(groupEntries, songScriptsRootPath, backupRootPath)
-                : SaveJsonEntry(groupEntries[0], songScriptsRootPath, backupRootPath);
+                ? SaveZipGroup(groupEntries, songScriptsRootPath, backupRootPath, enableBackup)
+                : SaveJsonEntry(groupEntries[0], songScriptsRootPath, backupRootPath, enableBackup);
 
             results.Add(result);
         }
@@ -48,7 +50,8 @@ public class SongScriptsSaveService
     private SongScriptsSaveResult SaveJsonEntry(
         SongScriptsManagerEntry entry,
         string songScriptsRootPath,
-        string backupRootPath)
+        string backupRootPath,
+        bool enableBackup)
     {
         var result = new SongScriptsSaveResult
         {
@@ -58,7 +61,7 @@ public class SongScriptsSaveService
 
         try
         {
-            BackupSourceFile(entry.SourceFilePath, songScriptsRootPath, backupRootPath);
+            BackupSourceFile(entry.SourceFilePath, songScriptsRootPath, backupRootPath, enableBackup);
 
             string originalJson = LoadJsonFileContent(entry);
             string jsonToWrite = SongScriptsMetadataJsonService.PrepareJsonWithMetadata(entry, originalJson);
@@ -79,7 +82,8 @@ public class SongScriptsSaveService
     private SongScriptsSaveResult SaveZipGroup(
         IList<SongScriptsManagerEntry> entries,
         string songScriptsRootPath,
-        string backupRootPath)
+        string backupRootPath,
+        bool enableBackup)
     {
         string sourceFilePath = entries[0].SourceFilePath;
         var result = new SongScriptsSaveResult
@@ -91,7 +95,7 @@ public class SongScriptsSaveService
         string tempFilePath = sourceFilePath + ".tmp";
         try
         {
-            BackupSourceFile(sourceFilePath, songScriptsRootPath, backupRootPath);
+            BackupSourceFile(sourceFilePath, songScriptsRootPath, backupRootPath, enableBackup);
             TryDeleteTempFile(tempFilePath);
 
             var pendingEntries = entries.ToDictionary(
@@ -146,8 +150,13 @@ public class SongScriptsSaveService
         return result;
     }
 
-    private static void BackupSourceFile(string sourceFilePath, string songScriptsRootPath, string backupRootPath)
+    private static void BackupSourceFile(string sourceFilePath, string songScriptsRootPath, string backupRootPath, bool enableBackup)
     {
+        if (!enableBackup)
+        {
+            return;
+        }
+
         string backupFilePath = GetBackupFilePath(sourceFilePath, songScriptsRootPath, backupRootPath);
         string? backupDirectory = Path.GetDirectoryName(backupFilePath);
         if (!string.IsNullOrWhiteSpace(backupDirectory))
@@ -160,18 +169,13 @@ public class SongScriptsSaveService
 
     private static string GetBackupFilePath(string sourceFilePath, string songScriptsRootPath, string backupRootPath)
     {
-        string backupFileName = Path.GetFileName(sourceFilePath) + ".bak";
-        if (string.IsNullOrWhiteSpace(backupRootPath))
-        {
-            string? sourceDirectory = Path.GetDirectoryName(sourceFilePath);
-            return Path.Combine(sourceDirectory ?? string.Empty, backupFileName);
-        }
-
+        string backupDirectoryRoot = BackupPathResolver.GetSongScriptsBackupDirectory(backupRootPath);
         string relativePath = SongScriptsPathResolver.GetRelativePathUnderSongScripts(songScriptsRootPath, sourceFilePath);
+        string backupFileName = BackupPathResolver.AppendTimestampToFileName(Path.GetFileName(relativePath), DateTime.Now);
         string? relativeDirectory = Path.GetDirectoryName(relativePath);
         return string.IsNullOrWhiteSpace(relativeDirectory)
-            ? Path.Combine(backupRootPath, backupFileName)
-            : Path.Combine(backupRootPath, relativeDirectory, backupFileName);
+            ? Path.Combine(backupDirectoryRoot, backupFileName)
+            : Path.Combine(backupDirectoryRoot, relativeDirectory, backupFileName);
     }
 
     private static void TryDeleteTempFile(string tempFilePath)

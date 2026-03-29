@@ -19,8 +19,8 @@
                 <local:SongScriptsManagerView DataContext="{Binding SongScriptsManagerViewModel}" />
             </TabItem>
 
-            <!-- Manager Tab -->
-            <TabItem Header="Manager">
+            <!-- MapScripts Tab -->
+            <TabItem Header="MapScripts">
                 <local:ManagerView DataContext="{Binding ManagerViewModel}" />
             </TabItem>
 

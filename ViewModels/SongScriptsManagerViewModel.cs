@@ -20,7 +20,7 @@ public class SongScriptsManagerViewModel : ViewModelBase
     private readonly SemaphoreSlim _scanSemaphore = new(1, 1);
 
     private string _songScriptsFolderPath = "";
-    private string _songScriptsBackupFolderPath = "";
+    private string _backupRootPath = "";
     private string _customLevelsPath = "";
     private string _customWipLevelsPath = "";
     private string _statusText = "";
@@ -30,6 +30,7 @@ public class SongScriptsManagerViewModel : ViewModelBase
     private bool _isHashScanRunning;
     private double _hashScanProgressValue;
     private bool _showMetadataColumns = true;
+    private bool _enableSongScriptsBackup;
     private CameraSongScriptCompatibleBeatmapIndex _beatmapIndex = new();
     private CancellationTokenSource? _hashScanCancellationTokenSource;
     private bool _isBeatmapMatchFinalized = true;
@@ -119,13 +120,14 @@ public class SongScriptsManagerViewModel : ViewModelBase
         _customLevelsPath = settings.CustomLevelsPath;
         _customWipLevelsPath = settings.CustomWIPLevelsPath;
         _songScriptsFolderPath = SongScriptsPathResolver.ResolveSongScriptsFolderPath(settings);
-        _songScriptsBackupFolderPath = SongScriptsPathResolver.ResolveSongScriptsBackupFolderPath(settings);
+        _backupRootPath = BackupPathResolver.ResolveBackupRootPath(settings);
+        _enableSongScriptsBackup = settings.EnableSongScriptsBackup;
         SetProperty(ref _showMetadataColumns, settings.ShowMetadataColumns);
 
         SongScriptsFolderDisplayPath = _songScriptsFolderPath;
-        BackupFolderDisplayPath = string.IsNullOrWhiteSpace(_songScriptsBackupFolderPath)
-            ? "(元データと同じフォルダ)"
-            : _songScriptsBackupFolderPath;
+        BackupFolderDisplayPath = _enableSongScriptsBackup
+            ? BackupPathResolver.GetSongScriptsBackupDirectory(_backupRootPath)
+            : "無効";
     }
 
     private void SaveSettings()
@@ -248,8 +250,12 @@ public class SongScriptsManagerViewModel : ViewModelBase
             return;
         }
 
+        string backupMessage = _enableSongScriptsBackup
+            ? $"既存データは {BackupFolderDisplayPath} にバックアップします。"
+            : "バックアップは作成されません。";
+
         var result = _dialogService.ShowMessageBoxWithResult(
-            $"チェックされた {targetItems.Count} 件のmetadataを上書き保存します。\n既存データは .bak でバックアップします。\nよろしいですか？",
+            $"チェックされた {targetItems.Count} 件のmetadataを上書き保存します。\n{backupMessage}\nよろしいですか？",
             "SongScripts保存",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -266,7 +272,8 @@ public class SongScriptsManagerViewModel : ViewModelBase
             saveResults = await _saveService.SaveAsync(
                 targetItems.Select(item => item.Model).ToList(),
                 _songScriptsFolderPath,
-                _songScriptsBackupFolderPath,
+                _backupRootPath,
+                _enableSongScriptsBackup,
                 saveProgress);
         });
 

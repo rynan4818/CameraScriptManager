@@ -11,11 +11,12 @@ public class AppSettings
     public string OriginalScriptPath2 { get; set; } = "";
     public string OriginalScriptPath3 { get; set; } = "";
     public string SongScriptsFolderPath { get; set; } = @"UserData\CameraSongScript\SongScripts";
-    public string SongScriptsBackupFolderPath { get; set; } = "";
+    public string BackupRootPath { get; set; } = "";
     public bool AddMetadata { get; set; } = true;
-    public bool CreateBackup { get; set; } = true;
+    public bool EnableMapScriptsBackup { get; set; } = true;
+    public bool EnableSongScriptsBackup { get; set; } = true;
+    public bool EnableCopierBackup { get; set; } = true;
     public string DefaultRenameOption { get; set; } = "IdAuthorSongName";
-    public bool? DefaultRenameToAuthorIdSongName { get; set; }
 
     // Naming settings
     public string ManagerZipNamingMode { get; set; } = "Default"; // Default or Custom

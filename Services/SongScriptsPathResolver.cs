@@ -15,14 +15,6 @@ public static class SongScriptsPathResolver
         return ResolveConfiguredPath(configuredPath, GetGameRootPath(settings));
     }
 
-    public static string ResolveSongScriptsBackupFolderPath(AppSettings settings)
-    {
-        if (string.IsNullOrWhiteSpace(settings.SongScriptsBackupFolderPath))
-            return string.Empty;
-
-        return ResolveConfiguredPath(settings.SongScriptsBackupFolderPath, GetGameRootPath(settings));
-    }
-
     public static string GetRelativePathUnderSongScripts(string songScriptsRootPath, string sourceFilePath)
     {
         if (string.IsNullOrWhiteSpace(songScriptsRootPath) || string.IsNullOrWhiteSpace(sourceFilePath))

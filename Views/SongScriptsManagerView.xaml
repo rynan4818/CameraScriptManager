@@ -54,7 +54,7 @@
         <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
             <StackPanel>
                 <TextBlock Text="{Binding SongScriptsFolderDisplayPath, StringFormat=SongScripts: {0}}" TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding BackupFolderDisplayPath, StringFormat=Backup: {0}}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding BackupFolderDisplayPath, StringFormat=バックアップ: {0}}" TextWrapping="Wrap" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
@@ -77,6 +77,10 @@
 
             <DataGrid.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Command="Cut" Header="切り取り" />
+                    <MenuItem Command="Copy" Header="コピー" />
+                    <MenuItem Command="Paste" Header="貼り付け" />
+                    <Separator/>
                     <MenuItem Header="BeatSaverからmetadata取得" Click="FetchBeatSaver_Click"/>
                     <Separator/>
                     <MenuItem Header="対象セルの項目をロック" Click="LockCell_Click"/>
@@ -111,6 +115,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding MapId, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsMapIdLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -156,6 +161,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding Hash, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsHashLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -179,6 +185,7 @@
                             <Grid>
                                 <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=PropertyChanged}"
                                          IsReadOnly="{Binding IsCameraScriptAuthorLocked}"
+                                         ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                          BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">
@@ -205,7 +212,7 @@
                 <DataGridTemplateColumn Header="songName" Width="180" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding SongName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding SongName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -225,7 +232,7 @@
                 <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongSubNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongSubNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -245,7 +252,7 @@
                 <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongAuthorNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongAuthorNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -265,7 +272,7 @@
                 <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="130" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsLevelAuthorNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsLevelAuthorNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -285,7 +292,7 @@
                 <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="60" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsBpmLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsBpmLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -305,7 +312,7 @@
                 <DataGridTemplateColumn x:Name="ColDuration" Header="Duration" Width="75" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Duration, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsDurationLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding Duration, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsDurationLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -325,7 +332,7 @@
                 <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding AvatarHeight, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsAvatarHeightLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding AvatarHeight, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsAvatarHeightLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -345,7 +352,7 @@
                 <DataGridTemplateColumn Header="Description" Width="180" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsDescriptionLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                            <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsDescriptionLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Background" Value="Transparent"/>

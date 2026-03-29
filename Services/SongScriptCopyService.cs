@@ -18,6 +18,9 @@ public class SongScriptCopyService
         IList<SongScriptEntry> entries,
         bool addMetadata,
         bool createBackup,
+        string backupRootPath,
+        string customLevelsRootPath,
+        string customWipLevelsRootPath,
         IProgress<string>? progress = null)
     {
         var results = new List<CopyResult>();
@@ -39,7 +42,7 @@ public class SongScriptCopyService
             {
                 string fileName = GetTargetFileName(entry);
                 string targetPath = Path.Combine(entry.SelectedCustomLevelsFolder.FullPath, fileName);
-                results.Add(CopyFile(entry, jsonToWrite, targetPath, createBackup));
+                results.Add(CopyFile(entry, jsonToWrite, targetPath, createBackup, backupRootPath, customLevelsRootPath, "CustomLevels"));
                 progress?.Report($"コピー完了: {entry.SelectedCustomLevelsFolder.FolderName}");
             }
 
@@ -47,7 +50,7 @@ public class SongScriptCopyService
             {
                 string fileName = GetTargetFileName(entry);
                 string targetPath = Path.Combine(entry.SelectedCustomWIPLevelsFolder.FullPath, fileName);
-                results.Add(CopyFile(entry, jsonToWrite, targetPath, createBackup));
+                results.Add(CopyFile(entry, jsonToWrite, targetPath, createBackup, backupRootPath, customWipLevelsRootPath, "CustomWIPLevels"));
                 progress?.Report($"コピー完了: {entry.SelectedCustomWIPLevelsFolder.FolderName}");
             }
         }
@@ -167,15 +170,27 @@ public class SongScriptCopyService
         return name;
     }
 
-    private static CopyResult CopyFile(SongScriptEntry entry, string content, string targetPath, bool createBackup)
+    private static CopyResult CopyFile(
+        SongScriptEntry entry,
+        string content,
+        string targetPath,
+        bool createBackup,
+        string backupRootPath,
+        string sourceRootPath,
+        string backupSubfolderName)
     {
         try
         {
             bool overwrite = File.Exists(targetPath);
             if (overwrite && createBackup)
             {
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string backupPath = targetPath + $".{timestamp}.bak";
+                string backupPath = GetBackupFilePath(targetPath, backupRootPath, sourceRootPath, backupSubfolderName);
+                string? backupDirectory = Path.GetDirectoryName(backupPath);
+                if (!string.IsNullOrWhiteSpace(backupDirectory))
+                {
+                    Directory.CreateDirectory(backupDirectory);
+                }
+
                 File.Copy(targetPath, backupPath, overwrite: true);
             }
 
@@ -206,5 +221,45 @@ public class SongScriptCopyService
         string fileName = GetTargetFileName(entry);
         string targetPath = Path.Combine(folder.FullPath, fileName);
         return File.Exists(targetPath);
+    }
+
+    private static string GetBackupFilePath(string targetPath, string backupRootPath, string sourceRootPath, string backupSubfolderName)
+    {
+        string copierBackupRoot = Path.Combine(BackupPathResolver.GetCopierBackupDirectory(backupRootPath), backupSubfolderName);
+        string relativePath = GetRelativePathUnderRoot(sourceRootPath, targetPath);
+        string backupFileName = BackupPathResolver.AppendTimestampToFileName(Path.GetFileName(relativePath), DateTime.Now);
+        string? relativeDirectory = Path.GetDirectoryName(relativePath);
+        return string.IsNullOrWhiteSpace(relativeDirectory)
+            ? Path.Combine(copierBackupRoot, backupFileName)
+            : Path.Combine(copierBackupRoot, relativeDirectory, backupFileName);
+    }
+
+    private static string GetRelativePathUnderRoot(string sourceRootPath, string targetPath)
+    {
+        if (string.IsNullOrWhiteSpace(sourceRootPath) || string.IsNullOrWhiteSpace(targetPath))
+        {
+            return Path.Combine(Path.GetFileName(Path.GetDirectoryName(targetPath) ?? string.Empty), Path.GetFileName(targetPath));
+        }
+
+        try
+        {
+            string fullRoot = Path.GetFullPath(sourceRootPath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string fullTarget = Path.GetFullPath(targetPath);
+
+            if (fullTarget.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fullTarget, fullRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                return Path.GetRelativePath(fullRoot, fullTarget);
+            }
+        }
+        catch
+        {
+        }
+
+        string folderName = Path.GetFileName(Path.GetDirectoryName(targetPath) ?? string.Empty);
+        return string.IsNullOrWhiteSpace(folderName)
+            ? Path.GetFileName(targetPath)
+            : Path.Combine(folderName, Path.GetFileName(targetPath));
     }
 }

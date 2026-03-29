@@ -19,7 +19,7 @@ public class SettingsViewModel : ViewModelBase
         BrowseOriginalScript2Command = new RelayCommand(BrowseOriginalScript2);
         BrowseOriginalScript3Command = new RelayCommand(BrowseOriginalScript3);
         BrowseSongScriptsFolderCommand = new RelayCommand(BrowseSongScriptsFolder);
-        BrowseSongScriptsBackupFolderCommand = new RelayCommand(BrowseSongScriptsBackupFolder);
+        BrowseBackupRootCommand = new RelayCommand(BrowseBackupRoot);
         CopyTagCommand = new RelayCommand(CopyTag);
 
         LoadSettings();
@@ -117,13 +117,13 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    private string _songScriptsBackupFolderPath = "";
-    public string SongScriptsBackupFolderPath
+    private string _backupRootPath = "";
+    public string BackupRootPath
     {
-        get => _songScriptsBackupFolderPath;
+        get => _backupRootPath;
         set
         {
-            if (SetProperty(ref _songScriptsBackupFolderPath, value))
+            if (SetProperty(ref _backupRootPath, value))
             {
                 SaveSettings();
                 OnSettingsChanged();
@@ -183,13 +183,41 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    private bool _createBackup = true;
-    public bool CreateBackup
+    private bool _enableMapScriptsBackup = true;
+    public bool EnableMapScriptsBackup
     {
-        get => _createBackup;
+        get => _enableMapScriptsBackup;
         set
         {
-            if (SetProperty(ref _createBackup, value))
+            if (SetProperty(ref _enableMapScriptsBackup, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    private bool _enableSongScriptsBackup = true;
+    public bool EnableSongScriptsBackup
+    {
+        get => _enableSongScriptsBackup;
+        set
+        {
+            if (SetProperty(ref _enableSongScriptsBackup, value))
+            {
+                SaveSettings();
+                OnSettingsChanged();
+            }
+        }
+    }
+
+    private bool _enableCopierBackup = true;
+    public bool EnableCopierBackup
+    {
+        get => _enableCopierBackup;
+        set
+        {
+            if (SetProperty(ref _enableCopierBackup, value))
             {
                 SaveSettings();
                 OnSettingsChanged();
@@ -210,7 +238,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand BrowseOriginalScript2Command { get; }
     public ICommand BrowseOriginalScript3Command { get; }
     public ICommand BrowseSongScriptsFolderCommand { get; }
-    public ICommand BrowseSongScriptsBackupFolderCommand { get; }
+    public ICommand BrowseBackupRootCommand { get; }
     public ICommand CopyTagCommand { get; }
 
     private void LoadSettings()
@@ -222,7 +250,7 @@ public class SettingsViewModel : ViewModelBase
         _originalScriptPath2 = settings.OriginalScriptPath2;
         _originalScriptPath3 = settings.OriginalScriptPath3;
         _songScriptsFolderPath = settings.SongScriptsFolderPath;
-        _songScriptsBackupFolderPath = settings.SongScriptsBackupFolderPath;
+        _backupRootPath = settings.BackupRootPath;
 
         _isManagerZipNamingDefault = settings.ManagerZipNamingMode != "Custom";
         _managerZipCustomFormat = string.IsNullOrEmpty(settings.ManagerZipCustomFormat)
@@ -234,7 +262,9 @@ public class SettingsViewModel : ViewModelBase
             ? "{MapId}_{CameraScriptAuthorName}_{SongName}_SongScript"
             : settings.CopierRenameCustomFormat;
 
-        _createBackup = settings.CreateBackup;
+        _enableMapScriptsBackup = settings.EnableMapScriptsBackup;
+        _enableSongScriptsBackup = settings.EnableSongScriptsBackup;
+        _enableCopierBackup = settings.EnableCopierBackup;
 
         OnPropertyChanged(nameof(CustomLevelsPath));
         OnPropertyChanged(nameof(CustomWIPLevelsPath));
@@ -242,13 +272,15 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(OriginalScriptPath2));
         OnPropertyChanged(nameof(OriginalScriptPath3));
         OnPropertyChanged(nameof(SongScriptsFolderPath));
-        OnPropertyChanged(nameof(SongScriptsBackupFolderPath));
+        OnPropertyChanged(nameof(BackupRootPath));
         OnPropertyChanged(nameof(IsManagerZipNamingDefault));
         OnPropertyChanged(nameof(IsManagerZipNamingCustom));
         OnPropertyChanged(nameof(ManagerZipCustomFormat));
 
         OnPropertyChanged(nameof(CopierRenameCustomFormat));
-        OnPropertyChanged(nameof(CreateBackup));
+        OnPropertyChanged(nameof(EnableMapScriptsBackup));
+        OnPropertyChanged(nameof(EnableSongScriptsBackup));
+        OnPropertyChanged(nameof(EnableCopierBackup));
     }
 
     private void SaveSettings()
@@ -260,12 +292,14 @@ public class SettingsViewModel : ViewModelBase
         currentSettings.OriginalScriptPath2 = OriginalScriptPath2;
         currentSettings.OriginalScriptPath3 = OriginalScriptPath3;
         currentSettings.SongScriptsFolderPath = SongScriptsFolderPath;
-        currentSettings.SongScriptsBackupFolderPath = SongScriptsBackupFolderPath;
+        currentSettings.BackupRootPath = BackupRootPath;
         currentSettings.ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom";
         currentSettings.ManagerZipCustomFormat = ManagerZipCustomFormat;
         currentSettings.CopierRenameNamingMode = "Custom";
         currentSettings.CopierRenameCustomFormat = CopierRenameCustomFormat;
-        currentSettings.CreateBackup = CreateBackup;
+        currentSettings.EnableMapScriptsBackup = EnableMapScriptsBackup;
+        currentSettings.EnableSongScriptsBackup = EnableSongScriptsBackup;
+        currentSettings.EnableCopierBackup = EnableCopierBackup;
         _settingsService.Save(currentSettings);
     }
 
@@ -311,11 +345,11 @@ public class SettingsViewModel : ViewModelBase
             SongScriptsFolderPath = path;
     }
 
-    private void BrowseSongScriptsBackupFolder()
+    private void BrowseBackupRoot()
     {
-        var path = BrowseFolder("SongScriptsバックアップフォルダを選択", SongScriptsBackupFolderPath);
+        var path = BrowseFolder("バックアップルートフォルダを選択", BackupRootPath);
         if (path != null)
-            SongScriptsBackupFolderPath = path;
+            BackupRootPath = path;
     }
 
     private static string? BrowseFolder(string description, string currentPath)
