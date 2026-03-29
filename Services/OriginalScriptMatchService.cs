@@ -12,6 +12,7 @@ public class OriginalScriptMatchService
 {
     private readonly string[] _searchPaths;
     private readonly Action<string, double?>? _progressCallback;
+    private readonly SearchCacheService _searchCacheService = new();
 
     public OriginalScriptMatchService(IEnumerable<string> searchPaths, Action<string, double?>? progressCallback = null)
     {
@@ -21,6 +22,11 @@ public class OriginalScriptMatchService
 
     public async Task MatchOriginalScriptsAsync(IReadOnlyList<CameraScriptEntry> targetEntries)
     {
+        foreach (var targetEntry in targetEntries)
+        {
+            targetEntry.OriginalSourceFiles.Clear();
+        }
+
         if (_searchPaths.Length == 0 || targetEntries.Count == 0)
             return;
 
@@ -33,6 +39,27 @@ public class OriginalScriptMatchService
             {
                 CollectFiles(path, sourceFiles);
             });
+        }
+
+        sourceFiles = sourceFiles
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        List<SearchCacheFileStamp> sourceFileStamps = SearchCacheService.CollectFileStamps(sourceFiles);
+        List<SearchCacheFileStamp> targetFileStamps = SearchCacheService.CollectFileStamps(
+            targetEntries
+                .Select(entry => entry.FullFilePath)
+                .Where(path => !string.IsNullOrWhiteSpace(path)));
+
+        var cachedResult = _searchCacheService.GetOriginalScriptMatch();
+        if (AreSameSearchPaths(cachedResult.SearchPaths, _searchPaths) &&
+            SearchCacheService.AreSameFileStamps(cachedResult.SourceFiles, sourceFileStamps) &&
+            SearchCacheService.AreSameFileStamps(cachedResult.TargetFiles, targetFileStamps))
+        {
+            _progressCallback?.Invoke("元データ照合キャッシュを適用中...", 100);
+            ApplyCachedMatches(targetEntries, cachedResult);
+            return;
         }
 
         int totalFiles = sourceFiles.Count;
@@ -65,6 +92,17 @@ public class OriginalScriptMatchService
                 }
             });
         }
+
+        _searchCacheService.SetOriginalScriptMatch(new CachedOriginalScriptMatchResult
+        {
+            SearchPaths = _searchPaths.Select(NormalizePath).ToList(),
+            SourceFiles = sourceFileStamps,
+            TargetFiles = targetFileStamps,
+            MatchesByTargetFilePath = targetEntries.ToDictionary(
+                target => NormalizePath(target.FullFilePath),
+                target => target.OriginalSourceFiles.ToList(),
+                StringComparer.OrdinalIgnoreCase)
+        });
     }
 
     private void CollectFiles(string path, List<string> sourceFiles)
@@ -159,13 +197,14 @@ public class OriginalScriptMatchService
 
             if (!idMatches) continue;
 
-            // 2. Parse target script info if needed
-            var targetInfo = ParseCameraScriptInfo(target.JsonContent);
-            if (targetInfo == null) continue;
+            if (target.MovementCount <= 0 || target.ScriptDuration <= 0)
+            {
+                continue;
+            }
 
             // 3. Match conditions
-            if (sourceInfo.MovementCount == targetInfo.MovementCount &&
-                Math.Abs(sourceInfo.TotalDurationAndDelay - targetInfo.TotalDurationAndDelay) <= 0.1)
+            if (sourceInfo.MovementCount == target.MovementCount &&
+                Math.Abs(sourceInfo.TotalDurationAndDelay - target.ScriptDuration) <= 0.1)
             {
                 if (!target.OriginalSourceFiles.Contains(displayName))
                 {
@@ -216,5 +255,69 @@ public class OriginalScriptMatchService
     {
         public int MovementCount { get; set; }
         public double TotalDurationAndDelay { get; set; }
+    }
+
+    private static bool AreSameSearchPaths(IReadOnlyList<string>? cachedPaths, IReadOnlyList<string> currentPaths)
+    {
+        if (cachedPaths == null)
+        {
+            return currentPaths.Count == 0;
+        }
+
+        if (cachedPaths.Count != currentPaths.Count)
+        {
+            return false;
+        }
+
+        for (int index = 0; index < currentPaths.Count; index++)
+        {
+            if (!string.Equals(NormalizePath(cachedPaths[index]), NormalizePath(currentPaths[index]), StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void ApplyCachedMatches(IReadOnlyList<CameraScriptEntry> targetEntries, CachedOriginalScriptMatchResult cachedResult)
+    {
+        foreach (var targetEntry in targetEntries)
+        {
+            string targetPath = NormalizePath(targetEntry.FullFilePath);
+            if (!cachedResult.MatchesByTargetFilePath.TryGetValue(targetPath, out var matches))
+            {
+                continue;
+            }
+
+            foreach (var match in matches)
+            {
+                if (!targetEntry.OriginalSourceFiles.Contains(match))
+                {
+                    targetEntry.OriginalSourceFiles.Add(match);
+                }
+            }
+        }
+    }
+
+    private static string NormalizePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            path = Path.GetFullPath(path);
+        }
+        catch
+        {
+        }
+
+        return path
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
+            .Trim()
+            .ToLowerInvariant();
     }
 }

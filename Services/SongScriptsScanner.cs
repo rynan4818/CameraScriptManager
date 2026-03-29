@@ -7,6 +7,8 @@ namespace CameraScriptManager.Services;
 
 public class SongScriptsScanner
 {
+    private readonly SearchCacheService _searchCacheService = new();
+
     public List<SongScriptsManagerEntry> Scan(string songScriptsRootPath, Action<string, double?>? progress = null)
     {
         var results = new List<SongScriptsManagerEntry>();
@@ -25,42 +27,72 @@ public class SongScriptsScanner
         sources = sources
             .OrderBy(source => source.path, StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var cacheUpdates = new List<CachedSongScriptsSourceResult>();
 
         for (int index = 0; index < sources.Count; index++)
         {
             var source = sources[index];
             string relativePath = SongScriptsPathResolver.GetRelativePathUnderSongScripts(songScriptsRootPath, source.path);
             double percent = sources.Count == 0 ? 0 : ((index + 1) * 100.0 / sources.Count);
-            progress?.Invoke($"SongScripts読込中... {relativePath}", percent);
+            var sourceStamp = SearchCacheService.TryCreateFileStamp(source.path);
 
-            if (source.isZip)
-                results.AddRange(ScanZipFile(source.path, songScriptsRootPath));
+            List<SongScriptsManagerEntry> sourceEntries;
+            if (sourceStamp != null &&
+                _searchCacheService.TryGetSongScriptsSourceEntry(source.path, out var cachedEntry) &&
+                cachedEntry != null &&
+                SearchCacheService.IsSameFileStamp(cachedEntry.SourceFile, sourceStamp))
+            {
+                progress?.Invoke($"SongScriptsキャッシュ読込中... {relativePath}", percent);
+                sourceEntries = cachedEntry.Entries.Select(CreateRuntimeEntryFromCache).ToList();
+            }
             else
-                TryAddJsonEntry(results, source.path, songScriptsRootPath);
+            {
+                progress?.Invoke($"SongScripts読込中... {relativePath}", percent);
+                sourceEntries = source.isZip
+                    ? ScanZipFile(source.path, songScriptsRootPath).ToList()
+                    : ScanJsonFile(source.path, songScriptsRootPath);
+            }
+
+            results.AddRange(sourceEntries);
+
+            if (sourceStamp != null)
+            {
+                cacheUpdates.Add(new CachedSongScriptsSourceResult
+                {
+                    SourceFile = sourceStamp,
+                    Entries = sourceEntries.Select(CreateCacheEntry).ToList()
+                });
+            }
         }
+
+        _searchCacheService.SetSongScriptsSourceEntries(cacheUpdates);
 
         return results
             .OrderBy(entry => entry.SourceDisplayPath, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
-    private void TryAddJsonEntry(ICollection<SongScriptsManagerEntry> results, string filePath, string songScriptsRootPath)
+    private List<SongScriptsManagerEntry> ScanJsonFile(string filePath, string songScriptsRootPath)
     {
+        var results = new List<SongScriptsManagerEntry>();
+
         try
         {
             string jsonContent = File.ReadAllText(filePath);
             if (!IsValidSongScript(jsonContent))
-                return;
+                return results;
 
             string sourceRelativePath = SongScriptsPathResolver.GetRelativePathUnderSongScripts(songScriptsRootPath, filePath);
             if (!TryCreateEntry(jsonContent, filePath, sourceRelativePath, Path.GetFileName(filePath), null, out var entry))
-                return;
+                return results;
 
             results.Add(entry);
         }
         catch
         {
         }
+
+        return results;
     }
 
     private IEnumerable<SongScriptsManagerEntry> ScanZipFile(string zipPath, string songScriptsRootPath)
@@ -321,5 +353,57 @@ public class SongScriptsScanner
             return left;
 
         return $"{left}{Path.DirectorySeparatorChar}{right}";
+    }
+
+    private static SongScriptsManagerEntry CreateRuntimeEntryFromCache(CachedSongScriptsEntry entry)
+    {
+        return new SongScriptsManagerEntry
+        {
+            SourceFilePath = entry.SourceFilePath,
+            SourceRelativePath = entry.SourceRelativePath,
+            ZipEntryName = entry.ZipEntryName,
+            SourceDisplayPath = entry.SourceDisplayPath,
+            FileName = entry.FileName,
+            HasMetadataBlock = entry.HasMetadataBlock,
+            MetadataMapId = entry.MetadataMapId,
+            PathMapId = entry.PathMapId,
+            MapId = entry.MapId,
+            Hash = entry.Hash,
+            CameraScriptAuthorName = entry.CameraScriptAuthorName,
+            SongName = entry.SongName,
+            SongSubName = entry.SongSubName,
+            SongAuthorName = entry.SongAuthorName,
+            LevelAuthorName = entry.LevelAuthorName,
+            Bpm = entry.Bpm,
+            Duration = entry.Duration,
+            AvatarHeight = entry.AvatarHeight,
+            Description = entry.Description
+        };
+    }
+
+    private static CachedSongScriptsEntry CreateCacheEntry(SongScriptsManagerEntry entry)
+    {
+        return new CachedSongScriptsEntry
+        {
+            SourceFilePath = entry.SourceFilePath,
+            SourceRelativePath = entry.SourceRelativePath,
+            ZipEntryName = entry.ZipEntryName,
+            SourceDisplayPath = entry.SourceDisplayPath,
+            FileName = entry.FileName,
+            HasMetadataBlock = entry.HasMetadataBlock,
+            MetadataMapId = entry.MetadataMapId,
+            PathMapId = entry.PathMapId,
+            MapId = entry.MapId,
+            Hash = entry.Hash,
+            CameraScriptAuthorName = entry.CameraScriptAuthorName,
+            SongName = entry.SongName,
+            SongSubName = entry.SongSubName,
+            SongAuthorName = entry.SongAuthorName,
+            LevelAuthorName = entry.LevelAuthorName,
+            Bpm = entry.Bpm,
+            Duration = entry.Duration,
+            AvatarHeight = entry.AvatarHeight,
+            Description = entry.Description
+        };
     }
 }

@@ -60,7 +60,8 @@ public class SongScriptsSaveService
         {
             BackupSourceFile(entry.SourceFilePath, songScriptsRootPath, backupRootPath);
 
-            string jsonToWrite = SongScriptsMetadataJsonService.PrepareJsonWithMetadata(entry);
+            string originalJson = LoadJsonFileContent(entry);
+            string jsonToWrite = SongScriptsMetadataJsonService.PrepareJsonWithMetadata(entry, originalJson);
             File.WriteAllText(entry.SourceFilePath, jsonToWrite, Encoding.UTF8);
             entry.JsonContent = jsonToWrite;
             entry.HasMetadataBlock = true;
@@ -108,7 +109,8 @@ public class SongScriptsSaveService
                     using var outputStream = destinationEntry.Open();
                     if (pendingEntries.TryGetValue(sourceEntry.FullName, out var managedEntry))
                     {
-                        string jsonToWrite = SongScriptsMetadataJsonService.PrepareJsonWithMetadata(managedEntry);
+                        string originalJson = ReadZipEntryContent(sourceEntry);
+                        string jsonToWrite = SongScriptsMetadataJsonService.PrepareJsonWithMetadata(managedEntry, originalJson);
                         using var writer = new StreamWriter(outputStream, Encoding.UTF8, 1024, leaveOpen: true);
                         writer.Write(jsonToWrite);
                         writer.Flush();
@@ -182,5 +184,22 @@ public class SongScriptsSaveService
         catch
         {
         }
+    }
+
+    private static string LoadJsonFileContent(SongScriptsManagerEntry entry)
+    {
+        if (!string.IsNullOrEmpty(entry.JsonContent))
+        {
+            return entry.JsonContent;
+        }
+
+        return File.ReadAllText(entry.SourceFilePath, Encoding.UTF8);
+    }
+
+    private static string ReadZipEntryContent(ZipArchiveEntry sourceEntry)
+    {
+        using var inputStream = sourceEntry.Open();
+        using var reader = new StreamReader(inputStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd();
     }
 }

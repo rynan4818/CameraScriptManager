@@ -140,8 +140,9 @@ public class ManagerViewModel : ViewModelBase
 
         foreach (var item in targetItems)
         {
+            string originalJson = item.GetOriginalJsonContent();
             var newJson = MetadataService.PrepareJsonWithMetadata(
-                item.Entry.JsonContent,
+                originalJson,
                 item.MapId,
                 item.CameraScriptAuthorName,
                 item.Bpm,
@@ -153,7 +154,7 @@ public class ManagerViewModel : ViewModelBase
                 item.AvatarHeight,
                 item.Description);
 
-            files.Add((item.FullFilePath, item.Entry.JsonContent, newJson, item.SourceType));
+            files.Add((item.FullFilePath, originalJson, newJson, item.SourceType));
         }
 
         try
@@ -212,9 +213,7 @@ public class ManagerViewModel : ViewModelBase
                 selected.Entry, 
                 selected.CameraScriptAuthorName ?? "");
 
-            string content = selected.IsModified
-                ? selected.GetCurrentJsonContent()
-                : selected.Entry.JsonContent;
+            string content = selected.GetCurrentJsonContent();
 
             items.Add((folderName, selected.FileName, content));
         }
@@ -264,14 +263,16 @@ public class ManagerViewModel : ViewModelBase
         int matchCount = 0;
         foreach (var item in targetItems)
         {
+            item.OriginalSourceFiles.Clear();
+            foreach (var match in item.Entry.OriginalSourceFiles)
+            {
+                item.OriginalSourceFiles.Add(match);
+            }
+
+            item.SelectedOriginalSourceFile = item.OriginalSourceFiles.FirstOrDefault();
+
             if (item.Entry.OriginalSourceFiles.Count > 0)
             {
-                item.OriginalSourceFiles.Clear();
-                foreach (var match in item.Entry.OriginalSourceFiles)
-                {
-                    item.OriginalSourceFiles.Add(match);
-                }
-                item.SelectedOriginalSourceFile = item.OriginalSourceFiles.FirstOrDefault();
                 matchCount++;
             }
         }

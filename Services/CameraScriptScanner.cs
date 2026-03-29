@@ -15,6 +15,7 @@ public class CameraScriptScanner
     };
 
     private readonly OggDurationService _oggDurationService = new();
+    private readonly SearchCacheService _searchCacheService = new();
 
     public List<CameraScriptEntry> Scan(string customLevelsPath, string customWIPLevelsPath)
     {
@@ -31,12 +32,15 @@ public class CameraScriptScanner
 
     private void ScanFolder(string rootPath, string sourceType, List<CameraScriptEntry> results)
     {
+        var cacheUpdates = new List<CachedCameraScriptScanEntry>();
+
         try
         {
             foreach (var dir in Directory.GetDirectories(rootPath))
             {
                 var folderName = Path.GetFileName(dir);
                 var jsonFiles = Directory.GetFiles(dir, "*.json");
+                var folderFileStamps = SearchCacheService.CollectDirectoryFileStamps(dir);
 
                 foreach (var jsonFile in jsonFiles)
                 {
@@ -46,18 +50,50 @@ public class CameraScriptScanner
 
                     try
                     {
-                        var content = File.ReadAllText(jsonFile);
-                        if (!IsValidCameraScript(content))
-                            continue;
+                        SearchCacheFileStamp? sourceFileStamp = SearchCacheService.TryCreateFileStamp(jsonFile);
+                        CameraScriptEntry? entry = null;
 
-                        var entry = CreateEntry(content, jsonFile, dir, folderName, sourceType);
+                        if (sourceFileStamp != null &&
+                            _searchCacheService.TryGetCameraScriptEntry(jsonFile, out var cachedEntry) &&
+                            cachedEntry != null &&
+                            SearchCacheService.IsSameFileStamp(cachedEntry.SourceFile, sourceFileStamp) &&
+                            SearchCacheService.AreSameFileStamps(cachedEntry.FolderFiles, folderFileStamps))
+                        {
+                            entry = CreateRuntimeEntryFromCache(cachedEntry.Entry);
+                        }
+                        else
+                        {
+                            var content = File.ReadAllText(jsonFile);
+                            if (!IsValidCameraScript(content))
+                                continue;
+
+                            entry = CreateEntry(content, jsonFile, dir, folderName, sourceType);
+                        }
+
+                        if (entry == null)
+                        {
+                            continue;
+                        }
+
                         results.Add(entry);
+
+                        if (sourceFileStamp != null)
+                        {
+                            cacheUpdates.Add(new CachedCameraScriptScanEntry
+                            {
+                                SourceFile = sourceFileStamp,
+                                FolderFiles = folderFileStamps.Select(CloneFileStamp).ToList(),
+                                Entry = CreateCacheEntry(entry)
+                            });
+                        }
                     }
                     catch { }
                 }
             }
         }
         catch { }
+
+        _searchCacheService.SetCameraScriptEntries(cacheUpdates);
     }
 
     private static bool IsValidCameraScript(string json)
@@ -85,9 +121,12 @@ public class CameraScriptScanner
             SourceType = sourceType,
             FullFilePath = fullPath,
             JsonContent = jsonContent,
-            ScriptDuration = CalculateScriptDuration(jsonContent),
             OggDuration = _oggDurationService.GetDurationFromFolder(folderPath)
         };
+
+        var scriptMetrics = GetScriptMetrics(jsonContent);
+        entry.MovementCount = scriptMetrics.MovementCount;
+        entry.ScriptDuration = scriptMetrics.TotalDurationAndDelay;
 
         // Try read metadata from JSON
         try
@@ -222,27 +261,113 @@ public class CameraScriptScanner
     /// <summary>
     /// SongScript JSONのMovements配列からDurationとDelayの合計値（秒）を計算する。
     /// </summary>
-    private static double CalculateScriptDuration(string jsonContent)
+    private static (int MovementCount, double TotalDurationAndDelay) GetScriptMetrics(string jsonContent)
     {
         try
         {
             using var doc = JsonDocument.Parse(jsonContent);
             if (!doc.RootElement.TryGetProperty("Movements", out var movements))
-                return 0;
+                return (0, 0);
 
+            int movementCount = 0;
             double total = 0;
             foreach (var movement in movements.EnumerateArray())
             {
+                movementCount++;
                 if (movement.TryGetProperty("Duration", out var duration))
                     total += duration.GetDouble();
                 if (movement.TryGetProperty("Delay", out var delay))
                     total += delay.GetDouble();
             }
-            return total;
+            return (movementCount, total);
         }
         catch
         {
-            return 0;
+            return (0, 0);
         }
+    }
+
+    private static CameraScriptEntry CreateRuntimeEntryFromCache(CachedCameraScriptEntry entry)
+    {
+        return new CameraScriptEntry
+        {
+            MapId = entry.MapId,
+            CameraScriptAuthorName = entry.CameraScriptAuthorName,
+            SongName = entry.SongName,
+            SongSubName = entry.SongSubName,
+            SongAuthorName = entry.SongAuthorName,
+            LevelAuthorName = entry.LevelAuthorName,
+            Bpm = entry.Bpm,
+            Duration = entry.Duration,
+            AvatarHeight = entry.AvatarHeight,
+            Description = entry.Description,
+            FileName = entry.FileName,
+            FolderPath = entry.FolderPath,
+            FolderName = entry.FolderName,
+            SourceType = entry.SourceType,
+            FullFilePath = entry.FullFilePath,
+            Hash = entry.Hash,
+            HasOriginalMetadata = entry.HasOriginalMetadata,
+            IsCameraScriptAuthorFromMetadata = entry.IsCameraScriptAuthorFromMetadata,
+            IsMapIdFromMetadata = entry.IsMapIdFromMetadata,
+            IsSongNameFromMetadata = entry.IsSongNameFromMetadata,
+            IsSongSubNameFromMetadata = entry.IsSongSubNameFromMetadata,
+            IsSongAuthorNameFromMetadata = entry.IsSongAuthorNameFromMetadata,
+            IsLevelAuthorNameFromMetadata = entry.IsLevelAuthorNameFromMetadata,
+            IsBpmFromMetadata = entry.IsBpmFromMetadata,
+            IsAvatarHeightFromMetadata = entry.IsAvatarHeightFromMetadata,
+            IsDescriptionFromMetadata = entry.IsDescriptionFromMetadata,
+            MovementCount = entry.MovementCount,
+            ScriptDuration = entry.ScriptDuration,
+            OggDuration = entry.OggDuration,
+            OriginalSourceFiles = new List<string>()
+        };
+    }
+
+    private static CachedCameraScriptEntry CreateCacheEntry(CameraScriptEntry entry)
+    {
+        return new CachedCameraScriptEntry
+        {
+            MapId = entry.MapId,
+            CameraScriptAuthorName = entry.CameraScriptAuthorName,
+            SongName = entry.SongName,
+            SongSubName = entry.SongSubName,
+            SongAuthorName = entry.SongAuthorName,
+            LevelAuthorName = entry.LevelAuthorName,
+            Bpm = entry.Bpm,
+            Duration = entry.Duration,
+            AvatarHeight = entry.AvatarHeight,
+            Description = entry.Description,
+            FileName = entry.FileName,
+            FolderPath = entry.FolderPath,
+            FolderName = entry.FolderName,
+            SourceType = entry.SourceType,
+            FullFilePath = entry.FullFilePath,
+            Hash = entry.Hash,
+            HasOriginalMetadata = entry.HasOriginalMetadata,
+            IsCameraScriptAuthorFromMetadata = entry.IsCameraScriptAuthorFromMetadata,
+            IsMapIdFromMetadata = entry.IsMapIdFromMetadata,
+            IsSongNameFromMetadata = entry.IsSongNameFromMetadata,
+            IsSongSubNameFromMetadata = entry.IsSongSubNameFromMetadata,
+            IsSongAuthorNameFromMetadata = entry.IsSongAuthorNameFromMetadata,
+            IsLevelAuthorNameFromMetadata = entry.IsLevelAuthorNameFromMetadata,
+            IsBpmFromMetadata = entry.IsBpmFromMetadata,
+            IsAvatarHeightFromMetadata = entry.IsAvatarHeightFromMetadata,
+            IsDescriptionFromMetadata = entry.IsDescriptionFromMetadata,
+            MovementCount = entry.MovementCount,
+            ScriptDuration = entry.ScriptDuration,
+            OggDuration = entry.OggDuration
+        };
+    }
+
+    private static SearchCacheFileStamp CloneFileStamp(SearchCacheFileStamp stamp)
+    {
+        return new SearchCacheFileStamp
+        {
+            Path = stamp.Path,
+            Length = stamp.Length,
+            CreationTimeUtc = stamp.CreationTimeUtc,
+            LastWriteTimeUtc = stamp.LastWriteTimeUtc
+        };
     }
 }

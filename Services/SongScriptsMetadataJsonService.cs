@@ -7,11 +7,11 @@ namespace CameraScriptManager.Services;
 
 public static class SongScriptsMetadataJsonService
 {
-    public static string PrepareJsonWithMetadata(SongScriptsManagerEntry entry)
+    public static string PrepareJsonWithMetadata(SongScriptsManagerEntry entry, string originalJson)
     {
         try
         {
-            using var doc = JsonDocument.Parse(entry.JsonContent);
+            using var doc = JsonDocument.Parse(originalJson);
             using var stream = new MemoryStream();
             using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
 
@@ -46,7 +46,7 @@ public static class SongScriptsMetadataJsonService
         }
         catch
         {
-            return entry.JsonContent;
+            return originalJson;
         }
     }
 }

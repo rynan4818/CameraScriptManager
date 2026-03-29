@@ -7,6 +7,7 @@ namespace CameraScriptManager.Services;
 public sealed class CameraSongScriptCompatibleBeatmapIndexService
 {
     private readonly SongDetailsCacheService _cacheService;
+    private readonly SearchCacheService _searchCacheService = new();
 
     public CameraSongScriptCompatibleBeatmapIndexService(SongDetailsCacheService cacheService)
     {
@@ -54,33 +55,63 @@ public sealed class CameraSongScriptCompatibleBeatmapIndexService
     {
         var result = new CameraSongScriptCompatibleBeatmapIndex();
         var candidates = new List<BeatmapFolderCandidate>();
+        var cacheUpdates = new List<CachedBeatmapFolderResult>();
 
         AddCustomLevelsInstalledMapIds(result.InstalledMapIds, customLevelsPath);
 
         candidates.AddRange(GetFolderCandidates(customLevelsPath, isCustomLevels: true, includeCacheSubfolder: false));
         candidates.AddRange(GetFolderCandidates(customWipLevelsPath, isCustomLevels: false, includeCacheSubfolder: true));
 
-        for (int index = 0; index < candidates.Count; index++)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            BeatmapFolderCandidate candidate = candidates[index];
-            double percent = candidates.Count == 0 ? 100 : ((index + 1) * 100.0 / candidates.Count);
-            progress?.Invoke($"hash検索中... {index + 1} / {candidates.Count}", percent);
-
-            if (!TryCreateBeatmapFolder(candidate, out var beatmapFolder))
+            for (int index = 0; index < candidates.Count; index++)
             {
-                continue;
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            result.BeatmapFolders.Add(beatmapFolder);
-            AddLookup(result.ByHash, beatmapFolder.Hash, beatmapFolder);
-            AddLookup(result.ByMapId, beatmapFolder.MapId, beatmapFolder);
+                BeatmapFolderCandidate candidate = candidates[index];
+                double percent = candidates.Count == 0 ? 100 : ((index + 1) * 100.0 / candidates.Count);
+                progress?.Invoke($"hash検索中... {index + 1} / {candidates.Count}", percent);
 
-            if (!string.IsNullOrEmpty(beatmapFolder.MapId))
-            {
-                result.InstalledMapIds.Add(beatmapFolder.MapId);
+                List<SearchCacheFileStamp> folderFileStamps = SearchCacheService.CollectDirectoryFileStamps(candidate.FullPath);
+                CompatibleBeatmapFolder? beatmapFolder = null;
+                bool isCompatibleBeatmap = false;
+
+                if (_searchCacheService.TryGetBeatmapFolderEntry(candidate.FullPath, out var cachedEntry) &&
+                    cachedEntry != null &&
+                    SearchCacheService.AreSameFileStamps(cachedEntry.FileStamps, folderFileStamps))
+                {
+                    isCompatibleBeatmap = cachedEntry.IsCompatibleBeatmap;
+                    if (isCompatibleBeatmap)
+                    {
+                        beatmapFolder = CreateBeatmapFolderFromCache(cachedEntry);
+                    }
+                }
+                else if (TryCreateBeatmapFolder(candidate, out var createdBeatmapFolder))
+                {
+                    beatmapFolder = createdBeatmapFolder;
+                    isCompatibleBeatmap = true;
+                }
+
+                cacheUpdates.Add(CreateBeatmapFolderCacheEntry(candidate, folderFileStamps, beatmapFolder, isCompatibleBeatmap));
+
+                if (beatmapFolder == null)
+                {
+                    continue;
+                }
+
+                result.BeatmapFolders.Add(beatmapFolder);
+                AddLookup(result.ByHash, beatmapFolder.Hash, beatmapFolder);
+                AddLookup(result.ByMapId, beatmapFolder.MapId, beatmapFolder);
+
+                if (!string.IsNullOrEmpty(beatmapFolder.MapId))
+                {
+                    result.InstalledMapIds.Add(beatmapFolder.MapId);
+                }
             }
+        }
+        finally
+        {
+            _searchCacheService.SetBeatmapFolderEntries(cacheUpdates);
         }
 
         return result;
@@ -95,6 +126,38 @@ public sealed class CameraSongScriptCompatibleBeatmapIndexService
             FullPath = candidate.FullPath,
             IsCustomLevels = candidate.IsCustomLevels,
             MapId = ExtractLeadingMapIdCandidate(Path.GetFileName(candidate.FullPath))
+        };
+    }
+
+    private static CompatibleBeatmapFolder CreateBeatmapFolderFromCache(CachedBeatmapFolderResult cacheEntry)
+    {
+        return new CompatibleBeatmapFolder
+        {
+            FolderName = cacheEntry.FolderName,
+            DisplayName = cacheEntry.DisplayName,
+            FullPath = cacheEntry.FullPath,
+            IsCustomLevels = cacheEntry.IsCustomLevels,
+            MapId = cacheEntry.MapId,
+            Hash = cacheEntry.Hash
+        };
+    }
+
+    private static CachedBeatmapFolderResult CreateBeatmapFolderCacheEntry(
+        BeatmapFolderCandidate candidate,
+        List<SearchCacheFileStamp> fileStamps,
+        CompatibleBeatmapFolder? beatmapFolder,
+        bool isCompatibleBeatmap)
+    {
+        return new CachedBeatmapFolderResult
+        {
+            FullPath = candidate.FullPath,
+            DisplayName = candidate.DisplayName,
+            FolderName = Path.GetFileName(candidate.FullPath),
+            IsCustomLevels = candidate.IsCustomLevels,
+            IsCompatibleBeatmap = isCompatibleBeatmap,
+            MapId = beatmapFolder?.MapId ?? string.Empty,
+            Hash = beatmapFolder?.Hash ?? string.Empty,
+            FileStamps = fileStamps.Select(CloneFileStamp).ToList()
         };
     }
 
@@ -290,6 +353,17 @@ public sealed class CameraSongScriptCompatibleBeatmapIndexService
         return (value >= '0' && value <= '9') ||
             (value >= 'a' && value <= 'f') ||
             (value >= 'A' && value <= 'F');
+    }
+
+    private static SearchCacheFileStamp CloneFileStamp(SearchCacheFileStamp stamp)
+    {
+        return new SearchCacheFileStamp
+        {
+            Path = stamp.Path,
+            Length = stamp.Length,
+            CreationTimeUtc = stamp.CreationTimeUtc,
+            LastWriteTimeUtc = stamp.LastWriteTimeUtc
+        };
     }
 
     private sealed class BeatmapFolderCandidate

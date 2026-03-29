@@ -29,6 +29,7 @@ public class SongScriptsManagerViewModel : ViewModelBase
     private string _hashScanStatusText = "hash検索: 未実行";
     private bool _isHashScanRunning;
     private double _hashScanProgressValue;
+    private bool _showMetadataColumns = true;
     private CameraSongScriptCompatibleBeatmapIndex _beatmapIndex = new();
     private CancellationTokenSource? _hashScanCancellationTokenSource;
     private bool _isBeatmapMatchFinalized = true;
@@ -90,6 +91,18 @@ public class SongScriptsManagerViewModel : ViewModelBase
         private set => SetProperty(ref _hashScanProgressValue, value);
     }
 
+    public bool ShowMetadataColumns
+    {
+        get => _showMetadataColumns;
+        set
+        {
+            if (SetProperty(ref _showMetadataColumns, value))
+            {
+                SaveSettings();
+            }
+        }
+    }
+
     public void ReloadSettings()
     {
         LoadSettings();
@@ -107,11 +120,19 @@ public class SongScriptsManagerViewModel : ViewModelBase
         _customWipLevelsPath = settings.CustomWIPLevelsPath;
         _songScriptsFolderPath = SongScriptsPathResolver.ResolveSongScriptsFolderPath(settings);
         _songScriptsBackupFolderPath = SongScriptsPathResolver.ResolveSongScriptsBackupFolderPath(settings);
+        SetProperty(ref _showMetadataColumns, settings.ShowMetadataColumns);
 
         SongScriptsFolderDisplayPath = _songScriptsFolderPath;
         BackupFolderDisplayPath = string.IsNullOrWhiteSpace(_songScriptsBackupFolderPath)
             ? "(元データと同じフォルダ)"
             : _songScriptsBackupFolderPath;
+    }
+
+    private void SaveSettings()
+    {
+        var settings = _settingsService.Load();
+        settings.ShowMetadataColumns = ShowMetadataColumns;
+        _settingsService.Save(settings);
     }
 
     private Task ScanAsync()

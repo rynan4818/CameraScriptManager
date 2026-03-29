@@ -1,4 +1,5 @@
 using CameraScriptManager.Models;
+using System.IO;
 
 namespace CameraScriptManager.ViewModels;
 
@@ -308,10 +309,11 @@ public class CameraScriptItemViewModel : ViewModelBase
 
     public string GetCurrentJsonContent()
     {
+        string originalJson = GetOriginalJsonContent();
         if (IsModified)
         {
             return Services.MetadataService.PrepareJsonWithMetadata(
-                _entry.JsonContent,
+                originalJson,
                 MapId,
                 CameraScriptAuthorName,
                 Bpm,
@@ -323,6 +325,27 @@ public class CameraScriptItemViewModel : ViewModelBase
                 AvatarHeight,
                 Description);
         }
+        return originalJson;
+    }
+
+    public string GetOriginalJsonContent()
+    {
+        if (!string.IsNullOrEmpty(_entry.JsonContent))
+        {
+            return _entry.JsonContent;
+        }
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(_entry.FullFilePath) && File.Exists(_entry.FullFilePath))
+            {
+                _entry.JsonContent = File.ReadAllText(_entry.FullFilePath);
+            }
+        }
+        catch
+        {
+        }
+
         return _entry.JsonContent;
     }
 

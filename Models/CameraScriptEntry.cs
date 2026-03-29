@@ -29,6 +29,7 @@ public class CameraScriptEntry
     public bool IsBpmFromMetadata { get; set; }
     public bool IsAvatarHeightFromMetadata { get; set; }
     public bool IsDescriptionFromMetadata { get; set; }
+    public int MovementCount { get; set; }
     public double ScriptDuration { get; set; }
     public double OggDuration { get; set; }
     public List<string> OriginalSourceFiles { get; set; } = new();

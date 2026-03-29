@@ -33,6 +33,10 @@
             <Button Content="再読込" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"/>
             <Button Content="BeatSaverからmetadata取得" Click="FetchBeatSaver_Click" Padding="16,4" Margin="0,0,8,0"/>
             <Button Content="保存チェックを保存" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"/>
+            <CheckBox Content="譜面metadataを表示"
+                      IsChecked="{Binding ShowMetadataColumns}"
+                      VerticalAlignment="Center"
+                      Margin="8,0,0,0"/>
         </StackPanel>
 
         <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
@@ -195,7 +199,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="songSubName" Width="120" CellStyle="{StaticResource ModifiedCellStyle}">
+                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongSubNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -215,7 +219,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="songAuthorName" Width="130" CellStyle="{StaticResource ModifiedCellStyle}">
+                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongAuthorNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -235,7 +239,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="levelAuthorName" Width="130" CellStyle="{StaticResource ModifiedCellStyle}">
+                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="130" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsLevelAuthorNameLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -255,7 +259,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="BPM" Width="60" CellStyle="{StaticResource ModifiedCellStyle}">
+                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="60" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsBpmLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -275,7 +279,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Duration" Width="75" CellStyle="{StaticResource ModifiedCellStyle}">
+                <DataGridTemplateColumn x:Name="ColDuration" Header="Duration" Width="75" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Duration, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsDurationLocked}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">

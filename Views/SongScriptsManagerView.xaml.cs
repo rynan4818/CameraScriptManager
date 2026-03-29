@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -12,11 +13,52 @@ public partial class SongScriptsManagerView : UserControl
     private bool _isDraggingFillHandle;
     private SongScriptsManagerItemViewModel? _dragSourceEntry;
     private Border? _activeFillHandle;
+    private SongScriptsManagerViewModel? _viewModel;
     private SongScriptsManagerViewModel ViewModel => (SongScriptsManagerViewModel)DataContext;
 
     public SongScriptsManagerView()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        }
+
+        _viewModel = e.NewValue as SongScriptsManagerViewModel;
+
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            UpdateColumnVisibility();
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SongScriptsManagerViewModel.ShowMetadataColumns))
+        {
+            UpdateColumnVisibility();
+        }
+    }
+
+    private void UpdateColumnVisibility()
+    {
+        if (_viewModel == null)
+        {
+            return;
+        }
+
+        var visibility = _viewModel.ShowMetadataColumns ? Visibility.Visible : Visibility.Collapsed;
+        ColSongSubName.Visibility = visibility;
+        ColSongAuthorName.Visibility = visibility;
+        ColLevelAuthorName.Visibility = visibility;
+        ColBpm.Visibility = visibility;
+        ColDuration.Visibility = visibility;
     }
 
     private void SongScriptsDataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
