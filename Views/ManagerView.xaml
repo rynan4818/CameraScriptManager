@@ -34,6 +34,8 @@
                     ToolTip="譜面フォルダを再スキャンして一覧を更新します"/>
             <Button Content="メタ情報追加" Command="{Binding AddMetadataCommand}" Padding="16,4" Margin="0,0,8,0"
                     ToolTip="選択中の譜面フォルダ内 SongScript に metadata を追加します"/>
+            <Button Content="フォルダ出力" Command="{Binding ExportFolderCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="選択中の譜面フォルダスクリプトをフォルダへ出力します"/>
             <Button Content="ZIP出力" Command="{Binding ExportZipCommand}" Padding="16,4" Margin="0,0,8,0"
                     ToolTip="選択中の譜面フォルダスクリプトを ZIP で出力します"/>
             <Button Content="プレイリストを作成" Command="{Binding CreatePlaylistCommand}" Padding="16,4" Margin="0,0,8,0"

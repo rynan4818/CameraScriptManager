@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 using CameraScriptManager.Views;
@@ -31,6 +32,21 @@ public class DialogService : IDialogService
         }
 
         return null;
+    }
+
+    public string? ShowOpenFolderDialog(string title, string? initialDirectory = null)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = title
+        };
+
+        if (!string.IsNullOrWhiteSpace(initialDirectory) && Directory.Exists(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
+
+        return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 
     public void ShowProgressDialog(string title, Func<Action<string, double?>, Task> action)

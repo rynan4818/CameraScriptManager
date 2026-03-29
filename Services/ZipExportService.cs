@@ -32,6 +32,25 @@ public static class ZipExportService
         }
     }
 
+    public static void ExportToDirectory(
+        IList<(string zipEntryFolder, string fileName, string jsonContent)> items,
+        string outputDirectoryPath)
+    {
+        Directory.CreateDirectory(outputDirectoryPath);
+
+        foreach (var (folder, fileName, content) in items)
+        {
+            string targetDirectory = string.IsNullOrWhiteSpace(folder)
+                ? outputDirectoryPath
+                : Path.Combine(outputDirectoryPath, folder);
+
+            Directory.CreateDirectory(targetDirectory);
+
+            string targetPath = Path.Combine(targetDirectory, fileName);
+            File.WriteAllText(targetPath, content, Encoding.UTF8);
+        }
+    }
+
     public static string SanitizeFileName(string name)
     {
         foreach (char c in Path.GetInvalidFileNameChars())
@@ -85,6 +104,22 @@ public static class ZipExportService
         }
 
         return NamingEngine.SanitizeFileName($"{entry.MapId}_{entry.SongName}_{entry.LevelAuthorName}");
+    }
+
+    public static string CreateTimestampedOutputDirectory(string rootDirectoryPath)
+    {
+        string baseName = DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_OUTPUT";
+        string candidatePath = Path.Combine(rootDirectoryPath, baseName);
+        int suffix = 1;
+
+        while (Directory.Exists(candidatePath))
+        {
+            candidatePath = Path.Combine(rootDirectoryPath, $"{baseName}_{suffix}");
+            suffix++;
+        }
+
+        Directory.CreateDirectory(candidatePath);
+        return candidatePath;
     }
 
     private static string EnsureJsonFileName(string name)

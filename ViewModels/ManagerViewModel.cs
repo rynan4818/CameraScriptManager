@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using CameraScriptManager.Services;
@@ -32,6 +33,7 @@ public class ManagerViewModel : ViewModelBase
 
         ScanCommand = new AsyncRelayCommand(ScanAsync);
         AddMetadataCommand = new AsyncRelayCommand(AddMetadataAsync);
+        ExportFolderCommand = new AsyncRelayCommand(ExportFolderAsync);
         ExportZipCommand = new AsyncRelayCommand(ExportZipAsync);
         FindOriginalScriptsCommand = new AsyncRelayCommand(FindOriginalScriptsAsync);
         CreatePlaylistCommand = new AsyncRelayCommand(CreatePlaylistAsync);
@@ -52,6 +54,7 @@ public class ManagerViewModel : ViewModelBase
 
     public AsyncRelayCommand ScanCommand { get; }
     public AsyncRelayCommand AddMetadataCommand { get; }
+    public AsyncRelayCommand ExportFolderCommand { get; }
     public AsyncRelayCommand ExportZipCommand { get; }
     public AsyncRelayCommand FindOriginalScriptsCommand { get; }
     public AsyncRelayCommand CreatePlaylistCommand { get; }
@@ -214,6 +217,73 @@ public class ManagerViewModel : ViewModelBase
 
         StatusText = "ZIPエクスポート中...";
 
+        var items = BuildExportItems(selectedItems);
+
+        try
+        {
+            ZipExportService.Export(items, fileName);
+            StatusText = $"ZIPエクスポート完了: {fileName}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"エラー: {ex.Message}";
+            _dialogService.ShowMessageBox($"ZIPエクスポート中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task ExportFolderAsync()
+    {
+        var selectedItems = Items.Where(i => i.IsSelected).ToList();
+        if (selectedItems.Count == 0)
+        {
+            StatusText = "エクスポートする項目を選択してください";
+            _dialogService.ShowMessageBox("エクスポートする項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return Task.CompletedTask;
+        }
+
+        string? rootFolderPath = _dialogService.ShowOpenFolderDialog("出力先フォルダを選択", _customLevelsPath);
+        if (string.IsNullOrWhiteSpace(rootFolderPath))
+        {
+            return Task.CompletedTask;
+        }
+
+        StatusText = "フォルダ出力中...";
+
+        var items = BuildExportItems(selectedItems);
+
+        try
+        {
+            string outputDirectoryPath = ZipExportService.CreateTimestampedOutputDirectory(rootFolderPath);
+            ZipExportService.ExportToDirectory(items, outputDirectoryPath);
+            StatusText = $"フォルダ出力完了: {outputDirectoryPath}";
+
+            try
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe", outputDirectoryPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessageBox(
+                    $"フォルダ出力は完了しましたが、保存先フォルダを開けませんでした:\n{ex.Message}",
+                    "情報",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"エラー: {ex.Message}";
+            _dialogService.ShowMessageBox($"フォルダ出力中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private List<(string zipEntryFolder, string fileName, string jsonContent)> BuildExportItems(
+        IList<CameraScriptItemViewModel> selectedItems)
+    {
         var items = new List<(string zipEntryFolder, string fileName, string jsonContent)>();
         var settings = _settingsService.Load();
 
@@ -228,22 +298,10 @@ public class ManagerViewModel : ViewModelBase
                 selected.FileName);
 
             string content = selected.GetCurrentJsonContent();
-
             items.Add((zipEntryFolder, zipEntryFileName, content));
         }
 
-        try
-        {
-            ZipExportService.Export(items, fileName);
-            StatusText = $"ZIPエクスポート完了: {fileName}";
-        }
-        catch (Exception ex)
-        {
-            StatusText = $"エラー: {ex.Message}";
-            _dialogService.ShowMessageBox($"ZIPエクスポート中にエラーが発生しました:\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        return Task.CompletedTask;
+        return items;
     }
 
     private Task FindOriginalScriptsAsync()
