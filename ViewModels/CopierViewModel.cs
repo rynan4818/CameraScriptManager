@@ -17,6 +17,8 @@ public class CopierViewModel : ViewModelBase
     private readonly SongDetailsCacheService _cacheService;
     private readonly BeatSaverApiClient _apiClient;
     private readonly SongScriptCopyService _copyService;
+    private readonly CameraSongScriptCompatibleBeatmapIndexService _beatmapIndexService;
+    private readonly SongScriptsMissingBeatmapDownloadService _missingBeatmapDownloadService;
     private readonly SettingsService _settingsService = new();
 
     private Dictionary<string, List<BeatMapFolder>> _customLevelsFolders = new();
@@ -28,6 +30,8 @@ public class CopierViewModel : ViewModelBase
         _cacheService = new SongDetailsCacheService();
         _apiClient = new BeatSaverApiClient(_cacheService);
         _copyService = new SongScriptCopyService(_apiClient);
+        _beatmapIndexService = new CameraSongScriptCompatibleBeatmapIndexService(_cacheService);
+        _missingBeatmapDownloadService = new SongScriptsMissingBeatmapDownloadService(_apiClient);
 
         // SongDetailsCacheをバックグラウンドで初期化
         _ = _cacheService.InitAsync();
@@ -50,6 +54,7 @@ public class CopierViewModel : ViewModelBase
         CopyCommand = new AsyncRelayCommand(ExecuteCopy, () => Entries.Count > 0 && !IsBusy);
         ClearEntriesCommand = new RelayCommand(() => Entries.Clear());
         OpenFilesCommand = new RelayCommand(OpenFiles);
+        DownloadMissingBeatmapCommand = new AsyncRelayCommand(DownloadMissingBeatmapAsync, CanDownloadMissingBeatmap);
         
         // Context Menu Commands
         DeleteSelectedCommand = new RelayCommand(ExecuteDeleteSelected);
@@ -151,6 +156,7 @@ public class CopierViewModel : ViewModelBase
     public ICommand CopyCommand { get; }
     public ICommand ClearEntriesCommand { get; }
     public ICommand OpenFilesCommand { get; }
+    public ICommand DownloadMissingBeatmapCommand { get; }
 
     // Context Menu Commands
     public ICommand DeleteSelectedCommand { get; }
@@ -219,6 +225,7 @@ public class CopierViewModel : ViewModelBase
         {
             entry.UpdateMatchedFolders(_customLevelsFolders, _customWIPLevelsFolders);
             UpdateOggDuration(entry);
+            UpdateBeatmapDownloadAvailability(entry);
         }
     }
 
@@ -269,6 +276,7 @@ public class CopierViewModel : ViewModelBase
                 var vm = new SongScriptEntryViewModel(entry);
                 vm.OnHexIdChanged = OnEntryHexIdChangedAsync;
                 UpdateOggDuration(vm);
+                UpdateBeatmapDownloadAvailability(vm);
 
                 // metadataがないエントリはSongDetailsCacheから即座に補完を試みる
                 if (!entry.HasOriginalMetadata && !string.IsNullOrEmpty(entry.HexId))
@@ -346,6 +354,7 @@ public class CopierViewModel : ViewModelBase
         // フォルダ再マッチ
         entry.UpdateMatchedFolders(_customLevelsFolders, _customWIPLevelsFolders);
         UpdateOggDuration(entry);
+        UpdateBeatmapDownloadAvailability(entry);
         StatusMessage = $"ID {hexId} の情報を更新しました";
     }
 
@@ -466,6 +475,53 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
+    private bool CanDownloadMissingBeatmap(object? parameter)
+    {
+        return parameter is SongScriptEntryViewModel entry && entry.CanDownloadMissingBeatmap;
+    }
+
+    private async Task DownloadMissingBeatmapAsync(object? parameter)
+    {
+        if (parameter is not SongScriptEntryViewModel entry || string.IsNullOrWhiteSpace(entry.HexId))
+        {
+            return;
+        }
+
+        string mapId = entry.HexId.Trim();
+        StatusMessage = $"譜面取得準備中: {mapId}...";
+        await _cacheService.EnsureInitializedAsync();
+
+        CameraSongScriptCompatibleBeatmapIndex beatmapIndex = await Task.Run(() =>
+            _beatmapIndexService.Scan(_customLevelsPath, _customWIPLevelsPath));
+
+        StatusMessage = $"譜面取得中: {mapId}...";
+        SongScriptsMissingBeatmapDownloadResult result = await _missingBeatmapDownloadService.DownloadMissingBeatmapAsync(
+            mapId,
+            beatmapIndex,
+            _customLevelsPath);
+
+        if (result.Success)
+        {
+            RescanFolders();
+            StatusMessage = $"譜面取得完了: {mapId}";
+            return;
+        }
+
+        if (result.IsUnavailableOnBeatSaver || result.IsAlreadyLoadedLatestHash)
+        {
+            StatusMessage = result.ErrorMessage;
+            UpdateBeatmapDownloadAvailability(entry);
+            return;
+        }
+
+        StatusMessage = $"譜面取得失敗: {mapId}";
+        MessageBox.Show(
+            $"譜面取得に失敗しました。\n{result.ErrorMessage}",
+            "譜面取得エラー",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+    }
+
     private void UpdateOggDuration(SongScriptEntryViewModel vm)
     {
         string? folderPath = vm.SelectedCustomLevelsFolder?.FullPath 
@@ -480,6 +536,16 @@ public class CopierViewModel : ViewModelBase
             vm.Model.OggDuration = 0;
         }
         vm.NotifyOggDurationChanged();
+    }
+
+    private void UpdateBeatmapDownloadAvailability(SongScriptEntryViewModel entry)
+    {
+        bool hasMatchedFolder = entry.Model.MatchedCustomLevels.Count > 0 || entry.Model.MatchedCustomWIPLevels.Count > 0;
+        bool canDownload = !string.IsNullOrWhiteSpace(entry.HexId) &&
+            !hasMatchedFolder &&
+            !_missingBeatmapDownloadService.IsDownloadBlocked(entry.HexId);
+        entry.UpdateBeatmapDownloadAvailability(canDownload);
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private async Task ExecuteCopy()

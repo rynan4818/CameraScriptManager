@@ -128,6 +128,29 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="BeatSaver" Width="125" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock VerticalAlignment="Center"
+                                           Visibility="{Binding CanOpenBeatSaver, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Hyperlink NavigateUri="{Binding BeatSaverUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                                        <Run Text="Open"/>
+                                    </Hyperlink>
+                                </TextBlock>
+                                <Button Content="[取得]"
+                                        Padding="4,1"
+                                        Margin="6,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding CanDownloadMissingBeatmap, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        IsEnabled="{Binding CanDownloadMissingBeatmap}"
+                                        Command="{Binding DataContext.DownloadMissingBeatmapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTemplateColumn Header="hash" Width="180" CellStyle="{StaticResource ModifiedCellStyle}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -351,19 +374,6 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CustomWipLevelsFoldersDisplay}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <DataGridTemplateColumn Header="取得" Width="60" CanUserSort="False">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="取得"
-                                    Padding="8,2"
-                                    Visibility="{Binding CanDownloadMissingBeatmap, Converter={StaticResource BoolToVisibilityConverter}}"
-                                    IsEnabled="{Binding CanDownloadMissingBeatmap}"
-                                    Command="{Binding DataContext.DownloadMissingBeatmapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

@@ -71,6 +71,8 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
     public string SourceDisplayPath => _model.SourceDisplayPath;
     public string SourceFilePath => _model.SourceFilePath;
     public string SourceType => _model.IsZipEntry ? "ZIP" : "JSON";
+    public string BeatSaverUrl => string.IsNullOrWhiteSpace(MapId) ? "" : $"https://beatsaver.com/maps/{MapId}";
+    public bool CanOpenBeatSaver => !string.IsNullOrWhiteSpace(MapId);
 
     public bool IsSaveChecked
     {
@@ -92,6 +94,8 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
             if (SetProperty(ref _mapId, value))
             {
                 _model.MapId = value;
+                OnPropertyChanged(nameof(BeatSaverUrl));
+                OnPropertyChanged(nameof(CanOpenBeatSaver));
                 MarkModified();
                 NotifyLevelReferenceChanged();
             }

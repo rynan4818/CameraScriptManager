@@ -9,6 +9,7 @@ public class SongScriptEntryViewModel : ViewModelBase
 {
     private readonly SongScriptEntry _model;
     private readonly SettingsService _settingsService = new();
+    private bool _canDownloadMissingBeatmap;
 
     /// <summary>HexId変更時に呼ばれるコールバック（MainViewModelから設定される）</summary>
     public Func<SongScriptEntryViewModel, Task>? OnHexIdChanged { get; set; }
@@ -72,7 +73,9 @@ public class SongScriptEntryViewModel : ViewModelBase
             {
                 _model.HexId = value;
                 OnPropertyChanged(nameof(BeatSaverUrl));
+                OnPropertyChanged(nameof(CanOpenBeatSaver));
                 OnPropertyChanged(nameof(RenameDisplayName));
+                CanDownloadMissingBeatmap = false;
                 _ = OnHexIdChanged?.Invoke(this);
             }
         }
@@ -115,7 +118,14 @@ public class SongScriptEntryViewModel : ViewModelBase
     }
 
     public string BeatSaverUrl => _model.BeatSaverUrl;
+    public bool CanOpenBeatSaver => !string.IsNullOrWhiteSpace(HexId);
     public string? SourceZipName => _model.SourceZipName;
+
+    public bool CanDownloadMissingBeatmap
+    {
+        get => _canDownloadMissingBeatmap;
+        private set => SetProperty(ref _canDownloadMissingBeatmap, value);
+    }
 
     private string _cameraScriptAuthorName = "";
     public string CameraScriptAuthorName
@@ -508,6 +518,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsSingleCustomWIPLevels));
 
         UpdateOverwriteWarnings();
+    }
+
+    public void UpdateBeatmapDownloadAvailability(bool canDownload)
+    {
+        CanDownloadMissingBeatmap = canDownload;
     }
 
     /// <summary>
