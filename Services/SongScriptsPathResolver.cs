@@ -4,13 +4,13 @@ namespace CameraScriptManager.Services;
 
 public static class SongScriptsPathResolver
 {
-    private const string DefaultSongScriptsFolderPath = @"UserData\CameraSongScript\SongScripts";
-
     public static string ResolveSongScriptsFolderPath(AppSettings settings)
     {
-        var configuredPath = string.IsNullOrWhiteSpace(settings.SongScriptsFolderPath)
-            ? DefaultSongScriptsFolderPath
-            : settings.SongScriptsFolderPath;
+        var configuredPath = settings.SongScriptsFolderPath;
+        if (string.IsNullOrWhiteSpace(configuredPath))
+        {
+            return string.Empty;
+        }
 
         return ResolveConfiguredPath(configuredPath, GetGameRootPath(settings));
     }

@@ -21,6 +21,7 @@ public class SettingsViewModel : ViewModelBase
         BrowseSongScriptsFolderCommand = new RelayCommand(BrowseSongScriptsFolder);
         BrowseBackupRootCommand = new RelayCommand(BrowseBackupRoot);
         CopyTagCommand = new RelayCommand(CopyTag);
+        ResetColumnWidthsCommand = new RelayCommand(ResetColumnWidths);
 
         LoadSettings();
     }
@@ -240,6 +241,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand BrowseSongScriptsFolderCommand { get; }
     public ICommand BrowseBackupRootCommand { get; }
     public ICommand CopyTagCommand { get; }
+    public ICommand ResetColumnWidthsCommand { get; }
 
     private void LoadSettings()
     {
@@ -350,6 +352,12 @@ public class SettingsViewModel : ViewModelBase
         var path = BrowseFolder("バックアップルートフォルダを選択", BackupRootPath);
         if (path != null)
             BackupRootPath = path;
+    }
+
+    private void ResetColumnWidths()
+    {
+        ColumnWidthSettingsService.ResetAllColumnWidths();
+        OnSettingsChanged();
     }
 
     private static string? BrowseFolder(string description, string currentPath)

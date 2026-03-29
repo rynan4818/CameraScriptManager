@@ -10,7 +10,7 @@ public class AppSettings
     public string OriginalScriptPath1 { get; set; } = "";
     public string OriginalScriptPath2 { get; set; } = "";
     public string OriginalScriptPath3 { get; set; } = "";
-    public string SongScriptsFolderPath { get; set; } = @"UserData\CameraSongScript\SongScripts";
+    public string SongScriptsFolderPath { get; set; } = "";
     public string BackupRootPath { get; set; } = "";
     public bool AddMetadata { get; set; } = true;
     public bool EnableMapScriptsBackup { get; set; } = true;
@@ -26,6 +26,7 @@ public class AppSettings
 
     // Copier column visibility
     public bool ShowMetadataColumns { get; set; } = true;
+    public Dictionary<string, Dictionary<string, double>> ColumnWidths { get; set; } = new();
 }
 
 public class SettingsService

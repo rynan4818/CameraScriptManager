@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:CameraScriptManager.Converters"
+        xmlns:views="clr-namespace:CameraScriptManager.Views"
         xmlns:models="clr-namespace:CameraScriptManager.Models"
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
@@ -73,6 +74,8 @@
 
         <!-- DataGrid -->
         <DataGrid Grid.Row="2" x:Name="EntryDataGrid" ItemsSource="{Binding Entries}"
+                  views:DataGridColumnWidthPersistence.EnablePersistence="True"
+                  views:DataGridColumnWidthPersistence.GridKey="Copier"
                   AutoGenerateColumns="False" CanUserAddRows="False"
                   SelectionMode="Extended" RowHeaderWidth="0"
                   HorizontalScrollBarVisibility="Auto"
@@ -152,11 +155,11 @@
 
             <DataGrid.Columns>
                 <!-- Source Path (left-aligned, sortable) -->
-                <DataGridTextColumn Header="ソース" Binding="{Binding SourceDisplayPath}" IsReadOnly="True" Width="200"
+                <DataGridTextColumn Header="ソース" Binding="{Binding SourceDisplayPath}" IsReadOnly="True" Width="200" views:DataGridColumnWidthPersistence.ColumnKey="source_display"
                                     SortMemberPath="SourceDisplayPath"/>
 
                 <!-- Hex ID (editable, lockable) -->
-                <DataGridTemplateColumn Header="ID" Width="60" SortMemberPath="HexId">
+                <DataGridTemplateColumn Header="ID" Width="52" SortMemberPath="HexId" views:DataGridColumnWidthPersistence.ColumnKey="hex_id">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding HexId, UpdateSourceTrigger=LostFocus}"
@@ -179,7 +182,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- BeatSaver URL -->
-                <DataGridTemplateColumn Header="BeatSaver" Width="125">
+                <DataGridTemplateColumn Header="BeatSaver" Width="84" views:DataGridColumnWidthPersistence.ColumnKey="beat_saver">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -203,7 +206,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Song Name (lockable) -->
-                <DataGridTemplateColumn Header="songName" Width="200" SortMemberPath="SongName">
+                <DataGridTemplateColumn Header="songName" Width="172" SortMemberPath="SongName" views:DataGridColumnWidthPersistence.ColumnKey="song_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongName, UpdateSourceTrigger=LostFocus}"
@@ -226,7 +229,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Author (sortable, lockable) -->
-                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="100" SortMemberPath="CameraScriptAuthorName">
+                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="149" SortMemberPath="CameraScriptAuthorName" views:DataGridColumnWidthPersistence.ColumnKey="camera_script_author">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>
@@ -255,7 +258,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- songSubName (lockable) -->
-                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" SortMemberPath="SongSubName">
+                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" SortMemberPath="SongSubName" views:DataGridColumnWidthPersistence.ColumnKey="song_sub_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}"
@@ -278,7 +281,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- songAuthorName (lockable) -->
-                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName">
+                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName" views:DataGridColumnWidthPersistence.ColumnKey="song_author_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}"
@@ -301,7 +304,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- levelAuthorName (lockable) -->
-                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName">
+                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName" views:DataGridColumnWidthPersistence.ColumnKey="level_author_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}"
@@ -324,7 +327,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- BPM (lockable) -->
-                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="50" SortMemberPath="Bpm">
+                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="50" SortMemberPath="Bpm" views:DataGridColumnWidthPersistence.ColumnKey="bpm">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}"
@@ -347,7 +350,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- AvatarHeight (lockable) -->
-                <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight">
+                <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight" views:DataGridColumnWidthPersistence.ColumnKey="avatar_height">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding AvatarHeight, UpdateSourceTrigger=LostFocus}"
@@ -370,7 +373,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Description (lockable) -->
-                <DataGridTemplateColumn Header="Description" Width="150" SortMemberPath="Description">
+                <DataGridTemplateColumn Header="Description" Width="139" SortMemberPath="Description" views:DataGridColumnWidthPersistence.ColumnKey="description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}"
@@ -393,7 +396,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- CustomLevels Checkbox -->
-                <DataGridTemplateColumn Header="CL" Width="35">
+                <DataGridTemplateColumn Header="CL" Width="35" views:DataGridColumnWidthPersistence.ColumnKey="cl_check">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding CopyToCustomLevels, UpdateSourceTrigger=PropertyChanged}"
@@ -404,7 +407,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- CL Overwrite Warning -->
-                <DataGridTemplateColumn Header="!" Width="25">
+                <DataGridTemplateColumn Header="!" Width="25" views:DataGridColumnWidthPersistence.ColumnKey="cl_alert">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Background="Red" CornerRadius="3" 
@@ -420,7 +423,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- CL Folder Count (red if multiple) -->
-                <DataGridTemplateColumn Header="CL#" Width="35">
+                <DataGridTemplateColumn Header="CL#" Width="35" views:DataGridColumnWidthPersistence.ColumnKey="cl_count">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CustomLevelsFolderCount}"
@@ -431,7 +434,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- CL Folder Selector (disabled if single, red if multiple) -->
-                <DataGridTemplateColumn Header="CustomLevelsフォルダ" Width="250">
+                <DataGridTemplateColumn Header="CustomLevelsフォルダ" Width="250" views:DataGridColumnWidthPersistence.ColumnKey="custom_levels_folder">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding CustomLevelsFolders}"
@@ -445,7 +448,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- CustomWIPLevels Checkbox -->
-                <DataGridTemplateColumn Header="WIP" Width="40">
+                <DataGridTemplateColumn Header="WIP" Width="40" views:DataGridColumnWidthPersistence.ColumnKey="wip_check">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding CopyToCustomWIPLevels, UpdateSourceTrigger=PropertyChanged}"
@@ -456,7 +459,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- WIP Overwrite Warning -->
-                <DataGridTemplateColumn Header="!" Width="25">
+                <DataGridTemplateColumn Header="!" Width="25" views:DataGridColumnWidthPersistence.ColumnKey="wip_alert">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Background="Red" CornerRadius="3" 
@@ -472,7 +475,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- WIP Folder Count (red if multiple) -->
-                <DataGridTemplateColumn Header="WIP#" Width="40">
+                <DataGridTemplateColumn Header="WIP#" Width="40" views:DataGridColumnWidthPersistence.ColumnKey="wip_count">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CustomWIPLevelsFolderCount}"
@@ -483,7 +486,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- WIP Folder Selector (disabled if single, red if multiple) -->
-                <DataGridTemplateColumn Header="CustomWIPLevelsフォルダ" Width="250">
+                <DataGridTemplateColumn Header="CustomWIPLevelsフォルダ" Width="250" views:DataGridColumnWidthPersistence.ColumnKey="custom_wip_levels_folder">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding CustomWIPLevelsFolders}"
@@ -497,7 +500,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Rename Option -->
-                <DataGridTemplateColumn Header="リネーム" Width="120">
+                <DataGridTemplateColumn Header="リネーム" Width="120" views:DataGridColumnWidthPersistence.ColumnKey="rename_choice">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox SelectedItem="{Binding RenameChoice, UpdateSourceTrigger=PropertyChanged}"
@@ -508,13 +511,13 @@
                 </DataGridTemplateColumn>
 
                 <!-- Renamed FileName (editable) -->
-                <DataGridTextColumn Header="ファイル名" Binding="{Binding RenameDisplayName, UpdateSourceTrigger=LostFocus}" Width="200"/>
+                <DataGridTextColumn Header="ファイル名" Binding="{Binding RenameDisplayName, UpdateSourceTrigger=LostFocus}" Width="200" views:DataGridColumnWidthPersistence.ColumnKey="rename_file_name"/>
 
                 <!-- Script Duration (MovementsのDuration+Delay合計) -->
-                <DataGridTextColumn Header="ｽｸﾘﾌﾟﾄ長" Binding="{Binding ScriptDurationText, Mode=OneWay}" IsReadOnly="True" Width="70"/>
+                <DataGridTextColumn Header="ｽｸﾘﾌﾟﾄ長" Binding="{Binding ScriptDurationText, Mode=OneWay}" IsReadOnly="True" Width="70" views:DataGridColumnWidthPersistence.ColumnKey="script_duration"/>
 
                 <!-- Ogg Duration -->
-                <DataGridTextColumn Header="曲長(egg)" Binding="{Binding OggDurationText, Mode=OneWay}" IsReadOnly="True" Width="70"/>
+                <DataGridTextColumn Header="曲長(egg)" Binding="{Binding OggDurationText, Mode=OneWay}" IsReadOnly="True" Width="70" views:DataGridColumnWidthPersistence.ColumnKey="ogg_duration"/>
             </DataGrid.Columns>
         </DataGrid>
 

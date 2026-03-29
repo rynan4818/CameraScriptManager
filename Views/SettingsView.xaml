@@ -48,27 +48,27 @@
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CustomWIPLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="1" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomWIPLevelsCommand}" Margin="5"/>
 
-                <Separator Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10"/>
+                <!-- SongScripts -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="SongScripts:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SongScriptsFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="2" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsFolderCommand}" Margin="5"/>
+
+                <Separator Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10"/>
 
                 <!-- OriginalScript 1 -->
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
-                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding OriginalScriptPath1, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="3" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}" Margin="5"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OriginalScriptPath1, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="4" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}" Margin="5"/>
 
                 <!-- OriginalScript 2 -->
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
-                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OriginalScriptPath2, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="4" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}" Margin="5"/>
-
-                <!-- OriginalScript 3 -->
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
                 <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"/>
 
-                <!-- SongScripts -->
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="SongScripts:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
-                <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SongScriptsFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="6" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsFolderCommand}" Margin="5"/>
+                <!-- OriginalScript 2 -->
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
+                <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding OriginalScriptPath2, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                <Button Grid.Row="6" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}" Margin="5"/>
 
                 <!-- Backup Root -->
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="バックアップルート:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
@@ -149,6 +149,14 @@
                                   Margin="0,0,0,5"/>
                         <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap">
                             <Run Text="※バックアップルートが空欄の場合は CameraScriptManager.exe 配下の backup フォルダを使用します。"/>
+                        </TextBlock>
+                        <Button Content="列の幅をリセット"
+                                Command="{Binding ResetColumnWidthsCommand}"
+                                Margin="0,10,0,0"
+                                Padding="12,4"
+                                HorizontalAlignment="Left"/>
+                        <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0">
+                            <Run Text="※MapScripts / SongScripts / Copier の列幅を既定値に戻します。"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
