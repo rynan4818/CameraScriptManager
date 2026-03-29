@@ -30,14 +30,12 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,8">
-            <Button Content="再読込" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
-                    ToolTip="SongScripts フォルダを再スキャンして一覧を更新します"/>
-            <Button Content="BeatSaverからmetadata取得" Click="FetchBeatSaver_Click" Padding="16,4" Margin="0,0,8,0"
-                    ToolTip="選択行の ID を使って BeatSaver から metadata を取得します"/>
-            <Button Content="保存チェックを保存" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"
-                    ToolTip="保存チェックが ON の行を元ファイルへ保存します"/>
-            <Button Content="プレイリストを作成" Click="CreatePlaylist_Click" Padding="16,4" Margin="0,0,8,0"
-                    ToolTip="選択中の SongScripts から Beat Saber 用プレイリストを作成します"/>
+            <Button Content="スキャン" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="SongScripts フォルダをスキャンして一覧を更新します"/>
+            <Button Content="メタ情報追加" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="チェックされた SongScripts にメタ情報を追加して元ファイルへ保存します"/>
+            <Button Content="プレイリストを作成" Command="{Binding CreatePlaylistCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="チェックされた SongScripts から Beat Saber 用プレイリストを作成します"/>
             <CheckBox Content="譜面metadataを表示"
                       IsChecked="{Binding ShowMetadataColumns}"
                       ToolTip="songSubName などの譜面 metadata 列を表示します"
@@ -88,7 +86,7 @@
                     <MenuItem Header="対象セルの項目をロック" Click="LockCell_Click"/>
                     <MenuItem Header="対象セルの項目をロック解除" Click="UnlockCell_Click"/>
                     <Separator/>
-                    <MenuItem Header="保存チェック ON/OFFを切り替え" Click="ToggleSaveSelection_Click"/>
+                    <MenuItem Header="選択 ON/OFFを切り替え" Click="ToggleSaveSelection_Click"/>
                     <Separator/>
                     <MenuItem Header="エクスプローラーで開く" Click="OpenSourceFolder_Click"/>
                 </ContextMenu>
@@ -99,7 +97,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsSaveChecked, UpdateSourceTrigger=PropertyChanged}"
-                                      ToolTip="この行を保存対象に含めます"
+                                      ToolTip="この行を各操作の対象に含めます"
                                       HorizontalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

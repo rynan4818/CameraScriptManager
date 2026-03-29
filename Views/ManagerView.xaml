@@ -30,8 +30,8 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,8">
-            <Button Content="再チェック" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
-                    ToolTip="譜面フォルダを再スキャンして一覧を更新します"/>
+            <Button Content="スキャン" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="譜面フォルダをスキャンして一覧を更新します"/>
             <Button Content="メタ情報追加" Command="{Binding AddMetadataCommand}" Padding="16,4" Margin="0,0,8,0"
                     ToolTip="選択中の譜面フォルダ内 SongScript に metadata を追加します"/>
             <Button Content="フォルダ出力" Command="{Binding ExportFolderCommand}" Padding="16,4" Margin="0,0,8,0"

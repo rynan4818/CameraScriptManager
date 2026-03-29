@@ -76,10 +76,96 @@ public class ManagerViewModel : ViewModelBase
         LoadSettings();
     }
 
+    private bool EnsureAnyBeatmapPathConfigured(bool showMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(_customLevelsPath) || !string.IsNullOrWhiteSpace(_customWIPLevelsPath))
+        {
+            return true;
+        }
+
+        StatusText = "CustomLevelsまたはCustomWIPLevelsパスが設定されていません";
+        if (showMessage)
+        {
+            _dialogService.ShowMessageBox(
+                "SettingsでCustomLevelsまたはCustomWIPLevelsパスを設定して下さい。",
+                "情報",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        return false;
+    }
+
+    private bool EnsureSourcePathConfigured(string sourceType, bool showMessage)
+    {
+        string displayName = string.Equals(sourceType, "CustomWIPLevels", StringComparison.OrdinalIgnoreCase)
+            ? "CustomWIPLevels"
+            : "CustomLevels";
+        string path = displayName == "CustomWIPLevels" ? _customWIPLevelsPath : _customLevelsPath;
+
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            return true;
+        }
+
+        StatusText = $"{displayName}パスが設定されていません";
+        if (showMessage)
+        {
+            _dialogService.ShowMessageBox(
+                $"Settingsで{displayName}パスを設定して下さい。",
+                "情報",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        return false;
+    }
+
+    public bool EnsureSelectedSourcePathsConfigured(IEnumerable<CameraScriptItemViewModel> items)
+    {
+        bool hasCustomLevelsItem = items.Any(item =>
+            string.Equals(item.SourceType, "CustomLevels", StringComparison.OrdinalIgnoreCase));
+        if (hasCustomLevelsItem && !EnsureSourcePathConfigured("CustomLevels", showMessage: true))
+        {
+            return false;
+        }
+
+        bool hasCustomWipLevelsItem = items.Any(item =>
+            string.Equals(item.SourceType, "CustomWIPLevels", StringComparison.OrdinalIgnoreCase));
+        if (hasCustomWipLevelsItem && !EnsureSourcePathConfigured("CustomWIPLevels", showMessage: true))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TryBuildMapFolderPath(CameraScriptItemViewModel item, out string folderPath)
+    {
+        folderPath = string.Empty;
+        string sourceType = string.Equals(item.SourceType, "CustomWIPLevels", StringComparison.OrdinalIgnoreCase)
+            ? "CustomWIPLevels"
+            : "CustomLevels";
+
+        if (!EnsureSourcePathConfigured(sourceType, showMessage: true))
+        {
+            return false;
+        }
+
+        string rootPath = sourceType == "CustomWIPLevels" ? _customWIPLevelsPath : _customLevelsPath;
+        folderPath = Path.Combine(rootPath, item.FolderName);
+        return true;
+    }
+
 
 
     private Task ScanAsync()
     {
+        if (!EnsureAnyBeatmapPathConfigured(showMessage: true))
+        {
+            return Task.CompletedTask;
+        }
+
         StatusText = "スキャン中...";
 
         var entries = new System.Collections.Generic.List<CameraScriptManager.Models.CameraScriptEntry>();
@@ -129,6 +215,11 @@ public class ManagerViewModel : ViewModelBase
         {
             StatusText = "選択された項目がありません";
             _dialogService.ShowMessageBox("処理を行う項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return Task.CompletedTask;
+        }
+
+        if (!EnsureSelectedSourcePathsConfigured(targetItems))
+        {
             return Task.CompletedTask;
         }
 

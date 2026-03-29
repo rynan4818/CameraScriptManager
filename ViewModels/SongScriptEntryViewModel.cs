@@ -149,7 +149,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _songSubName, value))
+            {
                 _model.SongSubName = value;
+                OnPropertyChanged(nameof(RenameDisplayName));
+                UpdateOverwriteWarnings();
+            }
         }
     }
 
@@ -160,7 +164,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _songAuthorName, value))
+            {
                 _model.SongAuthorName = value;
+                OnPropertyChanged(nameof(RenameDisplayName));
+                UpdateOverwriteWarnings();
+            }
         }
     }
 
@@ -171,7 +179,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _levelAuthorName, value))
+            {
                 _model.LevelAuthorName = value;
+                OnPropertyChanged(nameof(RenameDisplayName));
+                UpdateOverwriteWarnings();
+            }
         }
     }
 
@@ -182,7 +194,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _bpm, value))
+            {
                 _model.Bpm = value;
+                OnPropertyChanged(nameof(RenameDisplayName));
+                UpdateOverwriteWarnings();
+            }
         }
     }
 
@@ -525,24 +541,48 @@ public class SongScriptEntryViewModel : ViewModelBase
         CanDownloadMissingBeatmap = canDownload;
     }
 
-    /// <summary>
-    /// SongDetailsCacheから取得したメタデータでUIの表示フィールドを補完する。
-    /// ロック状態にはしない（元JSONから読んだものではないため）。
-    /// </summary>
-    public void UpdateFromCacheMetadata(BeatSaverMetadata metadata)
+    public bool ApplyBeatSaverData(BeatSaverApiResponse apiResponse)
     {
-        if (!string.IsNullOrWhiteSpace(metadata.SongSubName) && string.IsNullOrWhiteSpace(_songSubName))
-            SongSubName = metadata.SongSubName;
+        if (apiResponse.Metadata == null)
+        {
+            _model.Metadata = null;
+            return false;
+        }
 
-        if (!string.IsNullOrWhiteSpace(metadata.SongAuthorName) && string.IsNullOrWhiteSpace(_songAuthorName))
-            SongAuthorName = metadata.SongAuthorName;
+        _model.Metadata = apiResponse.Metadata;
+        var metadata = apiResponse.Metadata;
+        bool updated = false;
 
-        if (!string.IsNullOrWhiteSpace(metadata.LevelAuthorName) && string.IsNullOrWhiteSpace(_levelAuthorName))
-            LevelAuthorName = metadata.LevelAuthorName;
+        updated |= ApplyStringValue(() => IsSongNameLocked, SongName, metadata.SongName, value => SongName = value);
+        updated |= ApplyStringValue(() => IsSongSubNameLocked, SongSubName, metadata.SongSubName, value => SongSubName = value);
+        updated |= ApplyStringValue(() => IsSongAuthorNameLocked, SongAuthorName, metadata.SongAuthorName, value => SongAuthorName = value);
+        updated |= ApplyStringValue(() => IsLevelAuthorNameLocked, LevelAuthorName, metadata.LevelAuthorName, value => LevelAuthorName = value);
+        updated |= ApplyDoubleValue(() => IsBpmLocked, Bpm, metadata.Bpm, value => Bpm = value);
 
-        if (metadata.Bpm > 0 && _bpm <= 0)
-            Bpm = metadata.Bpm;
+        return updated;
+    }
 
-        UpdateSongName();
+    private static bool ApplyStringValue(Func<bool> isLocked, string? currentValue, string? newValue, Action<string> apply)
+    {
+        if (isLocked() ||
+            string.IsNullOrWhiteSpace(newValue) ||
+            string.Equals(currentValue ?? "", newValue, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        apply(newValue);
+        return true;
+    }
+
+    private static bool ApplyDoubleValue(Func<bool> isLocked, double currentValue, double newValue, Action<double> apply)
+    {
+        if (isLocked() || newValue <= 0 || currentValue.Equals(newValue))
+        {
+            return false;
+        }
+
+        apply(newValue);
+        return true;
     }
 }

@@ -6,8 +6,6 @@ namespace CameraScriptManager.Views;
 
 public partial class MainWindow : Window
 {
-    private bool _isSongScriptsInitialized;
-
     public MainWindow()
     {
         InitializeComponent();
@@ -16,13 +14,11 @@ public partial class MainWindow : Window
 
     private async void MainWindow_ContentRendered(object? sender, EventArgs e)
     {
-        if (_isSongScriptsInitialized || DataContext is not MainWindowViewModel viewModel)
+        if (DataContext is not MainWindowViewModel viewModel)
         {
             return;
         }
 
-        _isSongScriptsInitialized = true;
-        await viewModel.SongScriptsManagerViewModel.InitializeAsync();
         await viewModel.CheckForUpdatesOnStartupAsync();
     }
 }

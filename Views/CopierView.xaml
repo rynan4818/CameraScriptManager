@@ -103,6 +103,10 @@
                               Command="{Binding PlacementTarget.DataContext.CopyIdsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                               CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     <Separator/>
+                    <MenuItem Header="BeatSaverからmetadata取得"
+                              Command="{Binding PlacementTarget.DataContext.FetchBeatSaverMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                    <Separator/>
                     <MenuItem Header="選択した未取得譜面を取得"
                               Command="{Binding PlacementTarget.DataContext.DownloadSelectedMissingBeatmapsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                               CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>

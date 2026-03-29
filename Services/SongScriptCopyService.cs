@@ -14,7 +14,7 @@ public class SongScriptCopyService
         _apiClient = apiClient;
     }
 
-    public async Task<List<CopyResult>> CopyAllAsync(
+    public Task<List<CopyResult>> CopyAllAsync(
         IList<SongScriptEntry> entries,
         bool addMetadata,
         bool createBackup,
@@ -27,15 +27,6 @@ public class SongScriptCopyService
 
         foreach (var entry in entries)
         {
-            if (addMetadata && entry.Metadata == null)
-            {
-                progress?.Report($"API取得中: {entry.HexId}...");
-                var (apiResponse, fromApi, _) = await _apiClient.GetMapAsync(entry.HexId);
-                entry.Metadata = apiResponse?.Metadata;
-                if (fromApi)
-                    await Task.Delay(200); // Rate limiting (API呼び出し時のみ)
-            }
-
             string jsonToWrite = addMetadata ? PrepareJson(entry) : entry.JsonContent;
 
             if (entry.CopyToCustomLevels && entry.SelectedCustomLevelsFolder != null)
@@ -55,7 +46,7 @@ public class SongScriptCopyService
             }
         }
 
-        return results;
+        return Task.FromResult(results);
     }
 
     private string PrepareJson(SongScriptEntry entry)
@@ -68,45 +59,28 @@ public class SongScriptCopyService
 
             writer.WriteStartObject();
 
-            if (entry.Metadata != null)
-            {
-                writer.WritePropertyName("metadata");
-                writer.WriteStartObject();
-                writer.WriteString("mapId", entry.HexId);
-                writer.WriteString("cameraScriptAuthorName", entry.CameraScriptAuthorName ?? "");
-                writer.WriteNumber("bpm", entry.Metadata.Bpm);
-                writer.WriteNumber("duration", entry.OggDuration > 0 ? entry.OggDuration : entry.Metadata.Duration);
-                writer.WriteString("songName", entry.Metadata.SongName ?? "");
-                writer.WriteString("songSubName", entry.Metadata.SongSubName ?? "");
-                writer.WriteString("songAuthorName", entry.Metadata.SongAuthorName ?? "");
-                writer.WriteString("levelAuthorName", entry.Metadata.LevelAuthorName ?? "");
-                writer.WriteNumber("avatarHeight", entry.AvatarHeight);
-                writer.WriteString("description", entry.Description ?? "");
-                writer.WriteEndObject();
-            }
-            else
-            {
-                // metadataがない場合でもモデルに保持されているフィールドをmetadata内に書く
-                writer.WritePropertyName("metadata");
-                writer.WriteStartObject();
-                writer.WriteString("mapId", entry.HexId);
-                writer.WriteString("cameraScriptAuthorName", entry.CameraScriptAuthorName ?? "");
-                if (entry.Bpm > 0)
-                    writer.WriteNumber("bpm", entry.Bpm);
-                if (entry.OggDuration > 0)
-                    writer.WriteNumber("duration", entry.OggDuration);
-                if (!string.IsNullOrWhiteSpace(entry.SongName))
-                    writer.WriteString("songName", entry.SongName);
-                if (!string.IsNullOrWhiteSpace(entry.SongSubName))
-                    writer.WriteString("songSubName", entry.SongSubName);
-                if (!string.IsNullOrWhiteSpace(entry.SongAuthorName))
-                    writer.WriteString("songAuthorName", entry.SongAuthorName);
-                if (!string.IsNullOrWhiteSpace(entry.LevelAuthorName))
-                    writer.WriteString("levelAuthorName", entry.LevelAuthorName);
-                writer.WriteNumber("avatarHeight", entry.AvatarHeight);
-                writer.WriteString("description", entry.Description ?? "");
-                writer.WriteEndObject();
-            }
+            writer.WritePropertyName("metadata");
+            writer.WriteStartObject();
+            writer.WriteString("mapId", entry.HexId);
+            writer.WriteString("cameraScriptAuthorName", entry.CameraScriptAuthorName ?? "");
+            if (entry.Bpm > 0)
+                writer.WriteNumber("bpm", entry.Bpm);
+
+            double duration = entry.OggDuration > 0 ? entry.OggDuration : entry.Metadata?.Duration ?? 0;
+            if (duration > 0)
+                writer.WriteNumber("duration", duration);
+
+            if (!string.IsNullOrWhiteSpace(entry.SongName))
+                writer.WriteString("songName", entry.SongName);
+            if (!string.IsNullOrWhiteSpace(entry.SongSubName))
+                writer.WriteString("songSubName", entry.SongSubName);
+            if (!string.IsNullOrWhiteSpace(entry.SongAuthorName))
+                writer.WriteString("songAuthorName", entry.SongAuthorName);
+            if (!string.IsNullOrWhiteSpace(entry.LevelAuthorName))
+                writer.WriteString("levelAuthorName", entry.LevelAuthorName);
+            writer.WriteNumber("avatarHeight", entry.AvatarHeight);
+            writer.WriteString("description", entry.Description ?? "");
+            writer.WriteEndObject();
 
             foreach (var prop in doc.RootElement.EnumerateObject())
             {
@@ -140,12 +114,12 @@ public class SongScriptCopyService
             {
                 { "MapId", entry.HexId },
                 { "SongName", entry.SongName },
-                { "SongSubName", entry.Metadata?.SongSubName ?? "" },
-                { "SongAuthorName", entry.Metadata?.SongAuthorName ?? "" },
-                { "LevelAuthorName", entry.Metadata?.LevelAuthorName ?? "" },
+                { "SongSubName", entry.SongSubName },
+                { "SongAuthorName", entry.SongAuthorName },
+                { "LevelAuthorName", entry.LevelAuthorName },
                 { "CameraScriptAuthorName", entry.CameraScriptAuthorName ?? "" },
                 { "FileName", Path.GetFileName(entry.SourceFileName) },
-                { "Bpm", entry.Metadata?.Bpm.ToString() ?? "" }
+                { "Bpm", entry.Bpm > 0 ? entry.Bpm.ToString() : "" }
             };
             string name = NamingEngine.ReplaceTags(settings.CopierRenameCustomFormat, tags);
             if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))

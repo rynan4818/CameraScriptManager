@@ -19,7 +19,7 @@ public class AppSettings
     public bool EnableAutoUpdateCheck { get; set; } = true;
     public DateTime? LastUpdateCheckUtc { get; set; }
     public string LastKnownLatestCameraScriptManagerVersion { get; set; } = "";
-    public string DefaultRenameOption { get; set; } = "IdAuthorSongName";
+    public string DefaultRenameOption { get; set; } = "SongScript";
 
     // Naming settings
     public string ManagerZipNamingMode { get; set; } = "Default"; // Default or Custom

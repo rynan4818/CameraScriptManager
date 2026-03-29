@@ -70,9 +70,12 @@ public sealed class SongScriptsMissingBeatmapDownloadService
                 return SongScriptsMissingBeatmapDownloadResult.Failed("BeatSaverから空のZIPが返されました。");
             }
 
-            string targetRootPath = string.IsNullOrWhiteSpace(customLevelsPath)
-                ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CustomLevels")
-                : customLevelsPath;
+            if (string.IsNullOrWhiteSpace(customLevelsPath))
+            {
+                return SongScriptsMissingBeatmapDownloadResult.Failed("SettingsでCustomLevelsパスを設定して下さい。");
+            }
+
+            string targetRootPath = customLevelsPath;
 
             Directory.CreateDirectory(targetRootPath);
             string extractedFolderPath = await ExtractZipAsync(zipBytes, targetRootPath, BuildFolderName(response));

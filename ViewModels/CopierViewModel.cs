@@ -53,10 +53,11 @@ public class CopierViewModel : ViewModelBase
         _defaultRenameOption = ParseDefaultRenameOption(settings);
 
         // Commands
-        RescanCommand = new RelayCommand(RescanFolders);
+        RescanCommand = new RelayCommand(() => RescanFolders(showMissingPathMessage: true));
         CopyCommand = new AsyncRelayCommand(ExecuteCopy, () => Entries.Count > 0 && !IsBusy);
         ClearEntriesCommand = new RelayCommand(() => Entries.Clear());
         OpenFilesCommand = new RelayCommand(OpenFiles);
+        FetchBeatSaverMetadataCommand = new AsyncRelayCommand(ExecuteFetchBeatSaverMetadataAsync, CanFetchBeatSaverMetadata);
         DownloadMissingBeatmapCommand = new AsyncRelayCommand(DownloadMissingBeatmapAsync, CanDownloadMissingBeatmap);
         DownloadSelectedMissingBeatmapsCommand = new AsyncRelayCommand(DownloadSelectedMissingBeatmapsAsync, CanDownloadSelectedMissingBeatmaps);
         
@@ -77,7 +78,7 @@ public class CopierViewModel : ViewModelBase
         SongNameBeatSaverAndAuthorCommand = new AsyncRelayCommand(p => ExecuteSetSongNameOptionAsync(p, SongNameOption.BeatSaverSongNameAndAuthor));
 
         // Initial scan
-        RescanFolders();
+        RescanFolders(showMissingPathMessage: false);
     }
 
     // Settings
@@ -106,7 +107,7 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
-    private RenameOption _defaultRenameOption = RenameOption.IdAuthorSongName;
+    private RenameOption _defaultRenameOption = RenameOption.SongScript;
     public RenameOption DefaultRenameOption
     {
         get => _defaultRenameOption;
@@ -160,6 +161,7 @@ public class CopierViewModel : ViewModelBase
     public ICommand CopyCommand { get; }
     public ICommand ClearEntriesCommand { get; }
     public ICommand OpenFilesCommand { get; }
+    public ICommand FetchBeatSaverMetadataCommand { get; }
     public ICommand DownloadMissingBeatmapCommand { get; }
     public ICommand DownloadSelectedMissingBeatmapsCommand { get; }
 
@@ -196,8 +198,48 @@ public class CopierViewModel : ViewModelBase
 
         if (pathChanged)
         {
-            RescanFolders();
+            RescanFolders(showMissingPathMessage: false);
         }
+    }
+
+    private bool EnsureAnyBeatmapPathConfigured(bool showMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(_customLevelsPath) || !string.IsNullOrWhiteSpace(_customWIPLevelsPath))
+        {
+            return true;
+        }
+
+        StatusMessage = "CustomLevelsまたはCustomWIPLevelsパスが設定されていません";
+        if (showMessage)
+        {
+            MessageBox.Show(
+                "SettingsでCustomLevelsまたはCustomWIPLevelsパスを設定して下さい。",
+                "情報",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        return false;
+    }
+
+    private bool EnsureCustomLevelsPathConfigured(bool showMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(_customLevelsPath))
+        {
+            return true;
+        }
+
+        StatusMessage = "CustomLevelsパスが設定されていません";
+        if (showMessage)
+        {
+            MessageBox.Show(
+                "SettingsでCustomLevelsパスを設定して下さい。",
+                "情報",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        return false;
     }
 
     private void OpenFiles()
@@ -215,17 +257,23 @@ public class CopierViewModel : ViewModelBase
         }
     }
 
-    public void RescanFolders()
+    public void RescanFolders(bool showMissingPathMessage)
     {
-        if (string.IsNullOrEmpty(_customLevelsPath) && string.IsNullOrEmpty(_customWIPLevelsPath))
-            return;
+        bool hasAnyPath = EnsureAnyBeatmapPathConfigured(showMissingPathMessage);
 
-        _customLevelsFolders = _scanner.ScanFolder(_customLevelsPath, true);
-        _customWIPLevelsFolders = _scanner.ScanFolder(_customWIPLevelsPath, false);
+        _customLevelsFolders = string.IsNullOrWhiteSpace(_customLevelsPath)
+            ? new Dictionary<string, List<BeatMapFolder>>()
+            : _scanner.ScanFolder(_customLevelsPath, true);
+        _customWIPLevelsFolders = string.IsNullOrWhiteSpace(_customWIPLevelsPath)
+            ? new Dictionary<string, List<BeatMapFolder>>()
+            : _scanner.ScanFolder(_customWIPLevelsPath, false);
 
-        int clCount = _customLevelsFolders.Values.Sum(v => v.Count);
-        int wipCount = _customWIPLevelsFolders.Values.Sum(v => v.Count);
-        StatusMessage = $"スキャン完了: CustomLevels {clCount} フォルダ, CustomWIPLevels {wipCount} フォルダ";
+        if (hasAnyPath)
+        {
+            int clCount = _customLevelsFolders.Values.Sum(v => v.Count);
+            int wipCount = _customWIPLevelsFolders.Values.Sum(v => v.Count);
+            StatusMessage = $"スキャン完了: CustomLevels {clCount} フォルダ, CustomWIPLevels {wipCount} フォルダ";
+        }
 
         // Re-match existing entries
         foreach (var entry in Entries)
@@ -240,13 +288,12 @@ public class CopierViewModel : ViewModelBase
     {
         return Enum.TryParse<RenameOption>(settings.DefaultRenameOption, out var parsed)
             ? parsed
-            : RenameOption.IdAuthorSongName;
+            : RenameOption.SongScript;
     }
 
     public void HandleDroppedFiles(string[] filePaths)
     {
         int importedCount = 0;
-        var importedVms = new List<SongScriptEntryViewModel>();
 #if DEBUG
         DebugLog($"HandleDroppedFiles: cacheService.IsAvailable={_cacheService.IsAvailable}, files={filePaths.Length}");
 #endif
@@ -279,117 +326,128 @@ public class CopierViewModel : ViewModelBase
                 UpdateOggDuration(vm);
                 UpdateBeatmapDownloadAvailability(vm);
 
-                // metadataがないエントリはSongDetailsCacheから即座に補完を試みる
-                if (!entry.HasOriginalMetadata && !string.IsNullOrEmpty(entry.HexId))
-                {
-#if DEBUG
-                    DebugLog($"HandleDroppedFiles: trying cache for HexId=\"{entry.HexId}\"");
-#endif
-                    if (_cacheService.TryGetByMapId(entry.HexId, out var cacheResponse) && cacheResponse.Metadata != null)
-                    {
-                        entry.Metadata = cacheResponse.Metadata;
-                        vm.UpdateFromCacheMetadata(cacheResponse.Metadata);
-                        LastCacheLookupSuccess = true;
-                        CacheHitCount++;
-                    }
-                    else
-                    {
-                        // キャッシュ未初期化 or ヒットしなかった場合、非同期補完リストに追加
-#if DEBUG
-                        DebugLog($"HandleDroppedFiles: cache MISS for HexId=\"{entry.HexId}\", queued for async fallback");
-#endif
-                        LastCacheLookupSuccess = false;
-                        CacheMissCount++;
-                        importedVms.Add(vm);
-                    }
-                }
-
                 Entries.Add(vm);
                 importedCount++;
             }
         }
 
         StatusMessage = $"{importedCount} 件のSongScriptを読み込みました";
-
-        // キャッシュでカバーできなかったエントリを非同期でBeatSaver APIから補完
-        if (importedVms.Count > 0)
-        {
-#if DEBUG
-            DebugLog($"HandleDroppedFiles: {importedVms.Count} cache misses, starting PopulateMetadataAsync");
-#endif
-            _ = PopulateMetadataAsync(importedVms);
-        }
-    }
-
-    private async Task PopulateMetadataAsync(List<SongScriptEntryViewModel> entries)
-    {
-        // キャッシュの初期化完了を待機してから問い合わせを開始
-        // （HandleDroppedFiles時点では初期化未完了でキャッシュミスになるため）
-#if DEBUG
-        DebugLog($"PopulateMetadataAsync: waiting for cache init... IsAvailable={_cacheService.IsAvailable}");
-#endif
-        await _cacheService.EnsureInitializedAsync();
-#if DEBUG
-        DebugLog($"PopulateMetadataAsync: cache init done. IsAvailable={_cacheService.IsAvailable}. Processing {entries.Count} entries...");
-#endif
-
-        foreach (var vm in entries)
-        {
-            if (!vm.Model.HasOriginalMetadata && !string.IsNullOrEmpty(vm.HexId) && vm.Model.Metadata == null)
-            {
-                await FetchApiDataAsync(vm);
-                if (vm.Model.Metadata != null)
-                {
-                    vm.UpdateFromCacheMetadata(vm.Model.Metadata);
-                }
-            }
-        }
     }
 
     private async Task OnEntryHexIdChangedAsync(SongScriptEntryViewModel entry)
     {
         string hexId = entry.HexId.ToLowerInvariant();
-
-        await FetchApiDataAsync(entry);
+        entry.Model.Metadata = null;
+        if (entry.SongNameChoice != SongNameOption.Source)
+        {
+            entry.UpdateSongName();
+        }
 
         // フォルダ再マッチ
         entry.UpdateMatchedFolders(_customLevelsFolders, _customWIPLevelsFolders);
         UpdateOggDuration(entry);
         UpdateBeatmapDownloadAvailability(entry);
-        StatusMessage = $"ID {hexId} の情報を更新しました";
+        StatusMessage = string.IsNullOrWhiteSpace(hexId)
+            ? "ID未設定の行を更新しました"
+            : $"ID {hexId} の照合結果を更新しました";
     }
 
     public async Task FetchApiDataAsync(SongScriptEntryViewModel entry)
     {
-        string hexId = entry.HexId.ToLowerInvariant();
-        if (string.IsNullOrEmpty(hexId)) return;
+        string hexId = NormalizeMapId(entry.HexId);
+        if (string.IsNullOrEmpty(hexId))
+        {
+            return;
+        }
 
         try
         {
-            StatusMessage = $"API取得中: {hexId}...";
-            var (apiResponse, fromApi, cacheHit) = await _apiClient.GetMapAsync(hexId);
-            if (cacheHit.HasValue)
-            {
-                LastCacheLookupSuccess = cacheHit.Value;
-                if (cacheHit.Value)
-                    CacheHitCount++;
-                else
-                    CacheMissCount++;
-            }
-            if (apiResponse != null)
-            {
-                entry.Model.Metadata = apiResponse.Metadata;
-            }
-            else
-            {
-                entry.Model.Metadata = null;
-            }
+            BeatSaverApiResponse? apiResponse = await GetBeatSaverApiResponseAsync(hexId);
+            entry.Model.Metadata = apiResponse?.Metadata;
             entry.UpdateSongName();
-            StatusMessage = $"ID {hexId} のメタデータを取得しました";
+            StatusMessage = apiResponse?.Metadata != null
+                ? $"ID {hexId} のメタデータを取得しました"
+                : $"ID {hexId} のメタデータが見つかりませんでした";
         }
         catch
         {
+            entry.Model.Metadata = null;
             entry.UpdateSongName();
+        }
+    }
+
+    private bool CanFetchBeatSaverMetadata(object? parameter)
+    {
+        return GetSelectedEntries(parameter).Any(entry => !string.IsNullOrWhiteSpace(entry.HexId));
+    }
+
+    private async Task ExecuteFetchBeatSaverMetadataAsync(object? parameter)
+    {
+        var targetGroups = GetSelectedEntries(parameter)
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.HexId))
+            .GroupBy(entry => NormalizeMapId(entry.HexId), StringComparer.OrdinalIgnoreCase)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key))
+            .ToList();
+
+        if (targetGroups.Count == 0)
+        {
+            StatusMessage = "BeatSaverからmetadata取得する項目がありません";
+            return;
+        }
+
+        int totalCount = targetGroups.Sum(group => group.Count());
+        int successCount = 0;
+        int notFoundCount = 0;
+        int errorCount = 0;
+        var failedMessages = new List<string>();
+
+        foreach (var group in targetGroups)
+        {
+            string mapId = group.Key;
+
+            try
+            {
+                BeatSaverApiResponse? apiResponse = await GetBeatSaverApiResponseAsync(mapId);
+                if (apiResponse?.Metadata == null)
+                {
+                    foreach (SongScriptEntryViewModel entry in group)
+                    {
+                        entry.Model.Metadata = null;
+                    }
+
+                    notFoundCount += group.Count();
+                    StatusMessage = $"BeatSaverメタデータが見つかりませんでした: {mapId}";
+                    continue;
+                }
+
+                foreach (SongScriptEntryViewModel entry in group)
+                {
+                    entry.ApplyBeatSaverData(apiResponse);
+                }
+
+                successCount += group.Count();
+                StatusMessage = $"BeatSaverメタデータ取得完了: {mapId}";
+            }
+            catch (Exception ex)
+            {
+                errorCount += group.Count();
+                failedMessages.Add($"{mapId}: {ex.Message}");
+                StatusMessage = $"BeatSaverメタデータ取得エラー: {mapId}";
+            }
+        }
+
+        if (totalCount > 1)
+        {
+            StatusMessage = BuildBeatSaverFetchSummaryText(totalCount, successCount, notFoundCount, errorCount);
+        }
+
+        if (failedMessages.Count > 0)
+        {
+            MessageBox.Show(
+                $"BeatSaverメタデータ取得に失敗しました。\n{string.Join("\n", failedMessages)}",
+                "BeatSaverメタデータ取得エラー",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
     }
 
@@ -400,6 +458,22 @@ public class CopierViewModel : ViewModelBase
             return list.Cast<SongScriptEntryViewModel>().ToList();
         }
         return new List<SongScriptEntryViewModel>();
+    }
+
+    private async Task<BeatSaverApiResponse?> GetBeatSaverApiResponseAsync(string hexId)
+    {
+        StatusMessage = $"BeatSaver API取得中: {hexId}...";
+        var (apiResponse, _, cacheHit) = await _apiClient.GetMapAsync(hexId);
+        if (cacheHit.HasValue)
+        {
+            LastCacheLookupSuccess = cacheHit.Value;
+            if (cacheHit.Value)
+                CacheHitCount++;
+            else
+                CacheMissCount++;
+        }
+
+        return apiResponse;
     }
 
     private void ExecuteDeleteSelected(object? parameter)
@@ -513,6 +587,11 @@ public class CopierViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureCustomLevelsPathConfigured(showMessage: true))
+        {
+            return;
+        }
+
         StatusMessage = targetEntries.Count == 1
             ? $"譜面取得準備中: {targetEntries[0].HexId.Trim()}..."
             : $"譜面取得準備中... 0 / {targetEntries.Count}";
@@ -564,7 +643,7 @@ public class CopierViewModel : ViewModelBase
 
         if (successCount > 0)
         {
-            RescanFolders();
+            RescanFolders(showMissingPathMessage: false);
         }
         else
         {
@@ -610,6 +689,22 @@ public class CopierViewModel : ViewModelBase
         if (skippedCount > 0)
         {
             parts.Add($"スキップ {skippedCount} 件");
+        }
+
+        if (errorCount > 0)
+        {
+            parts.Add($"エラー {errorCount} 件");
+        }
+
+        return string.Join(" / ", parts);
+    }
+
+    private static string BuildBeatSaverFetchSummaryText(int totalCount, int successCount, int notFoundCount, int errorCount)
+    {
+        var parts = new List<string> { $"BeatSaverメタデータ取得完了: 成功 {successCount} 件 / 対象 {totalCount} 件" };
+        if (notFoundCount > 0)
+        {
+            parts.Add($"未検出 {notFoundCount} 件");
         }
 
         if (errorCount > 0)

@@ -124,11 +124,22 @@ public partial class ManagerView : UserControl
             .OfType<CameraScriptItemViewModel>()
             .ToList();
 
+        if (selectedItems.Count == 0)
+        {
+            return;
+        }
+
+        if (!ViewModel.EnsureSelectedSourcePathsConfigured(selectedItems))
+        {
+            return;
+        }
+
         foreach (var item in selectedItems)
         {
-            var folderPath = System.IO.Path.Combine(
-                item.SourceType == "CustomWIPLevels" ? ViewModel.CustomWIPLevelsPath : ViewModel.CustomLevelsPath,
-                item.FolderName);
+            if (!ViewModel.TryBuildMapFolderPath(item, out var folderPath))
+            {
+                return;
+            }
 
             if (System.IO.Directory.Exists(folderPath))
             {

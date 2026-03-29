@@ -44,9 +44,11 @@ public class SongScriptsManagerViewModel : ViewModelBase
         Items = new ObservableCollection<SongScriptsManagerItemViewModel>();
         ScanCommand = new AsyncRelayCommand(ScanAsync);
         SaveCheckedCommand = new AsyncRelayCommand(SaveCheckedAsync);
+        CreatePlaylistCommand = new AsyncRelayCommand(CreatePlaylistAsync);
         DownloadMissingBeatmapCommand = new AsyncRelayCommand(DownloadMissingBeatmapAsync);
 
         LoadSettings();
+        UpdateInitialStatus();
         _ = _cacheService.InitAsync();
     }
 
@@ -54,6 +56,7 @@ public class SongScriptsManagerViewModel : ViewModelBase
 
     public AsyncRelayCommand ScanCommand { get; }
     public AsyncRelayCommand SaveCheckedCommand { get; }
+    public AsyncRelayCommand CreatePlaylistCommand { get; }
     public AsyncRelayCommand DownloadMissingBeatmapCommand { get; }
 
     public Task DownloadSelectedMissingBeatmapsAsync(IEnumerable<SongScriptsManagerItemViewModel> items)
@@ -61,13 +64,19 @@ public class SongScriptsManagerViewModel : ViewModelBase
         return DownloadMissingBeatmapsCoreAsync(items);
     }
 
-    public async Task CreatePlaylistAsync(IEnumerable<SongScriptsManagerItemViewModel> sourceItems)
+    private Task CreatePlaylistAsync()
+    {
+        var selectedItems = Items.Where(item => item.IsSaveChecked).ToList();
+        return CreatePlaylistForItemsAsync(selectedItems);
+    }
+
+    private async Task CreatePlaylistForItemsAsync(IEnumerable<SongScriptsManagerItemViewModel> sourceItems)
     {
         var selectedItems = sourceItems.ToList();
         if (selectedItems.Count == 0)
         {
-            StatusText = "プレイリストを作成する項目を選択してください";
-            _dialogService.ShowMessageBox("プレイリストを作成する項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            StatusText = "プレイリストを作成する項目にチェックを入れてください";
+            _dialogService.ShowMessageBox("プレイリストを作成する項目にチェックを入れてください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -156,10 +165,21 @@ public class SongScriptsManagerViewModel : ViewModelBase
     public void ReloadSettings()
     {
         LoadSettings();
+        if (_scanGeneration == 0 && Items.Count == 0 && !IsHashScanRunning)
+        {
+            UpdateInitialStatus();
+        }
     }
 
     public Task InitializeAsync()
     {
+        LoadSettings();
+        if (!EnsureSongScriptsPathConfigured(showMessage: false))
+        {
+            SetSongScriptsPathMissingState();
+            return Task.CompletedTask;
+        }
+
         return ScanCoreAsync(showProgressDialog: true);
     }
 
@@ -179,6 +199,71 @@ public class SongScriptsManagerViewModel : ViewModelBase
             : "無効";
     }
 
+    private void UpdateInitialStatus()
+    {
+        if (string.IsNullOrWhiteSpace(_songScriptsFolderPath))
+        {
+            StatusText = "SongScriptsパスが設定されていません";
+            return;
+        }
+
+        if (!Directory.Exists(_songScriptsFolderPath))
+        {
+            StatusText = $"SongScriptsフォルダが見つかりません: {_songScriptsFolderPath}";
+            return;
+        }
+
+        StatusText = "SongScripts をスキャンしてください";
+    }
+
+    private void SetSongScriptsPathMissingState()
+    {
+        _beatmapIndex = new CameraSongScriptCompatibleBeatmapIndex();
+        _isBeatmapMatchFinalized = true;
+        Items.Clear();
+        SetHashScanIdle("hash検索: 未実行");
+    }
+
+    private bool EnsureSongScriptsPathConfigured(bool showMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(_songScriptsFolderPath))
+        {
+            return true;
+        }
+
+        StatusText = "SongScriptsパスが設定されていません";
+        if (showMessage)
+        {
+            _dialogService.ShowMessageBox(
+                "SettingsでSongScriptsパスを設定して下さい。",
+                "情報",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        return false;
+    }
+
+    private bool EnsureCustomLevelsPathConfigured(bool showMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(_customLevelsPath))
+        {
+            return true;
+        }
+
+        StatusText = "CustomLevelsパスが設定されていません";
+        if (showMessage)
+        {
+            _dialogService.ShowMessageBox(
+                "SettingsでCustomLevelsパスを設定して下さい。",
+                "情報",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        return false;
+    }
+
     private void SaveSettings()
     {
         var settings = _settingsService.Load();
@@ -188,6 +273,13 @@ public class SongScriptsManagerViewModel : ViewModelBase
 
     private Task ScanAsync()
     {
+        LoadSettings();
+        if (!EnsureSongScriptsPathConfigured(showMessage: true))
+        {
+            SetSongScriptsPathMissingState();
+            return Task.CompletedTask;
+        }
+
         return ScanCoreAsync(showProgressDialog: true);
     }
 
@@ -201,11 +293,8 @@ public class SongScriptsManagerViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(_songScriptsFolderPath))
             {
-                _beatmapIndex = new CameraSongScriptCompatibleBeatmapIndex();
-                _isBeatmapMatchFinalized = true;
-                Items.Clear();
-                SetHashScanIdle("hash検索: 未実行");
-                StatusText = "SongScriptsフォルダが設定されていません";
+                SetSongScriptsPathMissingState();
+                StatusText = "SongScriptsパスが設定されていません";
                 return;
             }
 
@@ -294,8 +383,14 @@ public class SongScriptsManagerViewModel : ViewModelBase
         var targetItems = Items.Where(item => item.IsSaveChecked).ToList();
         if (targetItems.Count == 0)
         {
-            StatusText = "保存対象がありません";
-            _dialogService.ShowMessageBox("保存する項目にチェックを入れてください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            StatusText = "メタ情報追加対象がありません";
+            _dialogService.ShowMessageBox("メタ情報を追加する項目にチェックを入れてください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        LoadSettings();
+        if (!EnsureSongScriptsPathConfigured(showMessage: true))
+        {
             return;
         }
 
@@ -304,18 +399,18 @@ public class SongScriptsManagerViewModel : ViewModelBase
             : "バックアップは作成されません。";
 
         var result = _dialogService.ShowMessageBoxWithResult(
-            $"チェックされた {targetItems.Count} 件のmetadataを上書き保存します。\n{backupMessage}\nよろしいですか？",
-            "SongScripts保存",
+            $"チェックされた {targetItems.Count} 件にメタ情報を追加して元ファイルを更新します。\n{backupMessage}\nよろしいですか？",
+            "メタ情報追加",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
         if (result != MessageBoxResult.Yes)
             return;
 
-        StatusText = "SongScriptsを保存中...";
+        StatusText = "メタ情報追加中...";
 
         List<SongScriptsSaveResult> saveResults = new();
-        _dialogService.ShowProgressDialog("SongScriptsを保存中...", async progress =>
+        _dialogService.ShowProgressDialog("メタ情報を追加中...", async progress =>
         {
             var saveProgress = new Progress<string>(message => progress(message, null));
             saveResults = await _saveService.SaveAsync(
@@ -341,19 +436,19 @@ public class SongScriptsManagerViewModel : ViewModelBase
 
         if (failCount == 0)
         {
-            StatusText = $"保存完了: {successCount} 件";
+            StatusText = $"メタ情報追加完了: {successCount} 件";
             return;
         }
 
-        StatusText = $"保存完了: {successCount} 件成功, {failCount} 件失敗";
+        StatusText = $"メタ情報追加完了: {successCount} 件成功, {failCount} 件失敗";
         string errorLines = string.Join(
             Environment.NewLine,
             saveResults
                 .Where(saveResult => !saveResult.Success)
                 .Select(saveResult => $"{Path.GetFileName(saveResult.SourceFilePath)}: {saveResult.ErrorMessage}"));
         _dialogService.ShowMessageBox(
-            $"一部保存に失敗しました。\n{errorLines}",
-            "保存エラー",
+            $"一部メタ情報追加に失敗しました。\n{errorLines}",
+            "メタ情報追加エラー",
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
     }
@@ -402,6 +497,12 @@ public class SongScriptsManagerViewModel : ViewModelBase
         if (targetItems.Count == 0)
         {
             StatusText = "譜面取得対象がありません";
+            return;
+        }
+
+        LoadSettings();
+        if (!EnsureCustomLevelsPathConfigured(showMessage: true))
+        {
             return;
         }
 

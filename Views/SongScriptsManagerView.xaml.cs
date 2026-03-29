@@ -101,15 +101,6 @@ public partial class SongScriptsManagerView : UserControl
         await ViewModel.DownloadSelectedMissingBeatmapsAsync(selectedItems);
     }
 
-    private async void CreatePlaylist_Click(object sender, RoutedEventArgs e)
-    {
-        var selectedItems = SongScriptsDataGrid.SelectedItems
-            .OfType<SongScriptsManagerItemViewModel>()
-            .ToList();
-
-        await ViewModel.CreatePlaylistAsync(selectedItems);
-    }
-
     private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
         Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });

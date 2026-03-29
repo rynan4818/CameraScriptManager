@@ -77,12 +77,12 @@ public class SongScriptEntry
             {
                 { "MapId", HexId },
                 { "SongName", SongName },
-                { "SongSubName", Metadata?.SongSubName ?? "" },
-                { "SongAuthorName", Metadata?.SongAuthorName ?? "" },
-                { "LevelAuthorName", Metadata?.LevelAuthorName ?? "" },
+                { "SongSubName", SongSubName },
+                { "SongAuthorName", SongAuthorName },
+                { "LevelAuthorName", LevelAuthorName },
                 { "CameraScriptAuthorName", cameraScriptAuthor },
                 { "FileName", Path.GetFileName(SourceFileName) },
-                { "Bpm", Metadata?.Bpm.ToString() ?? "" }
+                { "Bpm", Bpm > 0 ? Bpm.ToString() : "" }
             };
             string name = Services.NamingEngine.ReplaceTags(customFormat, tags);
             if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
