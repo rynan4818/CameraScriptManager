@@ -82,6 +82,7 @@
                     <MenuItem Command="Paste" Header="貼り付け" />
                     <Separator/>
                     <MenuItem Header="BeatSaverからmetadata取得" Click="FetchBeatSaver_Click"/>
+                    <MenuItem Header="選択した未取得譜面を取得" Click="DownloadSelectedMissingBeatmaps_Click"/>
                     <Separator/>
                     <MenuItem Header="対象セルの項目をロック" Click="LockCell_Click"/>
                     <MenuItem Header="対象セルの項目をロック解除" Click="UnlockCell_Click"/>

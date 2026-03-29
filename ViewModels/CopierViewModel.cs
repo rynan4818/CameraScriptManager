@@ -58,6 +58,7 @@ public class CopierViewModel : ViewModelBase
         ClearEntriesCommand = new RelayCommand(() => Entries.Clear());
         OpenFilesCommand = new RelayCommand(OpenFiles);
         DownloadMissingBeatmapCommand = new AsyncRelayCommand(DownloadMissingBeatmapAsync, CanDownloadMissingBeatmap);
+        DownloadSelectedMissingBeatmapsCommand = new AsyncRelayCommand(DownloadSelectedMissingBeatmapsAsync, CanDownloadSelectedMissingBeatmaps);
         
         // Context Menu Commands
         DeleteSelectedCommand = new RelayCommand(ExecuteDeleteSelected);
@@ -160,6 +161,7 @@ public class CopierViewModel : ViewModelBase
     public ICommand ClearEntriesCommand { get; }
     public ICommand OpenFilesCommand { get; }
     public ICommand DownloadMissingBeatmapCommand { get; }
+    public ICommand DownloadSelectedMissingBeatmapsCommand { get; }
 
     // Context Menu Commands
     public ICommand DeleteSelectedCommand { get; }
@@ -479,46 +481,150 @@ public class CopierViewModel : ViewModelBase
         return parameter is SongScriptEntryViewModel entry && entry.CanDownloadMissingBeatmap;
     }
 
+    private bool CanDownloadSelectedMissingBeatmaps(object? parameter)
+    {
+        return GetSelectedEntries(parameter).Any(entry => entry.CanDownloadMissingBeatmap);
+    }
+
     private async Task DownloadMissingBeatmapAsync(object? parameter)
     {
-        if (parameter is not SongScriptEntryViewModel entry || string.IsNullOrWhiteSpace(entry.HexId))
+        if (parameter is SongScriptEntryViewModel entry)
         {
+            await DownloadMissingBeatmapsCoreAsync(new[] { entry });
+        }
+    }
+
+    private Task DownloadSelectedMissingBeatmapsAsync(object? parameter)
+    {
+        return DownloadMissingBeatmapsCoreAsync(GetSelectedEntries(parameter));
+    }
+
+    private async Task DownloadMissingBeatmapsCoreAsync(IEnumerable<SongScriptEntryViewModel> sourceEntries)
+    {
+        var targetEntries = sourceEntries
+            .Where(entry => entry.CanDownloadMissingBeatmap && !string.IsNullOrWhiteSpace(entry.HexId))
+            .GroupBy(entry => NormalizeMapId(entry.HexId), StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToList();
+
+        if (targetEntries.Count == 0)
+        {
+            StatusMessage = "譜面取得対象がありません";
             return;
         }
 
-        string mapId = entry.HexId.Trim();
-        StatusMessage = $"譜面取得準備中: {mapId}...";
+        StatusMessage = targetEntries.Count == 1
+            ? $"譜面取得準備中: {targetEntries[0].HexId.Trim()}..."
+            : $"譜面取得準備中... 0 / {targetEntries.Count}";
         await _cacheService.EnsureInitializedAsync();
 
         CameraSongScriptCompatibleBeatmapIndex beatmapIndex = await Task.Run(() =>
             _beatmapIndexService.Scan(_customLevelsPath, _customWIPLevelsPath));
 
-        StatusMessage = $"譜面取得中: {mapId}...";
-        SongScriptsMissingBeatmapDownloadResult result = await _missingBeatmapDownloadService.DownloadMissingBeatmapAsync(
-            mapId,
-            beatmapIndex,
-            _customLevelsPath);
+        int successCount = 0;
+        int skippedCount = 0;
+        var failedMessages = new List<string>();
+        var processedMapIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        if (result.Success)
+        for (int index = 0; index < targetEntries.Count; index++)
+        {
+            SongScriptEntryViewModel entry = targetEntries[index];
+            string mapId = NormalizeMapId(entry.HexId);
+            if (string.IsNullOrWhiteSpace(mapId))
+            {
+                continue;
+            }
+
+            processedMapIds.Add(mapId);
+            StatusMessage = targetEntries.Count == 1
+                ? $"譜面取得中: {mapId}..."
+                : $"譜面取得中 ({index + 1}/{targetEntries.Count}): {mapId}...";
+
+            SongScriptsMissingBeatmapDownloadResult result = await _missingBeatmapDownloadService.DownloadMissingBeatmapAsync(
+                mapId,
+                beatmapIndex,
+                _customLevelsPath);
+
+            if (result.Success)
+            {
+                successCount++;
+                continue;
+            }
+
+            if (result.IsUnavailableOnBeatSaver || result.IsAlreadyLoadedLatestHash)
+            {
+                skippedCount++;
+                StatusMessage = result.ErrorMessage;
+                continue;
+            }
+
+            StatusMessage = $"譜面取得失敗: {mapId}";
+            failedMessages.Add($"{mapId}: {result.ErrorMessage}");
+        }
+
+        if (successCount > 0)
         {
             RescanFolders();
-            StatusMessage = $"譜面取得完了: {mapId}";
-            return;
         }
-
-        if (result.IsUnavailableOnBeatSaver || result.IsAlreadyLoadedLatestHash)
+        else
         {
-            StatusMessage = result.ErrorMessage;
-            UpdateBeatmapDownloadAvailability(entry);
+            foreach (string mapId in processedMapIds)
+            {
+                UpdateBeatmapDownloadAvailabilityForMapId(mapId);
+            }
+        }
+
+        if (targetEntries.Count > 1 || successCount > 0)
+        {
+            StatusMessage = BuildDownloadSummaryText(targetEntries.Count, successCount, skippedCount, failedMessages.Count);
+        }
+
+        if (failedMessages.Count > 0)
+        {
+            MessageBox.Show(
+                $"譜面取得に失敗しました。\n{string.Join("\n", failedMessages)}",
+                "譜面取得エラー",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void UpdateBeatmapDownloadAvailabilityForMapId(string mapId)
+    {
+        string normalizedMapId = NormalizeMapId(mapId);
+        if (string.IsNullOrWhiteSpace(normalizedMapId))
+        {
             return;
         }
 
-        StatusMessage = $"譜面取得失敗: {mapId}";
-        MessageBox.Show(
-            $"譜面取得に失敗しました。\n{result.ErrorMessage}",
-            "譜面取得エラー",
-            MessageBoxButton.OK,
-            MessageBoxImage.Warning);
+        foreach (var entry in Entries.Where(entry =>
+                     string.Equals(NormalizeMapId(entry.HexId), normalizedMapId, StringComparison.OrdinalIgnoreCase)))
+        {
+            UpdateBeatmapDownloadAvailability(entry);
+        }
+    }
+
+    private static string BuildDownloadSummaryText(int totalCount, int successCount, int skippedCount, int errorCount)
+    {
+        var parts = new List<string> { $"譜面取得完了: 成功 {successCount} 件 / 対象 {totalCount} 件" };
+        if (skippedCount > 0)
+        {
+            parts.Add($"スキップ {skippedCount} 件");
+        }
+
+        if (errorCount > 0)
+        {
+            parts.Add($"エラー {errorCount} 件");
+        }
+
+        return string.Join(" / ", parts);
+    }
+
+    private static string NormalizeMapId(string? mapId)
+    {
+        return string.IsNullOrWhiteSpace(mapId)
+            ? string.Empty
+            : mapId.Trim().ToLowerInvariant();
     }
 
     private void UpdateOggDuration(SongScriptEntryViewModel vm)

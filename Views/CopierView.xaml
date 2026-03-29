@@ -93,6 +93,10 @@
                               Command="{Binding PlacementTarget.DataContext.CopyIdsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                               CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     <Separator/>
+                    <MenuItem Header="選択した未取得譜面を取得"
+                              Command="{Binding PlacementTarget.DataContext.DownloadSelectedMissingBeatmapsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                    <Separator/>
                     <MenuItem Header="Rename">
                         <MenuItem Header="無し" 
                                   Command="{Binding PlacementTarget.DataContext.RenameNoneCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"

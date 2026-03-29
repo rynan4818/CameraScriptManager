@@ -56,6 +56,11 @@ public class SongScriptsManagerViewModel : ViewModelBase
     public AsyncRelayCommand SaveCheckedCommand { get; }
     public AsyncRelayCommand DownloadMissingBeatmapCommand { get; }
 
+    public Task DownloadSelectedMissingBeatmapsAsync(IEnumerable<SongScriptsManagerItemViewModel> items)
+    {
+        return DownloadMissingBeatmapsCoreAsync(items);
+    }
+
     public string SongScriptsFolderDisplayPath
     {
         get => _songScriptsFolderDisplayPath;
@@ -336,42 +341,124 @@ public class SongScriptsManagerViewModel : ViewModelBase
 
     private async Task DownloadMissingBeatmapAsync(object? parameter)
     {
-        if (parameter is not SongScriptsManagerItemViewModel item)
+        if (parameter is SongScriptsManagerItemViewModel item)
         {
+            await DownloadMissingBeatmapsCoreAsync(new[] { item });
+        }
+    }
+
+    private async Task DownloadMissingBeatmapsCoreAsync(IEnumerable<SongScriptsManagerItemViewModel> sourceItems)
+    {
+        var targetItems = sourceItems
+            .Where(item => item.CanDownloadMissingBeatmap && !string.IsNullOrWhiteSpace(item.MissingBeatmapMapId))
+            .GroupBy(item => NormalizeMapId(item.MissingBeatmapMapId), StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToList();
+
+        if (targetItems.Count == 0)
+        {
+            StatusText = "譜面取得対象がありません";
             return;
         }
 
-        string mapId = item.MissingBeatmapMapId;
-        if (string.IsNullOrWhiteSpace(mapId))
+        int successCount = 0;
+        int skippedCount = 0;
+        var failedMessages = new List<string>();
+        var processedMapIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        for (int index = 0; index < targetItems.Count; index++)
         {
-            return;
+            var item = targetItems[index];
+            string mapId = NormalizeMapId(item.MissingBeatmapMapId);
+            if (string.IsNullOrWhiteSpace(mapId))
+            {
+                continue;
+            }
+
+            processedMapIds.Add(mapId);
+            StatusText = targetItems.Count == 1
+                ? $"譜面取得中: {mapId}..."
+                : $"譜面取得中 ({index + 1}/{targetItems.Count}): {mapId}...";
+
+            SongScriptsMissingBeatmapDownloadResult result = await _missingBeatmapDownloadService.DownloadMissingBeatmapAsync(
+                mapId,
+                _beatmapIndex,
+                _customLevelsPath);
+
+            if (result.Success)
+            {
+                successCount++;
+                continue;
+            }
+
+            if (result.IsUnavailableOnBeatSaver || result.IsAlreadyLoadedLatestHash)
+            {
+                skippedCount++;
+                StatusText = result.ErrorMessage;
+                continue;
+            }
+
+            StatusText = $"譜面取得失敗: {mapId}";
+            failedMessages.Add($"{mapId}: {result.ErrorMessage}");
         }
 
-        StatusText = $"譜面取得中: {mapId}...";
-        SongScriptsMissingBeatmapDownloadResult result = await _missingBeatmapDownloadService.DownloadMissingBeatmapAsync(
-            mapId,
-            _beatmapIndex,
-            _customLevelsPath);
-
-        if (result.Success)
+        if (successCount > 0)
         {
             await RefreshBeatmapIndexAsync(showProgressDialog: false);
-            return;
         }
-
-        if (result.IsUnavailableOnBeatSaver || result.IsAlreadyLoadedLatestHash)
+        else
         {
-            StatusText = result.ErrorMessage;
-            ApplyBeatmapMatchState(item);
+            foreach (string mapId in processedMapIds)
+            {
+                ApplyBeatmapMatchStateForMapId(mapId);
+            }
+        }
+
+        if (targetItems.Count > 1 || successCount > 0)
+        {
+            StatusText = BuildDownloadSummaryText(targetItems.Count, successCount, skippedCount, failedMessages.Count);
+        }
+
+        if (failedMessages.Count > 0)
+        {
+            _dialogService.ShowMessageBox(
+                $"譜面取得に失敗しました。\n{string.Join("\n", failedMessages)}",
+                "譜面取得エラー",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void ApplyBeatmapMatchStateForMapId(string mapId)
+    {
+        string normalizedMapId = NormalizeMapId(mapId);
+        if (string.IsNullOrWhiteSpace(normalizedMapId))
+        {
             return;
         }
 
-        StatusText = $"譜面取得失敗: {mapId}";
-        _dialogService.ShowMessageBox(
-            $"譜面取得に失敗しました。\n{result.ErrorMessage}",
-            "譜面取得エラー",
-            MessageBoxButton.OK,
-            MessageBoxImage.Warning);
+        foreach (var item in Items.Where(item =>
+                     string.Equals(NormalizeMapId(item.MapId), normalizedMapId, StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(NormalizeMapId(item.MissingBeatmapMapId), normalizedMapId, StringComparison.OrdinalIgnoreCase)))
+        {
+            ApplyBeatmapMatchState(item);
+        }
+    }
+
+    private static string BuildDownloadSummaryText(int totalCount, int successCount, int skippedCount, int errorCount)
+    {
+        var parts = new List<string> { $"譜面取得完了: 成功 {successCount} 件 / 対象 {totalCount} 件" };
+        if (skippedCount > 0)
+        {
+            parts.Add($"スキップ {skippedCount} 件");
+        }
+
+        if (errorCount > 0)
+        {
+            parts.Add($"エラー {errorCount} 件");
+        }
+
+        return string.Join(" / ", parts);
     }
 
     private async Task RefreshBeatmapIndexAsync(bool showProgressDialog)

@@ -92,6 +92,15 @@ public partial class SongScriptsManagerView : UserControl
         }
     }
 
+    private async void DownloadSelectedMissingBeatmaps_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedItems = SongScriptsDataGrid.SelectedItems
+            .OfType<SongScriptsManagerItemViewModel>()
+            .ToList();
+
+        await ViewModel.DownloadSelectedMissingBeatmapsAsync(selectedItems);
+    }
+
     private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
         Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
