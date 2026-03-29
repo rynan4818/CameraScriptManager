@@ -199,8 +199,8 @@ public class CameraScriptScanner
         }
         catch { }
 
-        // Extract mapId from folder name if not found in metadata
-        if (string.IsNullOrWhiteSpace(entry.MapId))
+        // metadataが無い場合のみ、フォルダ名からmapIdを補完する
+        if (!entry.HasOriginalMetadata && string.IsNullOrWhiteSpace(entry.MapId))
         {
             entry.MapId = HexIdExtractor.ExtractHexId(folderName) ?? "";
         }
@@ -211,31 +211,39 @@ public class CameraScriptScanner
         {
             bool supplemented = false;
 
-            if (string.IsNullOrWhiteSpace(entry.SongName) && !string.IsNullOrWhiteSpace(infoDat.SongName))
+            if (!entry.HasOriginalMetadata &&
+                string.IsNullOrWhiteSpace(entry.SongName) &&
+                !string.IsNullOrWhiteSpace(infoDat.SongName))
             {
                 entry.SongName = infoDat.SongName;
                 supplemented = true;
             }
 
-            if (string.IsNullOrWhiteSpace(entry.SongSubName) && !string.IsNullOrWhiteSpace(infoDat.SongSubName))
+            if (!entry.HasOriginalMetadata &&
+                string.IsNullOrWhiteSpace(entry.SongSubName) &&
+                !string.IsNullOrWhiteSpace(infoDat.SongSubName))
             {
                 entry.SongSubName = infoDat.SongSubName;
                 supplemented = true;
             }
 
-            if (string.IsNullOrWhiteSpace(entry.SongAuthorName) && !string.IsNullOrWhiteSpace(infoDat.SongAuthorName))
+            if (!entry.HasOriginalMetadata &&
+                string.IsNullOrWhiteSpace(entry.SongAuthorName) &&
+                !string.IsNullOrWhiteSpace(infoDat.SongAuthorName))
             {
                 entry.SongAuthorName = infoDat.SongAuthorName;
                 supplemented = true;
             }
 
-            if (string.IsNullOrWhiteSpace(entry.LevelAuthorName) && !string.IsNullOrWhiteSpace(infoDat.LevelAuthorName))
+            if (!entry.HasOriginalMetadata &&
+                string.IsNullOrWhiteSpace(entry.LevelAuthorName) &&
+                !string.IsNullOrWhiteSpace(infoDat.LevelAuthorName))
             {
                 entry.LevelAuthorName = infoDat.LevelAuthorName;
                 supplemented = true;
             }
 
-            if (entry.Bpm == 0 && infoDat.Bpm > 0)
+            if (!entry.HasOriginalMetadata && entry.Bpm == 0 && infoDat.Bpm > 0)
             {
                 entry.Bpm = infoDat.Bpm;
                 supplemented = true;

@@ -208,6 +208,53 @@ public class ManagerViewModel : ViewModelBase
         }
     }
 
+    public void SupplementFromInfoDat(IEnumerable<CameraScriptItemViewModel> items)
+    {
+        var targetItems = items.ToList();
+        if (targetItems.Count == 0)
+        {
+            StatusText = "補完対象がありません";
+            _dialogService.ShowMessageBox("補完する項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        int updatedCount = 0;
+        int missingInfoCount = 0;
+        int unchangedCount = 0;
+
+        foreach (var item in targetItems)
+        {
+            InfoDatData? infoDat = InfoDatReader.ReadFromFolder(item.FolderPath);
+            if (infoDat == null)
+            {
+                missingInfoCount++;
+                continue;
+            }
+
+            if (item.ApplyInfoDatData(infoDat))
+            {
+                updatedCount++;
+            }
+            else
+            {
+                unchangedCount++;
+            }
+        }
+
+        var parts = new List<string> { $"info.dat補完完了: 更新 {updatedCount} 件 / 対象 {targetItems.Count} 件" };
+        if (missingInfoCount > 0)
+        {
+            parts.Add($"info.datなし {missingInfoCount} 件");
+        }
+
+        if (unchangedCount > 0)
+        {
+            parts.Add($"変更なし {unchangedCount} 件");
+        }
+
+        StatusText = string.Join(" / ", parts);
+    }
+
     private Task AddMetadataAsync()
     {
         var targetItems = Items.Where(i => i.IsSelected).ToList();

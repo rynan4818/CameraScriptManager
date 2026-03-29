@@ -44,6 +44,15 @@ public partial class ManagerView : UserControl
         }
     }
 
+    private void SupplementFromInfoDat_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedItems = ScriptDataGrid.SelectedItems
+            .OfType<CameraScriptItemViewModel>()
+            .ToList();
+
+        ViewModel.SupplementFromInfoDat(selectedItems);
+    }
+
     private void LockCell_Click(object sender, RoutedEventArgs e)
     {
         SetLockOnCurrentColumn(true);
@@ -92,7 +101,7 @@ public partial class ManagerView : UserControl
                 case "BPM":
                     item.IsBpmLocked = isLocked;
                     break;
-                case "AvatarHeight":
+                case "AvatarHeight(cm)":
                     item.IsAvatarHeightLocked = isLocked;
                     break;
                 case "Description":

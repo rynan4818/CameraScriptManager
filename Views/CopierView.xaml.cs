@@ -159,7 +159,7 @@ public partial class CopierView : UserControl
                 case "BPM":
                     item.IsBpmLocked = isLocked;
                     break;
-                case "AvatarHeight":
+                case "AvatarHeight(cm)":
                     item.IsAvatarHeightLocked = isLocked;
                     break;
                 case "Description":

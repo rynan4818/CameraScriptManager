@@ -216,80 +216,77 @@ public class ArchiveImportService
                 return;
 
             entry.HasOriginalMetadata = true;
+            entry.HexId = "";
+            entry.SongName = "";
+            entry.CameraScriptAuthorName = "";
+            entry.SongSubName = "";
+            entry.SongAuthorName = "";
+            entry.LevelAuthorName = "";
+            entry.Bpm = 0;
+            entry.AvatarHeight = 0;
+            entry.Description = "";
+            entry.IsHexIdFromMetadata = false;
+            entry.IsSongNameFromMetadata = false;
+            entry.IsCameraScriptAuthorFromMetadata = false;
+            entry.IsSongSubNameFromMetadata = false;
+            entry.IsSongAuthorNameFromMetadata = false;
+            entry.IsLevelAuthorNameFromMetadata = false;
+            entry.IsBpmFromMetadata = false;
+            entry.IsAvatarHeightFromMetadata = false;
+            entry.IsDescriptionFromMetadata = false;
 
-            // mapId: metadataにあればファイル名推定より優先
             if (metadata.TryGetProperty("mapId", out var mapId))
             {
                 var val = mapId.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(val))
-                {
-                    entry.HexId = val;
-                    entry.IsHexIdFromMetadata = true;
-                }
+                entry.HexId = val;
+                entry.IsHexIdFromMetadata = true;
             }
 
-            // songName: metadataにあればファイル名推定より優先
             if (metadata.TryGetProperty("songName", out var songName))
             {
                 var val = songName.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(val))
-                {
-                    entry.SongName = val;
-                    entry.SourceSongName = val;
-                    entry.IsSongNameFromMetadata = true;
-                }
+                entry.SongName = val;
+                entry.IsSongNameFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("cameraScriptAuthorName", out var author))
             {
                 var val = author.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(val))
-                {
-                    entry.CameraScriptAuthorName = val;
-                    entry.IsCameraScriptAuthorFromMetadata = true;
-                }
+                entry.CameraScriptAuthorName = val;
+                entry.IsCameraScriptAuthorFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("songSubName", out var songSubName))
             {
                 var val = songSubName.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(val))
-                {
-                    entry.SongSubName = val;
-                    entry.IsSongSubNameFromMetadata = true;
-                }
+                entry.SongSubName = val;
+                entry.IsSongSubNameFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("songAuthorName", out var songAuthorName))
             {
                 var val = songAuthorName.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(val))
-                {
-                    entry.SongAuthorName = val;
-                    entry.IsSongAuthorNameFromMetadata = true;
-                }
+                entry.SongAuthorName = val;
+                entry.IsSongAuthorNameFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("levelAuthorName", out var levelAuthorName))
             {
                 var val = levelAuthorName.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(val))
-                {
-                    entry.LevelAuthorName = val;
-                    entry.IsLevelAuthorNameFromMetadata = true;
-                }
+                entry.LevelAuthorName = val;
+                entry.IsLevelAuthorNameFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("bpm", out var bpm))
             {
                 entry.Bpm = bpm.GetDouble();
-                entry.IsBpmFromMetadata = entry.Bpm > 0;
+                entry.IsBpmFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))
             {
                 entry.AvatarHeight = avatarHeight.GetDouble();
-                entry.IsAvatarHeightFromMetadata = entry.AvatarHeight > 0;
+                entry.IsAvatarHeightFromMetadata = true;
             }
 
             if (metadata.TryGetProperty("description", out var description))

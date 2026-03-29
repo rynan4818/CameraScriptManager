@@ -25,6 +25,7 @@ public class SongScriptEntryViewModel : ViewModelBase
         _copyToCustomWIPLevels = model.CopyToCustomWIPLevels;
         _selectedCustomLevelsFolder = model.SelectedCustomLevelsFolder;
         _selectedCustomWIPLevelsFolder = model.SelectedCustomWIPLevelsFolder;
+        _songName = model.SongName;
         _cameraScriptAuthorName = model.CameraScriptAuthorName;
         _songSubName = model.SongSubName;
         _songAuthorName = model.SongAuthorName;
@@ -45,6 +46,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         _isBpmLocked = model.IsBpmFromMetadata;
         _isAvatarHeightLocked = model.IsAvatarHeightFromMetadata;
         _isDescriptionLocked = model.IsDescriptionFromMetadata;
+
+        if (model.HasOriginalMetadata)
+        {
+            LockAll();
+        }
 
         UpdateOverwriteWarnings();
     }
@@ -113,6 +119,11 @@ public class SongScriptEntryViewModel : ViewModelBase
 
     public void UpdateSongName()
     {
+        if (IsSongNameLocked)
+        {
+            return;
+        }
+
         _model.UpdateSongName();
         SongName = _model.SongName;
     }

@@ -1,4 +1,5 @@
 using CameraScriptManager.Models;
+using CameraScriptManager.Services;
 using System.IO;
 
 namespace CameraScriptManager.ViewModels;
@@ -57,6 +58,11 @@ public class CameraScriptItemViewModel : ViewModelBase
         
         OriginalSourceFiles = new System.Collections.ObjectModel.ObservableCollection<string>(entry.OriginalSourceFiles);
         _selectedOriginalSourceFile = OriginalSourceFiles.FirstOrDefault();
+
+        if (entry.HasOriginalMetadata)
+        {
+            LockAll();
+        }
 
         // If no original metadata but Info.dat provided data, mark as modified
         if (!entry.HasOriginalMetadata &&
@@ -351,42 +357,72 @@ public class CameraScriptItemViewModel : ViewModelBase
 
     public void ApplyBeatSaverData(Models.BeatSaverApiResponse apiResponse)
     {
+        if (apiResponse.Metadata == null)
+        {
+            return;
+        }
+
+        bool updated = false;
         _suppressModifiedTracking = true;
 
-        if (apiResponse.Metadata != null)
+        try
         {
             var meta = apiResponse.Metadata;
 
-            if (!string.IsNullOrWhiteSpace(apiResponse.Id))
-                MapId = apiResponse.Id;
+            updated |= ApplyStringValue(() => IsMapIdLocked, MapId, apiResponse.Id, value => MapId = value);
+            updated |= ApplyDoubleValue(() => IsBpmLocked, Bpm, meta.Bpm, value => Bpm = value);
+            updated |= ApplyStringValue(() => IsSongNameLocked, SongName, meta.SongName, value => SongName = value);
+            updated |= ApplyStringValue(() => IsSongSubNameLocked, SongSubName, meta.SongSubName, value => SongSubName = value);
+            updated |= ApplyStringValue(() => IsSongAuthorNameLocked, SongAuthorName, meta.SongAuthorName, value => SongAuthorName = value);
+            updated |= ApplyStringValue(() => IsLevelAuthorNameLocked, LevelAuthorName, meta.LevelAuthorName, value => LevelAuthorName = value);
 
-            if (meta.Bpm > 0)
-                Bpm = meta.Bpm;
-
-            if (meta.Duration > 0)
+            if (!_entry.HasOriginalMetadata && meta.Duration > 0 && !_duration.Equals(meta.Duration))
+            {
                 Duration = meta.Duration;
-
-            if (!string.IsNullOrWhiteSpace(meta.SongName))
-                SongName = meta.SongName;
-
-            if (!string.IsNullOrWhiteSpace(meta.SongSubName))
-                SongSubName = meta.SongSubName;
-
-            if (!string.IsNullOrWhiteSpace(meta.SongAuthorName))
-                SongAuthorName = meta.SongAuthorName;
-
-            if (!string.IsNullOrWhiteSpace(meta.LevelAuthorName))
-                LevelAuthorName = meta.LevelAuthorName;
+                updated = true;
+            }
+        }
+        finally
+        {
+            _suppressModifiedTracking = false;
         }
 
-        _suppressModifiedTracking = false;
-        IsModified = true;
+        if (updated)
+        {
+            IsModified = true;
+        }
     }
 
     private void MarkModified()
     {
         if (!_suppressModifiedTracking)
             IsModified = true;
+    }
+
+    public bool ApplyInfoDatData(InfoDatData infoDat)
+    {
+        bool updated = false;
+        _suppressModifiedTracking = true;
+
+        try
+        {
+            updated |= ApplySupplementStringValue(() => IsSongNameLocked, SongName, infoDat.SongName, value => SongName = value);
+            updated |= ApplySupplementStringValue(() => IsSongSubNameLocked, SongSubName, infoDat.SongSubName, value => SongSubName = value);
+            updated |= ApplySupplementStringValue(() => IsSongAuthorNameLocked, SongAuthorName, infoDat.SongAuthorName, value => SongAuthorName = value);
+            updated |= ApplySupplementStringValue(() => IsLevelAuthorNameLocked, LevelAuthorName, infoDat.LevelAuthorName, value => LevelAuthorName = value);
+            updated |= ApplySupplementDoubleValue(() => IsBpmLocked, Bpm, infoDat.Bpm, value => Bpm = value);
+        }
+        finally
+        {
+            _suppressModifiedTracking = false;
+        }
+
+        if (updated)
+        {
+            IsModified = true;
+        }
+
+        return updated;
     }
 
     public void LockAll()
@@ -400,5 +436,53 @@ public class CameraScriptItemViewModel : ViewModelBase
         IsBpmLocked = true;
         IsAvatarHeightLocked = true;
         IsDescriptionLocked = true;
+    }
+
+    private bool ApplyStringValue(Func<bool> isLocked, string? currentValue, string? newValue, Action<string> apply)
+    {
+        if (isLocked() ||
+            string.IsNullOrWhiteSpace(newValue) ||
+            string.Equals(currentValue ?? "", newValue, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        apply(newValue);
+        return true;
+    }
+
+    private bool ApplyDoubleValue(Func<bool> isLocked, double currentValue, double newValue, Action<double> apply)
+    {
+        if (isLocked() || newValue <= 0 || currentValue.Equals(newValue))
+        {
+            return false;
+        }
+
+        apply(newValue);
+        return true;
+    }
+
+    private bool ApplySupplementStringValue(Func<bool> isLocked, string? currentValue, string? newValue, Action<string> apply)
+    {
+        if (isLocked() ||
+            !string.IsNullOrWhiteSpace(currentValue) ||
+            string.IsNullOrWhiteSpace(newValue))
+        {
+            return false;
+        }
+
+        apply(newValue);
+        return true;
+    }
+
+    private bool ApplySupplementDoubleValue(Func<bool> isLocked, double currentValue, double newValue, Action<double> apply)
+    {
+        if (isLocked() || currentValue > 0 || newValue <= 0)
+        {
+            return false;
+        }
+
+        apply(newValue);
+        return true;
     }
 }

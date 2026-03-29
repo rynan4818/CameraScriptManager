@@ -188,7 +188,7 @@ public class SongScriptsScanner
                 HasMetadataBlock = hasMetadataBlock,
                 MetadataMapId = metadataMapId,
                 PathMapId = pathMapId,
-                MapId = !string.IsNullOrEmpty(metadataMapId) ? metadataMapId : pathMapId,
+                MapId = hasMetadataBlock ? metadataMapId : pathMapId,
                 Hash = metadataHash,
                 CameraScriptAuthorName = hasMetadataBlock ? ReadString(metadataElement, "cameraScriptAuthorName") : string.Empty,
                 SongName = hasMetadataBlock ? ReadString(metadataElement, "songName") : string.Empty,

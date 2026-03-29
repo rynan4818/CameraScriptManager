@@ -71,6 +71,7 @@
                     <MenuItem Command="Paste" Header="貼り付け" />
                     <Separator/>
                     <MenuItem Header="BeatSaverからメタデータ取得" Click="FetchBeatSaver_Click"/>
+                    <MenuItem Header="info.datから補完" Click="SupplementFromInfoDat_Click"/>
                     <Separator/>
                     <MenuItem Header="選択したIDをコピー" Click="CopyIds_Click"/>
                     <Separator/>
