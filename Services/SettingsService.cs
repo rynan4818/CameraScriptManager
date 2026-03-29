@@ -21,6 +21,7 @@ public class AppSettings
     // Naming settings
     public string ManagerZipNamingMode { get; set; } = "Default"; // Default or Custom
     public string ManagerZipCustomFormat { get; set; } = "{MapId}_{SongName}_{LevelAuthorName}";
+    public string ManagerZipPackagingMode { get; set; } = "FolderKeepOriginalJson";
     public string CopierRenameNamingMode { get; set; } = "Default"; // Default or Custom
     public string CopierRenameCustomFormat { get; set; } = "{MapId}_{CameraScriptAuthorName}_{SongName}_SongScript";
 

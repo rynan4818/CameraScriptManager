@@ -41,39 +41,46 @@
                 <!-- CustomLevels -->
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="CustomLevels:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CustomLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="0" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomLevelsCommand}" Margin="5"/>
+                <Button Grid.Row="0" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomLevelsCommand}" Margin="5"
+                        ToolTip="CustomLevels フォルダを選択します"/>
 
                 <!-- CustomWIPLevels -->
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="CustomWIPLevels:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CustomWIPLevelsPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="1" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomWIPLevelsCommand}" Margin="5"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="参照..." Command="{Binding BrowseCustomWIPLevelsCommand}" Margin="5"
+                        ToolTip="CustomWIPLevels フォルダを選択します"/>
 
                 <!-- SongScripts -->
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="SongScripts:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SongScriptsFolderPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="2" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsFolderCommand}" Margin="5"/>
+                <Button Grid.Row="2" Grid.Column="2" Content="参照..." Command="{Binding BrowseSongScriptsFolderCommand}" Margin="5"
+                        ToolTip="SongScripts フォルダを選択します"/>
 
                 <Separator Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10"/>
 
                 <!-- OriginalScript 1 -->
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 1:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding OriginalScriptPath1, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="4" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}" Margin="5"/>
+                <Button Grid.Row="4" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript1Command}" Margin="5"
+                        ToolTip="元データ検索フォルダ 1 を選択します"/>
 
                 <!-- OriginalScript 2 -->
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 3:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding OriginalScriptPath3, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"/>
+                <Button Grid.Row="5" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript3Command}" Margin="5"
+                        ToolTip="元データ検索フォルダ 3 を選択します"/>
 
                 <!-- OriginalScript 2 -->
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="元データ検索(アーカイブ/JSON) 2:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding OriginalScriptPath2, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="6" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}" Margin="5"/>
+                <Button Grid.Row="6" Grid.Column="2" Content="参照..." Command="{Binding BrowseOriginalScript2Command}" Margin="5"
+                        ToolTip="元データ検索フォルダ 2 を選択します"/>
 
                 <!-- Backup Root -->
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="バックアップルート:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,5"/>
                 <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding BackupRootPath, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-                <Button Grid.Row="7" Grid.Column="2" Content="参照..." Command="{Binding BrowseBackupRootCommand}" Margin="5"/>
+                <Button Grid.Row="7" Grid.Column="2" Content="参照..." Command="{Binding BrowseBackupRootCommand}" Margin="5"
+                        ToolTip="バックアップの保存先ルートを選択します"/>
             </Grid>
         </GroupBox>
 
@@ -92,14 +99,39 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- MapScripts Zip Naming -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="MapScripts ZIP出力名:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,10"/>
-                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
-                    <RadioButton GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0">
-                        <TextBlock Text="デフォルト({MapId}_{SongName}_{LevelAuthorName})"/>
-                    </RadioButton>
-                    <RadioButton Content="カスタム" GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingCustom}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBox Text="{Binding ManagerZipCustomFormat, UpdateSourceTrigger=PropertyChanged}" 
-                             IsEnabled="{Binding IsManagerZipNamingCustom}" Width="300" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="MapScripts ZIP出力名:" VerticalAlignment="Top" FontWeight="Bold" Margin="0,0,10,10"/>
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingDefault}" VerticalAlignment="Center" Margin="0,0,10,0"
+                                     ToolTip="MapScripts ZIP出力で使う指定名を既定書式で生成します">
+                            <TextBlock Text="デフォルト({MapId}_{SongName}_{LevelAuthorName})"/>
+                        </RadioButton>
+                        <RadioButton Content="カスタム" GroupName="ManagerZipNaming" IsChecked="{Binding IsManagerZipNamingCustom}" VerticalAlignment="Center" Margin="0,0,10,0"
+                                     ToolTip="MapScripts ZIP出力で使う指定名をカスタム書式で生成します"/>
+                        <TextBox Text="{Binding ManagerZipCustomFormat, UpdateSourceTrigger=PropertyChanged}" 
+                                 IsEnabled="{Binding IsManagerZipNamingCustom}" Width="300" VerticalAlignment="Center"
+                                 ToolTip="MapScripts ZIP出力時の指定名をカスタム書式で入力します"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,8,0,0">
+                        <TextBlock Text="ZIP内配置:" Foreground="Gray" Margin="0,0,0,4"/>
+                        <RadioButton GroupName="ManagerZipPackaging"
+                                     IsChecked="{Binding IsManagerZipPackagingFolderKeepOriginalJson}"
+                                     Margin="0,0,0,4"
+                                     ToolTip="元の JSON 名のまま、指定名フォルダに格納します">
+                            <TextBlock Text="1. JSON名そのまま + 指定名フォルダに格納"/>
+                        </RadioButton>
+                        <RadioButton GroupName="ManagerZipPackaging"
+                                     IsChecked="{Binding IsManagerZipPackagingFlatRenameJson}"
+                                     Margin="0,0,0,4"
+                                     ToolTip="JSON 名を指定名に変更して ZIP 直下に保存します">
+                            <TextBlock Text="2. JSON名を指定名に変更 + フォルダなし"/>
+                        </RadioButton>
+                        <RadioButton GroupName="ManagerZipPackaging"
+                                     IsChecked="{Binding IsManagerZipPackagingFolderSongScriptJson}"
+                                     ToolTip="指定名フォルダに格納し、JSON 名は SongScript.json に固定します">
+                            <TextBlock Text="3. SongScript.json + 指定名フォルダに格納"/>
+                        </RadioButton>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Copier Rename Naming -->
@@ -120,14 +152,14 @@
                                 <Setter Property="Background" Value="#F0F0F0"/>
                             </Style>
                         </WrapPanel.Resources>
-                        <Button Content="{}{MapId}" Command="{Binding CopyTagCommand}" CommandParameter="MapId"/>
-                        <Button Content="{}{SongName}" Command="{Binding CopyTagCommand}" CommandParameter="SongName"/>
-                        <Button Content="{}{SongSubName}" Command="{Binding CopyTagCommand}" CommandParameter="SongSubName"/>
-                        <Button Content="{}{SongAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="SongAuthorName"/>
-                        <Button Content="{}{LevelAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="LevelAuthorName"/>
-                        <Button Content="{}{CameraScriptAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="CameraScriptAuthorName"/>
-                        <Button Content="{}{FileName}" Command="{Binding CopyTagCommand}" CommandParameter="FileName"/>
-                        <Button Content="{}{Bpm}" Command="{Binding CopyTagCommand}" CommandParameter="Bpm"/>
+                        <Button Content="{}{MapId}" Command="{Binding CopyTagCommand}" CommandParameter="MapId" ToolTip="MapId タグをクリップボードにコピーします"/>
+                        <Button Content="{}{SongName}" Command="{Binding CopyTagCommand}" CommandParameter="SongName" ToolTip="SongName タグをクリップボードにコピーします"/>
+                        <Button Content="{}{SongSubName}" Command="{Binding CopyTagCommand}" CommandParameter="SongSubName" ToolTip="SongSubName タグをクリップボードにコピーします"/>
+                        <Button Content="{}{SongAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="SongAuthorName" ToolTip="SongAuthorName タグをクリップボードにコピーします"/>
+                        <Button Content="{}{LevelAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="LevelAuthorName" ToolTip="LevelAuthorName タグをクリップボードにコピーします"/>
+                        <Button Content="{}{CameraScriptAuthorName}" Command="{Binding CopyTagCommand}" CommandParameter="CameraScriptAuthorName" ToolTip="CameraScriptAuthorName タグをクリップボードにコピーします"/>
+                        <Button Content="{}{FileName}" Command="{Binding CopyTagCommand}" CommandParameter="FileName" ToolTip="FileName タグをクリップボードにコピーします"/>
+                        <Button Content="{}{Bpm}" Command="{Binding CopyTagCommand}" CommandParameter="Bpm" ToolTip="Bpm タグをクリップボードにコピーします"/>
                     </WrapPanel>
                     <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11" Margin="0,5,0,0">
                         <Run Text="※ {FileName} はJSONファイル名、{CameraScriptAuthorName} は作成者（入力値）を指します。"/>
@@ -140,12 +172,15 @@
                     <StackPanel>
                         <CheckBox Content="MapScripts更新時にバックアップを作成する"
                                   IsChecked="{Binding EnableMapScriptsBackup}"
+                                  ToolTip="MapScripts で上書き前に backup\\MapScripts へバックアップします"
                                   Margin="0,0,0,5"/>
                         <CheckBox Content="SongScripts保存時にバックアップを作成する"
                                   IsChecked="{Binding EnableSongScriptsBackup}"
+                                  ToolTip="SongScripts 保存前に backup\\SongScripts へバックアップします"
                                   Margin="0,0,0,5"/>
                         <CheckBox Content="Copier上書き時にバックアップを作成する"
                                   IsChecked="{Binding EnableCopierBackup}"
+                                  ToolTip="Copier の上書き前に backup\\Copier へバックアップします"
                                   Margin="0,0,0,5"/>
                         <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap">
                             <Run Text="※バックアップルートが空欄の場合は CameraScriptManager.exe 配下の backup フォルダを使用します。"/>
@@ -154,6 +189,7 @@
                                 Command="{Binding ResetColumnWidthsCommand}"
                                 Margin="0,10,0,0"
                                 Padding="12,4"
+                                ToolTip="3タブの保存済み列幅を削除して既定値へ戻します"
                                 HorizontalAlignment="Left"/>
                         <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0">
                             <Run Text="※MapScripts / SongScripts / Copier の列幅を既定値に戻します。"/>

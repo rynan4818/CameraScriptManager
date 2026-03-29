@@ -219,16 +219,17 @@ public class ManagerViewModel : ViewModelBase
 
         foreach (var selected in selectedItems)
         {
-            string folderName = ZipExportService.GetFolderName(
-                isSingle, 
-                settings.ManagerZipNamingMode ?? "", 
-                settings.ManagerZipCustomFormat ?? "", 
-                selected.Entry, 
-                selected.CameraScriptAuthorName ?? "");
+            var (zipEntryFolder, zipEntryFileName) = ZipExportService.GetZipEntryParts(
+                settings.ManagerZipPackagingMode ?? ZipExportService.PackagingFolderKeepOriginalJson,
+                settings.ManagerZipNamingMode ?? "",
+                settings.ManagerZipCustomFormat ?? "",
+                selected.Entry,
+                selected.CameraScriptAuthorName ?? "",
+                selected.FileName);
 
             string content = selected.GetCurrentJsonContent();
 
-            items.Add((folderName, selected.FileName, content));
+            items.Add((zipEntryFolder, zipEntryFileName, content));
         }
 
         try

@@ -30,11 +30,16 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,8">
-            <Button Content="再チェック" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"/>
-            <Button Content="メタ情報追加" Command="{Binding AddMetadataCommand}" Padding="16,4" Margin="0,0,8,0"/>
-            <Button Content="ZIP出力" Command="{Binding ExportZipCommand}" Padding="16,4" Margin="0,0,8,0"/>
-            <Button Content="プレイリストを作成" Command="{Binding CreatePlaylistCommand}" Padding="16,4" Margin="0,0,8,0"/>
-            <Button Content="元データ照合" Command="{Binding FindOriginalScriptsCommand}" Padding="16,4"/>
+            <Button Content="再チェック" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="譜面フォルダを再スキャンして一覧を更新します"/>
+            <Button Content="メタ情報追加" Command="{Binding AddMetadataCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="選択中の譜面フォルダ内 SongScript に metadata を追加します"/>
+            <Button Content="ZIP出力" Command="{Binding ExportZipCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="選択中の譜面フォルダスクリプトを ZIP で出力します"/>
+            <Button Content="プレイリストを作成" Command="{Binding CreatePlaylistCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="選択中の譜面から Beat Saber 用プレイリストを作成します"/>
+            <Button Content="元データ照合" Command="{Binding FindOriginalScriptsCommand}" Padding="16,4"
+                    ToolTip="元データ検索パスから一致候補を検索します"/>
         </StackPanel>
 
         <!-- DataGrid -->
@@ -85,6 +90,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                      ToolTip="この行を各操作の対象に含めます"
                                       HorizontalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -96,6 +102,7 @@
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsModified, Mode=OneWay}"
                                       IsEnabled="False"
+                                      ToolTip="この行に未保存の変更があるかを表示します"
                                       HorizontalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -237,6 +244,7 @@
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="#0055AA"
                                      MaxHeight="60"
+                                     ToolTip="元データ照合で見つかった候補です。選択した項目を関連操作の対象に使います"
                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

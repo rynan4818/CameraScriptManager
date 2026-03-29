@@ -25,17 +25,20 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,8">
-            <Button Content="再読込" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"/>
-            <Button Content="BeatSaverからmetadata取得" Click="FetchBeatSaver_Click" Padding="16,4" Margin="0,0,8,0"/>
-            <Button Content="保存チェックを保存" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"/>
+            <Button Content="再読込" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="SongScripts フォルダを再スキャンして一覧を更新します"/>
+            <Button Content="BeatSaverからmetadata取得" Click="FetchBeatSaver_Click" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="選択行の ID を使って BeatSaver から metadata を取得します"/>
+            <Button Content="保存チェックを保存" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"
+                    ToolTip="保存チェックが ON の行を元ファイルへ保存します"/>
             <CheckBox Content="譜面metadataを表示"
                       IsChecked="{Binding ShowMetadataColumns}"
+                      ToolTip="songSubName などの譜面 metadata 列を表示します"
                       VerticalAlignment="Center"
                       Margin="8,0,0,0"/>
         </StackPanel>
@@ -52,14 +55,7 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
-            <StackPanel>
-                <TextBlock Text="{Binding SongScriptsFolderDisplayPath, StringFormat=SongScripts: {0}}" TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding BackupFolderDisplayPath, StringFormat=バックアップ: {0}}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-            </StackPanel>
-        </Border>
-
-        <DataGrid Grid.Row="3"
+        <DataGrid Grid.Row="2"
                   x:Name="SongScriptsDataGrid"
                   ItemsSource="{Binding Items}"
                   views:DataGridColumnWidthPersistence.EnablePersistence="True"
@@ -101,6 +97,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsSaveChecked, UpdateSourceTrigger=PropertyChanged}"
+                                      ToolTip="この行を保存対象に含めます"
                                       HorizontalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -109,7 +106,8 @@
                 <DataGridTemplateColumn Header="編集済" Width="50" SortMemberPath="IsModified" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="modified">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding IsModified, Mode=OneWay}" IsEnabled="False" HorizontalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding IsModified, Mode=OneWay}" IsEnabled="False" HorizontalAlignment="Center"
+                                      ToolTip="この行に未保存の変更があるかを表示します"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -151,6 +149,7 @@
                                         Padding="4,1"
                                         Margin="6,0,0,0"
                                         VerticalAlignment="Center"
+                                        ToolTip="この譜面を BeatSaver から取得して CustomLevels に展開します"
                                         Visibility="{Binding CanDownloadMissingBeatmap, Converter={StaticResource BoolToVisibilityConverter}}"
                                         IsEnabled="{Binding CanDownloadMissingBeatmap}"
                                         Command="{Binding DataContext.DownloadMissingBeatmapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -394,7 +393,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StatusBar Grid.Row="4" Margin="0,4,0,0">
+        <StatusBar Grid.Row="3" Margin="0,4,0,0">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
             </StatusBarItem>

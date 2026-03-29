@@ -168,6 +168,44 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    private string _managerZipPackagingMode = ZipExportService.PackagingFolderKeepOriginalJson;
+
+    public bool IsManagerZipPackagingFolderKeepOriginalJson
+    {
+        get => _managerZipPackagingMode == ZipExportService.PackagingFolderKeepOriginalJson;
+        set
+        {
+            if (value)
+            {
+                SetManagerZipPackagingMode(ZipExportService.PackagingFolderKeepOriginalJson);
+            }
+        }
+    }
+
+    public bool IsManagerZipPackagingFlatRenameJson
+    {
+        get => _managerZipPackagingMode == ZipExportService.PackagingFlatRenameJson;
+        set
+        {
+            if (value)
+            {
+                SetManagerZipPackagingMode(ZipExportService.PackagingFlatRenameJson);
+            }
+        }
+    }
+
+    public bool IsManagerZipPackagingFolderSongScriptJson
+    {
+        get => _managerZipPackagingMode == ZipExportService.PackagingFolderSongScriptJson;
+        set
+        {
+            if (value)
+            {
+                SetManagerZipPackagingMode(ZipExportService.PackagingFolderSongScriptJson);
+            }
+        }
+    }
+
 
 
     private string _copierRenameCustomFormat = "";
@@ -243,6 +281,21 @@ public class SettingsViewModel : ViewModelBase
     public ICommand CopyTagCommand { get; }
     public ICommand ResetColumnWidthsCommand { get; }
 
+    private void SetManagerZipPackagingMode(string mode)
+    {
+        if (_managerZipPackagingMode == mode)
+        {
+            return;
+        }
+
+        _managerZipPackagingMode = mode;
+        OnPropertyChanged(nameof(IsManagerZipPackagingFolderKeepOriginalJson));
+        OnPropertyChanged(nameof(IsManagerZipPackagingFlatRenameJson));
+        OnPropertyChanged(nameof(IsManagerZipPackagingFolderSongScriptJson));
+        SaveSettings();
+        OnSettingsChanged();
+    }
+
     private void LoadSettings()
     {
         var settings = _settingsService.Load();
@@ -258,6 +311,9 @@ public class SettingsViewModel : ViewModelBase
         _managerZipCustomFormat = string.IsNullOrEmpty(settings.ManagerZipCustomFormat)
             ? "{MapId}_{SongName}_{LevelAuthorName}"
             : settings.ManagerZipCustomFormat;
+        _managerZipPackagingMode = string.IsNullOrWhiteSpace(settings.ManagerZipPackagingMode)
+            ? ZipExportService.PackagingFolderKeepOriginalJson
+            : settings.ManagerZipPackagingMode;
 
 
         _copierRenameCustomFormat = string.IsNullOrEmpty(settings.CopierRenameCustomFormat)
@@ -278,6 +334,9 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsManagerZipNamingDefault));
         OnPropertyChanged(nameof(IsManagerZipNamingCustom));
         OnPropertyChanged(nameof(ManagerZipCustomFormat));
+        OnPropertyChanged(nameof(IsManagerZipPackagingFolderKeepOriginalJson));
+        OnPropertyChanged(nameof(IsManagerZipPackagingFlatRenameJson));
+        OnPropertyChanged(nameof(IsManagerZipPackagingFolderSongScriptJson));
 
         OnPropertyChanged(nameof(CopierRenameCustomFormat));
         OnPropertyChanged(nameof(EnableMapScriptsBackup));
@@ -297,6 +356,7 @@ public class SettingsViewModel : ViewModelBase
         currentSettings.BackupRootPath = BackupRootPath;
         currentSettings.ManagerZipNamingMode = IsManagerZipNamingDefault ? "Default" : "Custom";
         currentSettings.ManagerZipCustomFormat = ManagerZipCustomFormat;
+        currentSettings.ManagerZipPackagingMode = _managerZipPackagingMode;
         currentSettings.CopierRenameNamingMode = "Custom";
         currentSettings.CopierRenameCustomFormat = CopierRenameCustomFormat;
         currentSettings.EnableMapScriptsBackup = EnableMapScriptsBackup;

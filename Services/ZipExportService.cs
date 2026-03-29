@@ -6,6 +6,10 @@ namespace CameraScriptManager.Services;
 
 public static class ZipExportService
 {
+    public const string PackagingFolderKeepOriginalJson = "FolderKeepOriginalJson";
+    public const string PackagingFlatRenameJson = "FlatRenameJson";
+    public const string PackagingFolderSongScriptJson = "FolderSongScriptJson";
+
     public static void Export(
         IList<(string zipEntryFolder, string fileName, string jsonContent)> items,
         string zipFilePath)
@@ -35,10 +39,35 @@ public static class ZipExportService
         return name;
     }
 
-    public static string GetFolderName(bool isSingle, string namingMode, string customFormat, CameraScriptManager.Models.CameraScriptEntry entry, string cameraScriptAuthor)
+    public static (string zipEntryFolder, string zipEntryFileName) GetZipEntryParts(
+        string packagingMode,
+        string namingMode,
+        string customFormat,
+        CameraScriptManager.Models.CameraScriptEntry entry,
+        string cameraScriptAuthor,
+        string originalFileName)
     {
-        if (isSingle) return "";
+        string configuredName = GetConfiguredName(namingMode, customFormat, entry, cameraScriptAuthor);
+        string safeOriginalFileName = Path.GetFileName(originalFileName);
+        if (string.IsNullOrWhiteSpace(safeOriginalFileName))
+        {
+            safeOriginalFileName = "SongScript.json";
+        }
 
+        return packagingMode switch
+        {
+            PackagingFlatRenameJson => ("", EnsureJsonFileName(configuredName)),
+            PackagingFolderSongScriptJson => (configuredName, "SongScript.json"),
+            _ => (configuredName, safeOriginalFileName)
+        };
+    }
+
+    public static string GetConfiguredName(
+        string namingMode,
+        string customFormat,
+        CameraScriptManager.Models.CameraScriptEntry entry,
+        string cameraScriptAuthor)
+    {
         if (namingMode == "Custom")
         {
             var tags = new System.Collections.Generic.Dictionary<string, string>
@@ -56,5 +85,18 @@ public static class ZipExportService
         }
 
         return NamingEngine.SanitizeFileName($"{entry.MapId}_{entry.SongName}_{entry.LevelAuthorName}");
+    }
+
+    private static string EnsureJsonFileName(string name)
+    {
+        string sanitized = SanitizeFileName(name);
+        if (string.IsNullOrWhiteSpace(sanitized))
+        {
+            return "SongScript.json";
+        }
+
+        return sanitized.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            ? sanitized
+            : sanitized + ".json";
     }
 }

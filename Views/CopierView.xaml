@@ -33,16 +33,22 @@
 
         <!-- Settings & Action Buttons -->
         <WrapPanel Grid.Row="0" Margin="0,0,0,5" VerticalAlignment="Center">
-            <CheckBox Content="譜面metadataを表示" IsChecked="{Binding ShowMetadataColumns}" VerticalAlignment="Center" Margin="0,0,15,0"/>
-            <CheckBox Content="metadataをSongScriptに追加" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+            <CheckBox Content="譜面metadataを表示" IsChecked="{Binding ShowMetadataColumns}" VerticalAlignment="Center" Margin="0,0,15,0"
+                      ToolTip="songSubName などの譜面 metadata 列を表示します"/>
+            <CheckBox Content="metadataをSongScriptに追加" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"
+                      ToolTip="コピー時に metadata を SongScript に追加します"/>
             <TextBlock Text="リネーム:" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ComboBox SelectedItem="{Binding DefaultRenameOption, UpdateSourceTrigger=PropertyChanged}"
                       ItemsSource="{Binding Source={StaticResource RenameOptions}}"
-                      IsEditable="False" Width="150" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                      IsEditable="False" Width="150" VerticalAlignment="Center" Margin="0,0,15,0"
+                      ToolTip="新規コピー時の既定リネーム方式を選択します"/>
             
-            <Button Content="再チェック" Command="{Binding RescanCommand}" Width="80" Margin="0,0,5,0"/>
-            <Button Content="クリア" Command="{Binding ClearEntriesCommand}" Width="60" Margin="0,0,5,0"/>
-            <Button Content="コピー実行" Command="{Binding CopyCommand}" Width="100" FontWeight="Bold" Background="#4CAF50" Foreground="White" Margin="0,0,5,0"/>
+            <Button Content="再チェック" Command="{Binding RescanCommand}" Width="80" Margin="0,0,5,0"
+                    ToolTip="CustomLevels と CustomWIPLevels を再スキャンして照合結果を更新します"/>
+            <Button Content="クリア" Command="{Binding ClearEntriesCommand}" Width="60" Margin="0,0,5,0"
+                    ToolTip="取り込み済みの一覧をクリアします"/>
+            <Button Content="コピー実行" Command="{Binding CopyCommand}" Width="100" FontWeight="Bold" Background="#4CAF50" Foreground="White" Margin="0,0,5,0"
+                    ToolTip="チェックされたコピー先へ SongScript をコピーします"/>
 
             <!-- SongDetailsCache デバッグインジケータ -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
@@ -68,7 +74,8 @@
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
                 <TextBlock Text=".json / アーカイブ (.zip/.7z 等) をここにドロップ"
                            Foreground="{DynamicResource MaterialDesignToolTipBackground}" VerticalAlignment="Center" Margin="0,0,15,0"/>
-                <Button Content="ファイルを選択..." Command="{Binding OpenFilesCommand}" Padding="10,5"/>
+                <Button Content="ファイルを選択..." Command="{Binding OpenFilesCommand}" Padding="10,5"
+                        ToolTip="JSON やアーカイブから SongScript を取り込みます"/>
             </StackPanel>
         </Border>
 
@@ -196,6 +203,7 @@
                                         Padding="4,1"
                                         Margin="6,0,0,0"
                                         VerticalAlignment="Center"
+                                        ToolTip="この譜面を BeatSaver から取得して CustomLevels に展開します"
                                         Visibility="{Binding CanDownloadMissingBeatmap, Converter={StaticResource BoolToVisibilityConverter}}"
                                         IsEnabled="{Binding CanDownloadMissingBeatmap}"
                                         Command="{Binding DataContext.DownloadMissingBeatmapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -401,6 +409,7 @@
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding CopyToCustomLevels, UpdateSourceTrigger=PropertyChanged}"
                                       IsEnabled="{Binding CanCopyToCustomLevels}"
+                                      ToolTip="この SongScript を CustomLevels にコピーします"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -442,7 +451,8 @@
                                       Visibility="{Binding CanCopyToCustomLevels, Converter={StaticResource BoolToVisibilityConverter}}"
                                       Foreground="{Binding HasMultipleCustomLevels, Converter={StaticResource BoolToColorConverter}}"
                                       IsEnabled="{Binding HasMultipleCustomLevels}"
-                                      DisplayMemberPath="FolderName" IsEditable="False"/>
+                                      DisplayMemberPath="FolderName" IsEditable="False"
+                                      ToolTip="コピー先に使う CustomLevels の譜面フォルダを選択します"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -453,6 +463,7 @@
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding CopyToCustomWIPLevels, UpdateSourceTrigger=PropertyChanged}"
                                       IsEnabled="{Binding CanCopyToCustomWIPLevels}"
+                                      ToolTip="この SongScript を CustomWIPLevels にコピーします"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -494,7 +505,8 @@
                                       Visibility="{Binding CanCopyToCustomWIPLevels, Converter={StaticResource BoolToVisibilityConverter}}"
                                       Foreground="{Binding HasMultipleCustomWIPLevels, Converter={StaticResource BoolToColorConverter}}"
                                       IsEnabled="{Binding HasMultipleCustomWIPLevels}"
-                                      DisplayMemberPath="FolderName" IsEditable="False"/>
+                                      DisplayMemberPath="FolderName" IsEditable="False"
+                                      ToolTip="コピー先に使う CustomWIPLevels の譜面フォルダを選択します"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -505,7 +517,8 @@
                         <DataTemplate>
                             <ComboBox SelectedItem="{Binding RenameChoice, UpdateSourceTrigger=PropertyChanged}"
                                       ItemsSource="{Binding Source={StaticResource RenameOptions}}"
-                                      IsEditable="False"/>
+                                      IsEditable="False"
+                                      ToolTip="この行のリネーム方式を選択します"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
