@@ -17,6 +17,7 @@ public sealed class AppUpdateCheckService
         AppSettings settings = _settingsService.Load();
         string currentVersion = GetCurrentVersionString();
         string latestVersion = settings.LastKnownLatestCameraScriptManagerVersion ?? string.Empty;
+        bool checkedOnlineSuccessfully = false;
 
         if (!settings.EnableAutoUpdateCheck)
         {
@@ -53,6 +54,7 @@ public sealed class AppUpdateCheckService
                 {
                     latestVersion = fetchedVersion.Trim();
                     settings.LastKnownLatestCameraScriptManagerVersion = latestVersion;
+                    checkedOnlineSuccessfully = true;
                 }
             }
             catch
@@ -63,7 +65,7 @@ public sealed class AppUpdateCheckService
             _settingsService.Save(settings);
         }
 
-        return CreateResult(currentVersion, latestVersion, shouldCheckOnline);
+        return CreateResult(currentVersion, latestVersion, checkedOnlineSuccessfully);
     }
 
     public static string GetCurrentVersionString()
@@ -88,20 +90,23 @@ public sealed class AppUpdateCheckService
         return assemblyVersion != null ? FormatVersion(assemblyVersion) : "0.0.0";
     }
 
-    private static AppUpdateCheckResult CreateResult(string currentVersion, string latestVersion, bool wasCheckedOnline)
+    public static bool IsUpdateAvailable(string currentVersion, string latestVersion)
     {
-        bool isUpdateAvailable = TryParseVersion(currentVersion, out Version? current) &&
+        return TryParseVersion(currentVersion, out Version? current) &&
             current is not null &&
             TryParseVersion(latestVersion, out Version? latest) &&
             latest is not null &&
             latest > current;
+    }
 
+    private static AppUpdateCheckResult CreateResult(string currentVersion, string latestVersion, bool wasCheckedOnline)
+    {
         return new AppUpdateCheckResult
         {
             CurrentVersion = currentVersion,
             LatestVersion = latestVersion,
             ReleaseUrl = ReleasePageUrl,
-            IsUpdateAvailable = isUpdateAvailable,
+            IsUpdateAvailable = IsUpdateAvailable(currentVersion, latestVersion),
             WasCheckedOnline = wasCheckedOnline
         };
     }

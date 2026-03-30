@@ -10,6 +10,7 @@ namespace CameraScriptManager.ViewModels;
 public class SettingsViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService = new();
+    private string _latestKnownLatestVersion = string.Empty;
 
     public SettingsViewModel()
     {
@@ -280,6 +281,25 @@ public class SettingsViewModel : ViewModelBase
 
     public string CurrentVersion => AppUpdateCheckService.GetCurrentVersionString();
     public string ReleaseUrl => AppUpdateCheckService.ReleasePageUrl;
+    public string LatestKnownLatestVersion
+    {
+        get => _latestKnownLatestVersion;
+        private set
+        {
+            if (SetProperty(ref _latestKnownLatestVersion, value))
+            {
+                OnPropertyChanged(nameof(HasUpdateAvailable));
+                OnPropertyChanged(nameof(UpdateAvailableMessage));
+            }
+        }
+    }
+
+    public bool HasUpdateAvailable => AppUpdateCheckService.IsUpdateAvailable(CurrentVersion, LatestKnownLatestVersion);
+
+    public string UpdateAvailableMessage =>
+        HasUpdateAvailable
+            ? $"新しい CameraScriptManager が利用可能です。最新バージョン: {LatestKnownLatestVersion}"
+            : string.Empty;
 
     public event EventHandler? SettingsChanged;
 
@@ -341,6 +361,7 @@ public class SettingsViewModel : ViewModelBase
         _enableSongScriptsBackup = settings.EnableSongScriptsBackup;
         _enableCopierBackup = settings.EnableCopierBackup;
         _enableAutoUpdateCheck = settings.EnableAutoUpdateCheck;
+        _latestKnownLatestVersion = settings.LastKnownLatestCameraScriptManagerVersion?.Trim() ?? string.Empty;
 
         OnPropertyChanged(nameof(CustomLevelsPath));
         OnPropertyChanged(nameof(CustomWIPLevelsPath));
@@ -363,6 +384,9 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(EnableAutoUpdateCheck));
         OnPropertyChanged(nameof(CurrentVersion));
         OnPropertyChanged(nameof(ReleaseUrl));
+        OnPropertyChanged(nameof(LatestKnownLatestVersion));
+        OnPropertyChanged(nameof(HasUpdateAvailable));
+        OnPropertyChanged(nameof(UpdateAvailableMessage));
     }
 
     private void SaveSettings()
@@ -385,6 +409,19 @@ public class SettingsViewModel : ViewModelBase
         currentSettings.EnableCopierBackup = EnableCopierBackup;
         currentSettings.EnableAutoUpdateCheck = EnableAutoUpdateCheck;
         _settingsService.Save(currentSettings);
+        RefreshAppUpdateInfo(currentSettings);
+    }
+
+    public void RefreshAppUpdateInfo()
+    {
+        RefreshAppUpdateInfo(_settingsService.Load());
+    }
+
+    private void RefreshAppUpdateInfo(AppSettings settings)
+    {
+        LatestKnownLatestVersion = settings.LastKnownLatestCameraScriptManagerVersion?.Trim() ?? string.Empty;
+        OnPropertyChanged(nameof(CurrentVersion));
+        OnPropertyChanged(nameof(ReleaseUrl));
     }
 
     private void BrowseCustomLevels()

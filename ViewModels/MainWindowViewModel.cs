@@ -40,15 +40,13 @@ public class MainWindowViewModel : ViewModelBase
         _hasCheckedForUpdatesOnStartup = true;
 
         AppUpdateCheckResult result = await _appUpdateCheckService.CheckForUpdatesAsync();
-        if (!result.IsUpdateAvailable)
+        SettingsViewModel.RefreshAppUpdateInfo();
+
+        if (!result.WasCheckedOnline || !result.IsUpdateAvailable)
         {
             return;
         }
 
-        _dialogService.ShowMessageBox(
-            $"新しい CameraScriptManager が公開されています。\n現在のバージョン: {result.CurrentVersion}\n最新バージョン: {result.LatestVersion}\n\n最新版リリース:\n{result.ReleaseUrl}",
-            "アップデートがあります",
-            System.Windows.MessageBoxButton.OK,
-            System.Windows.MessageBoxImage.Information);
+        _dialogService.ShowUpdateAvailableDialog(result.CurrentVersion, result.LatestVersion, result.ReleaseUrl);
     }
 }

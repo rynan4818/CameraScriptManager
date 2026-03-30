@@ -17,6 +17,20 @@ public class DialogService : IDialogService
         return MessageBox.Show(message, title, button, image);
     }
 
+    public void ShowUpdateAvailableDialog(string currentVersion, string latestVersion, string releaseUrl)
+    {
+        var dialog = new UpdateAvailableDialog(currentVersion, latestVersion, releaseUrl);
+
+        if (Application.Current?.MainWindow is Window owner &&
+            owner.IsLoaded &&
+            owner.IsVisible)
+        {
+            dialog.Owner = owner;
+        }
+
+        dialog.ShowDialog();
+    }
+
     public string? ShowSaveFileDialog(string defaultFileName, string filter, string title)
     {
         var dialog = new SaveFileDialog
