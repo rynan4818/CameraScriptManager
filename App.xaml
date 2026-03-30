@@ -3,5 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
+        <SolidColorBrush x:Key="MetadataColumnHeaderBackgroundBrush" Color="#FFDCEEFF"/>
+        <SolidColorBrush x:Key="MetadataColumnHeaderBorderBrush" Color="#FF8CB6FF"/>
+        <SolidColorBrush x:Key="MetadataColumnHeaderForegroundBrush" Color="#FF0B3D91"/>
+
+        <Style x:Key="MetadataColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="Background" Value="{StaticResource MetadataColumnHeaderBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource MetadataColumnHeaderBorderBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource MetadataColumnHeaderForegroundBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
     </Application.Resources>
 </Application>

@@ -78,7 +78,8 @@ public class SongScriptCopyService
                 writer.WriteString("songAuthorName", entry.SongAuthorName);
             if (!string.IsNullOrWhiteSpace(entry.LevelAuthorName))
                 writer.WriteString("levelAuthorName", entry.LevelAuthorName);
-            writer.WriteNumber("avatarHeight", entry.AvatarHeight);
+            if (entry.AvatarHeight.HasValue)
+                writer.WriteNumber("avatarHeight", entry.AvatarHeight.Value);
             writer.WriteString("description", entry.Description ?? "");
             writer.WriteEndObject();
 

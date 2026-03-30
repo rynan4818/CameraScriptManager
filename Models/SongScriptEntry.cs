@@ -18,7 +18,7 @@ public class SongScriptEntry
     public string SongAuthorName { get; set; } = "";
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
-    public double AvatarHeight { get; set; }
+    public double? AvatarHeight { get; set; }
     public string Description { get; set; } = "";
     /// <summary>既読metadataがある場合のロック情報</summary>
     public bool HasOriginalMetadata { get; set; }

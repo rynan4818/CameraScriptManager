@@ -2,7 +2,7 @@ namespace CameraScriptManager.Models;
 
 public sealed class SearchCacheDocument
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     public int Version { get; set; } = CurrentVersion;
     public Dictionary<string, CachedSongScriptsSourceResult> SongScriptsSources { get; set; } = new();
@@ -44,7 +44,7 @@ public sealed class CachedSongScriptsEntry
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
     public double Duration { get; set; }
-    public double AvatarHeight { get; set; }
+    public double? AvatarHeight { get; set; }
     public string Description { get; set; } = "";
 }
 
@@ -77,7 +77,7 @@ public sealed class CachedCameraScriptEntry
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
     public double Duration { get; set; }
-    public double AvatarHeight { get; set; }
+    public double? AvatarHeight { get; set; }
     public string Description { get; set; } = "";
     public string FileName { get; set; } = "";
     public string FolderPath { get; set; } = "";

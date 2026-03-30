@@ -185,8 +185,12 @@ public class CameraScriptScanner
 
                 if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))
                 {
-                    entry.AvatarHeight = avatarHeight.GetDouble();
-                    entry.IsAvatarHeightFromMetadata = entry.AvatarHeight > 0;
+                    if (TryReadDouble(avatarHeight, out double avatarHeightValue))
+                    {
+                        entry.AvatarHeight = avatarHeightValue;
+                    }
+
+                    entry.IsAvatarHeightFromMetadata = true;
                 }
 
                 if (metadata.TryGetProperty("description", out var descriptionProp))
@@ -293,6 +297,24 @@ public class CameraScriptScanner
         {
             return (0, 0);
         }
+    }
+
+    private static bool TryReadDouble(JsonElement property, out double value)
+    {
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetDouble(out value))
+        {
+            return true;
+        }
+
+        if (property.ValueKind == JsonValueKind.String &&
+            double.TryParse(property.GetString(), out double parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = 0;
+        return false;
     }
 
     private static CameraScriptEntry CreateRuntimeEntryFromCache(CachedCameraScriptEntry entry)

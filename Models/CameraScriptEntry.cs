@@ -10,7 +10,7 @@ public class CameraScriptEntry
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
     public double Duration { get; set; }
-    public double AvatarHeight { get; set; }
+    public double? AvatarHeight { get; set; }
     public string Description { get; set; } = "";
     public string FileName { get; set; } = "";
     public string FolderPath { get; set; } = "";

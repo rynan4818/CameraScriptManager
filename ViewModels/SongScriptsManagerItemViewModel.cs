@@ -17,7 +17,7 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
     private string _levelAuthorName = "";
     private double _bpm;
     private double _duration;
-    private double _avatarHeight;
+    private double? _avatarHeight;
     private string _description = "";
     private bool _isMapIdLocked;
     private bool _isHashLocked;
@@ -207,7 +207,7 @@ public class SongScriptsManagerItemViewModel : ViewModelBase
         }
     }
 
-    public double AvatarHeight
+    public double? AvatarHeight
     {
         get => _avatarHeight;
         set

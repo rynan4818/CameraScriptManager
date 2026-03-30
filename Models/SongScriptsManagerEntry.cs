@@ -20,7 +20,7 @@ public class SongScriptsManagerEntry
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
     public double Duration { get; set; }
-    public double AvatarHeight { get; set; }
+    public double? AvatarHeight { get; set; }
     public string Description { get; set; } = "";
     public List<SongScriptsMatchedBeatmapFolder> MatchedCustomLevels { get; set; } = new();
     public List<SongScriptsMatchedBeatmapFolder> MatchedCustomWIPLevels { get; set; } = new();

@@ -17,7 +17,7 @@ public class CameraScriptItemViewModel : ViewModelBase
     private string _levelAuthorName = "";
     private double _bpm;
     private double _duration;
-    private double _avatarHeight;
+    private double? _avatarHeight;
     private string _description = "";
     private bool _isCameraScriptAuthorLocked;
     private bool _isMapIdLocked;
@@ -171,7 +171,7 @@ public class CameraScriptItemViewModel : ViewModelBase
         set => SetProperty(ref _duration, value);
     }
 
-    public double AvatarHeight
+    public double? AvatarHeight
     {
         get => _avatarHeight;
         set

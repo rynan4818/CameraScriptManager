@@ -197,7 +197,7 @@ public class SongScriptsScanner
                 LevelAuthorName = hasMetadataBlock ? ReadString(metadataElement, "levelAuthorName") : string.Empty,
                 Bpm = hasMetadataBlock ? ReadDouble(metadataElement, "bpm") : 0,
                 Duration = hasMetadataBlock ? ReadDouble(metadataElement, "duration") : 0,
-                AvatarHeight = hasMetadataBlock ? ReadDouble(metadataElement, "avatarHeight") : 0,
+                AvatarHeight = hasMetadataBlock ? ReadNullableDouble(metadataElement, "avatarHeight") : null,
                 Description = hasMetadataBlock ? ReadString(metadataElement, "description") : string.Empty
             };
 
@@ -255,6 +255,23 @@ public class SongScriptsScanner
         }
 
         return 0;
+    }
+
+    private static double? ReadNullableDouble(JsonElement metadataElement, string propertyName)
+    {
+        if (!metadataElement.TryGetProperty(propertyName, out var property))
+            return null;
+
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetDouble(out double numberValue))
+            return numberValue;
+
+        if (property.ValueKind == JsonValueKind.String &&
+            double.TryParse(property.GetString(), out double stringValue))
+        {
+            return stringValue;
+        }
+
+        return null;
     }
 
     private static string ResolvePathMapId(string fileName, string sourceRelativePath, string? zipEntryName)

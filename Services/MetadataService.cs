@@ -17,7 +17,7 @@ public static class MetadataService
         string songSubName,
         string songAuthorName,
         string levelAuthorName,
-        double avatarHeight = 0,
+        double? avatarHeight = null,
         string description = "")
     {
         try
@@ -39,7 +39,8 @@ public static class MetadataService
             writer.WriteString("songSubName", songSubName);
             writer.WriteString("songAuthorName", songAuthorName);
             writer.WriteString("levelAuthorName", levelAuthorName);
-            writer.WriteNumber("avatarHeight", avatarHeight);
+            if (avatarHeight.HasValue)
+                writer.WriteNumber("avatarHeight", avatarHeight.Value);
             writer.WriteString("description", description);
             writer.WriteEndObject();
 

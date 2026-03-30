@@ -223,7 +223,7 @@ public class ArchiveImportService
             entry.SongAuthorName = "";
             entry.LevelAuthorName = "";
             entry.Bpm = 0;
-            entry.AvatarHeight = 0;
+            entry.AvatarHeight = null;
             entry.Description = "";
             entry.IsHexIdFromMetadata = false;
             entry.IsSongNameFromMetadata = false;
@@ -285,7 +285,11 @@ public class ArchiveImportService
 
             if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))
             {
-                entry.AvatarHeight = avatarHeight.GetDouble();
+                if (TryReadDouble(avatarHeight, out double avatarHeightValue))
+                {
+                    entry.AvatarHeight = avatarHeightValue;
+                }
+
                 entry.IsAvatarHeightFromMetadata = true;
             }
 
@@ -296,5 +300,23 @@ public class ArchiveImportService
             }
         }
         catch { }
+    }
+
+    private static bool TryReadDouble(JsonElement property, out double value)
+    {
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetDouble(out value))
+        {
+            return true;
+        }
+
+        if (property.ValueKind == JsonValueKind.String &&
+            double.TryParse(property.GetString(), out double parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = 0;
+        return false;
     }
 }

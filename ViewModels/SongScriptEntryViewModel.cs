@@ -213,8 +213,8 @@ public class SongScriptEntryViewModel : ViewModelBase
         }
     }
 
-    private double _avatarHeight;
-    public double AvatarHeight
+    private double? _avatarHeight;
+    public double? AvatarHeight
     {
         get => _avatarHeight;
         set
