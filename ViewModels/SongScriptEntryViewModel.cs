@@ -27,10 +27,12 @@ public class SongScriptEntryViewModel : ViewModelBase
         _selectedCustomWIPLevelsFolder = model.SelectedCustomWIPLevelsFolder;
         _songName = model.SongName;
         _cameraScriptAuthorName = model.CameraScriptAuthorName;
+        _hash = model.Hash;
         _songSubName = model.SongSubName;
         _songAuthorName = model.SongAuthorName;
         _levelAuthorName = model.LevelAuthorName;
         _bpm = model.Bpm;
+        _duration = model.Duration;
         _avatarHeight = model.AvatarHeight;
         _description = model.Description;
         _renameChoice = model.RenameChoice;
@@ -168,6 +170,19 @@ public class SongScriptEntryViewModel : ViewModelBase
         }
     }
 
+    private string _hash = "";
+    public string Hash
+    {
+        get => _hash;
+        set
+        {
+            if (SetProperty(ref _hash, value))
+            {
+                _model.Hash = value;
+            }
+        }
+    }
+
     private string _songAuthorName = "";
     public string SongAuthorName
     {
@@ -209,6 +224,19 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.Bpm = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+            }
+        }
+    }
+
+    private double _duration;
+    public double Duration
+    {
+        get => _duration;
+        set
+        {
+            if (SetProperty(ref _duration, value))
+            {
+                _model.Duration = value;
             }
         }
     }
@@ -313,6 +341,20 @@ public class SongScriptEntryViewModel : ViewModelBase
         }
     }
 
+    private bool _isHashLocked;
+    public bool IsHashLocked
+    {
+        get => _isHashLocked;
+        set => SetProperty(ref _isHashLocked, value);
+    }
+
+    private bool _isDurationLocked;
+    public bool IsDurationLocked
+    {
+        get => _isDurationLocked;
+        set => SetProperty(ref _isDurationLocked, value);
+    }
+
     private bool _isAvatarHeightLocked;
     public bool IsAvatarHeightLocked
     {
@@ -338,12 +380,14 @@ public class SongScriptEntryViewModel : ViewModelBase
     public void LockAll()
     {
         IsHexIdLocked = true;
+        IsHashLocked = true;
         IsSongNameLocked = true;
         IsCameraScriptAuthorLocked = true;
         IsSongSubNameLocked = true;
         IsSongAuthorNameLocked = true;
         IsLevelAuthorNameLocked = true;
         IsBpmLocked = true;
+        IsDurationLocked = true;
         IsAvatarHeightLocked = true;
         IsDescriptionLocked = true;
     }
@@ -569,6 +613,7 @@ public class SongScriptEntryViewModel : ViewModelBase
         updated |= ApplyStringValue(() => IsSongAuthorNameLocked, SongAuthorName, metadata.SongAuthorName, value => SongAuthorName = value);
         updated |= ApplyStringValue(() => IsLevelAuthorNameLocked, LevelAuthorName, metadata.LevelAuthorName, value => LevelAuthorName = value);
         updated |= ApplyDoubleValue(() => IsBpmLocked, Bpm, metadata.Bpm, value => Bpm = value);
+        updated |= ApplyDoubleValue(() => IsDurationLocked, Duration, metadata.Duration, value => Duration = value);
 
         return updated;
     }

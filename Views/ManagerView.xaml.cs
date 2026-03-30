@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -7,12 +8,53 @@ namespace CameraScriptManager.Views;
 
 public partial class ManagerView : UserControl
 {
+    private ManagerViewModel? _viewModel;
     private ManagerViewModel ViewModel => (ManagerViewModel)DataContext;
 
     public ManagerView()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
         DataContext = new ManagerViewModel();
+    }
+
+    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        }
+
+        _viewModel = e.NewValue as ManagerViewModel;
+
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            UpdateColumnVisibility();
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ManagerViewModel.ShowMetadataColumns))
+        {
+            UpdateColumnVisibility();
+        }
+    }
+
+    private void UpdateColumnVisibility()
+    {
+        if (_viewModel == null)
+        {
+            return;
+        }
+
+        var visibility = _viewModel.ShowMetadataColumns ? Visibility.Visible : Visibility.Collapsed;
+        ColSongSubName.Visibility = visibility;
+        ColSongAuthorName.Visibility = visibility;
+        ColLevelAuthorName.Visibility = visibility;
+        ColBpm.Visibility = visibility;
+        ColDuration.Visibility = visibility;
     }
 
     private void ScriptDataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -30,6 +72,11 @@ public partial class ManagerView : UserControl
                 ScriptDataGrid.SelectedItem = row.Item;
             }
         }
+    }
+
+    private void ScriptDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DataGridSelectionToggleHelper.HandlePreviewMouseLeftButtonDown(ScriptDataGrid, e);
     }
 
     private async void FetchBeatSaver_Click(object sender, RoutedEventArgs e)
@@ -83,6 +130,9 @@ public partial class ManagerView : UserControl
                 case "ID":
                     item.IsMapIdLocked = isLocked;
                     break;
+                case "hash":
+                    item.IsHashLocked = isLocked;
+                    break;
                 case "cameraScriptAuthorName":
                     item.IsCameraScriptAuthorLocked = isLocked;
                     break;
@@ -100,6 +150,9 @@ public partial class ManagerView : UserControl
                     break;
                 case "BPM":
                     item.IsBpmLocked = isLocked;
+                    break;
+                case "Duration":
+                    item.IsDurationLocked = isLocked;
                     break;
                 case "AvatarHeight(cm)":
                     item.IsAvatarHeightLocked = isLocked;

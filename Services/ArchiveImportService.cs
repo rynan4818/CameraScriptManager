@@ -217,12 +217,14 @@ public class ArchiveImportService
 
             entry.HasOriginalMetadata = true;
             entry.HexId = "";
+            entry.Hash = "";
             entry.SongName = "";
             entry.CameraScriptAuthorName = "";
             entry.SongSubName = "";
             entry.SongAuthorName = "";
             entry.LevelAuthorName = "";
             entry.Bpm = 0;
+            entry.Duration = 0;
             entry.AvatarHeight = null;
             entry.Description = "";
             entry.IsHexIdFromMetadata = false;
@@ -240,6 +242,11 @@ public class ArchiveImportService
                 var val = mapId.GetString() ?? "";
                 entry.HexId = val;
                 entry.IsHexIdFromMetadata = true;
+            }
+
+            if (metadata.TryGetProperty("hash", out var hash))
+            {
+                entry.Hash = hash.GetString() ?? "";
             }
 
             if (metadata.TryGetProperty("songName", out var songName))
@@ -281,6 +288,14 @@ public class ArchiveImportService
             {
                 entry.Bpm = bpm.GetDouble();
                 entry.IsBpmFromMetadata = true;
+            }
+
+            if (metadata.TryGetProperty("duration", out var duration))
+            {
+                if (TryReadDouble(duration, out double durationValue))
+                {
+                    entry.Duration = durationValue;
+                }
             }
 
             if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))

@@ -120,7 +120,7 @@ UserData\CameraSongScript\SongScripts
 | **フォルダ出力** | 選択した項目を `yyyyMMdd_HHmmss_OUTPUT` フォルダへ出力します |
 | **ZIP出力** | 選択した項目を配布用 ZIP として出力します |
 | **プレイリストを作成** | 選択した項目から Beat Saber プレイリスト (`.bplist`) を生成します |
-| **元データ照合** | `Settings` で指定した元データ検索フォルダ内のアーカイブ / JSON と、譜面内スクリプトを hash で照合します |
+| **元データ照合** | `Settings` で指定した元データ検索フォルダ内のアーカイブ / JSON と、譜面内スクリプトを `Movements` 件数、`Duration + Delay` 合計、`Duration` 統計値（2番目の最大値 / 2番目の最小値 / 中央値 / 最頻値）で照合します |
 
 #### DataGrid列
 

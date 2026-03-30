@@ -127,6 +127,10 @@ public class CameraScriptScanner
         var scriptMetrics = GetScriptMetrics(jsonContent);
         entry.MovementCount = scriptMetrics.MovementCount;
         entry.ScriptDuration = scriptMetrics.TotalDurationAndDelay;
+        entry.SecondLargestDuration = scriptMetrics.SecondLargestDuration;
+        entry.SecondSmallestDuration = scriptMetrics.SecondSmallestDuration;
+        entry.MedianDuration = scriptMetrics.MedianDuration;
+        entry.ModeDuration = scriptMetrics.ModeDuration;
 
         // Try read metadata from JSON
         try
@@ -142,6 +146,11 @@ public class CameraScriptScanner
                 {
                     entry.MapId = mapId.GetString() ?? "";
                     entry.IsMapIdFromMetadata = !string.IsNullOrWhiteSpace(entry.MapId);
+                }
+
+                if (metadata.TryGetProperty("hash", out var hash))
+                {
+                    entry.Hash = hash.GetString() ?? "";
                 }
 
                 if (metadata.TryGetProperty("cameraScriptAuthorName", out var author))
@@ -256,7 +265,11 @@ public class CameraScriptScanner
             // Calculate Song Hash based on Info.dat and associated beatmap files
             if (infoDat.BeatmapFilenames.Count > 0)
             {
-                entry.Hash = HashCalculator.CalculateSongHash(folderPath, infoDat);
+                string calculatedHash = HashCalculator.CalculateSongHash(folderPath, infoDat);
+                if (!entry.HasOriginalMetadata || string.IsNullOrWhiteSpace(entry.Hash))
+                {
+                    entry.Hash = calculatedHash;
+                }
             }
 
             // If no original metadata but Info.dat provided data, mark as needing metadata write
@@ -273,30 +286,98 @@ public class CameraScriptScanner
     /// <summary>
     /// SongScript JSONのMovements配列からDurationとDelayの合計値（秒）を計算する。
     /// </summary>
-    private static (int MovementCount, double TotalDurationAndDelay) GetScriptMetrics(string jsonContent)
+    private static (int MovementCount, double TotalDurationAndDelay, double? SecondLargestDuration, double? SecondSmallestDuration, double? MedianDuration, double? ModeDuration) GetScriptMetrics(string jsonContent)
     {
         try
         {
             using var doc = JsonDocument.Parse(jsonContent);
             if (!doc.RootElement.TryGetProperty("Movements", out var movements))
-                return (0, 0);
+                return (0, 0, null, null, null, null);
 
             int movementCount = 0;
             double total = 0;
+            var durations = new List<double>();
             foreach (var movement in movements.EnumerateArray())
             {
                 movementCount++;
+                double durationValue = 0;
                 if (movement.TryGetProperty("Duration", out var duration))
-                    total += duration.GetDouble();
+                    durationValue = duration.GetDouble();
+                durations.Add(durationValue);
+                total += durationValue;
                 if (movement.TryGetProperty("Delay", out var delay))
                     total += delay.GetDouble();
             }
-            return (movementCount, total);
+
+            durations.Sort();
+            return (
+                movementCount,
+                total,
+                GetSecondLargestDuration(durations),
+                GetSecondSmallestDuration(durations),
+                GetMedianDuration(durations),
+                GetModeDuration(durations));
         }
         catch
         {
-            return (0, 0);
+            return (0, 0, null, null, null, null);
         }
+    }
+
+    private static double? GetSecondLargestDuration(IReadOnlyList<double> sortedDurations)
+    {
+        return sortedDurations.Count >= 2 ? sortedDurations[^2] : null;
+    }
+
+    private static double? GetSecondSmallestDuration(IReadOnlyList<double> sortedDurations)
+    {
+        return sortedDurations.Count >= 2 ? sortedDurations[1] : null;
+    }
+
+    private static double? GetMedianDuration(IReadOnlyList<double> sortedDurations)
+    {
+        if (sortedDurations.Count == 0)
+        {
+            return null;
+        }
+
+        int middleIndex = sortedDurations.Count / 2;
+        if (sortedDurations.Count % 2 == 1)
+        {
+            return sortedDurations[middleIndex];
+        }
+
+        return (sortedDurations[middleIndex - 1] + sortedDurations[middleIndex]) / 2.0;
+    }
+
+    private static double? GetModeDuration(IReadOnlyList<double> durations)
+    {
+        if (durations.Count == 0)
+        {
+            return null;
+        }
+
+        const double modeBucketScale = 10.0;
+        var grouped = durations
+            .Select(duration => (int)Math.Round(duration * modeBucketScale, MidpointRounding.AwayFromZero))
+            .GroupBy(bucket => bucket)
+            .Select(group => new { Bucket = group.Key, Count = group.Count() })
+            .OrderByDescending(group => group.Count)
+            .ThenBy(group => group.Bucket)
+            .ToList();
+
+        if (grouped.Count == 0)
+        {
+            return null;
+        }
+
+        int topCount = grouped[0].Count;
+        if (grouped.Count(group => group.Count == topCount) > 1)
+        {
+            return null;
+        }
+
+        return grouped[0].Bucket / modeBucketScale;
     }
 
     private static bool TryReadDouble(JsonElement property, out double value)
@@ -349,6 +430,10 @@ public class CameraScriptScanner
             IsDescriptionFromMetadata = entry.IsDescriptionFromMetadata,
             MovementCount = entry.MovementCount,
             ScriptDuration = entry.ScriptDuration,
+            SecondLargestDuration = entry.SecondLargestDuration,
+            SecondSmallestDuration = entry.SecondSmallestDuration,
+            MedianDuration = entry.MedianDuration,
+            ModeDuration = entry.ModeDuration,
             OggDuration = entry.OggDuration,
             OriginalSourceFiles = new List<string>()
         };
@@ -386,6 +471,10 @@ public class CameraScriptScanner
             IsDescriptionFromMetadata = entry.IsDescriptionFromMetadata,
             MovementCount = entry.MovementCount,
             ScriptDuration = entry.ScriptDuration,
+            SecondLargestDuration = entry.SecondLargestDuration,
+            SecondSmallestDuration = entry.SecondSmallestDuration,
+            MedianDuration = entry.MedianDuration,
+            ModeDuration = entry.ModeDuration,
             OggDuration = entry.OggDuration
         };
     }

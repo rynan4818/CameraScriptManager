@@ -72,6 +72,7 @@
                   IsReadOnly="False"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling"
+                  PreviewMouseLeftButtonDown="SongScriptsDataGrid_PreviewMouseLeftButtonDown"
                   PreviewMouseRightButtonDown="SongScriptsDataGrid_PreviewMouseRightButtonDown">
 
             <DataGrid.ContextMenu>

@@ -75,6 +75,11 @@ public partial class SongScriptsManagerView : UserControl
         }
     }
 
+    private void SongScriptsDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DataGridSelectionToggleHelper.HandlePreviewMouseLeftButtonDown(SongScriptsDataGrid, e);
+    }
+
     private void LockCell_Click(object sender, RoutedEventArgs e)
     {
         SetLockOnCurrentColumn(true);

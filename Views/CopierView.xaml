@@ -35,8 +35,8 @@
         <WrapPanel Grid.Row="0" Margin="0,0,0,5" VerticalAlignment="Center">
             <CheckBox Content="譜面metadataを表示" IsChecked="{Binding ShowMetadataColumns}" VerticalAlignment="Center" Margin="0,0,15,0"
                       ToolTip="songSubName などの譜面 metadata 列を表示します"/>
-            <CheckBox Content="metadataをSongScriptに追加" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"
-                      ToolTip="コピー時に metadata を SongScript に追加します"/>
+            <CheckBox Content="コピー時にmetadataをUI内容で再生成" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"
+                      ToolTip="ON の場合、コピー先 SongScript の metadata を現在の UI の値で再生成します。metadata が無い場合は新規追加します。OFF の場合は元の JSON をそのままコピーします。"/>
             <TextBlock Text="リネーム:" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ComboBox SelectedItem="{Binding DefaultRenameOption, UpdateSourceTrigger=PropertyChanged}"
                       ItemsSource="{Binding Source={StaticResource RenameOptions}}"
@@ -90,6 +90,7 @@
                   CanUserSortColumns="True"
                   GridLinesVisibility="All"
                   AlternatingRowBackground="#F9F9F9"
+                  PreviewMouseLeftButtonDown="EntryDataGrid_PreviewMouseLeftButtonDown"
                   PreviewMouseRightButtonDown="EntryDataGrid_PreviewMouseRightButtonDown">
 
             <!-- Context Menu -->
@@ -175,6 +176,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding HexId, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsHexIdLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -217,12 +219,36 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="hash" Width="79" SortMemberPath="Hash" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="hash">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Hash, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsHashLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsHashLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <!-- Song Name (lockable) -->
                 <DataGridTemplateColumn Header="songName" Width="172" SortMemberPath="SongName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongName, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsSongNameLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -247,6 +273,7 @@
                             <Grid>
                                 <TextBox Text="{Binding CameraScriptAuthorName, UpdateSourceTrigger=PropertyChanged}"
                                          IsReadOnly="{Binding IsCameraScriptAuthorLocked}"
+                                         ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                          BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">
@@ -275,6 +302,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsSongSubNameLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -298,6 +326,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsSongAuthorNameLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -321,6 +350,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsLevelAuthorNameLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -344,6 +374,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsBpmLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -361,12 +392,36 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn x:Name="ColDuration" Header="Duration" Width="75" SortMemberPath="Duration" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="duration">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Duration, UpdateSourceTrigger=LostFocus}"
+                                     IsReadOnly="{Binding IsDurationLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                     BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDurationLocked}" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Setter Property="Foreground" Value="#555555"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <!-- AvatarHeight (lockable) -->
                 <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="avatar_height">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding AvatarHeight, TargetNullValue='', UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsAvatarHeightLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -390,6 +445,7 @@
                         <DataTemplate>
                             <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}"
                                      IsReadOnly="{Binding IsDescriptionLocked}"
+                                     ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                      BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">

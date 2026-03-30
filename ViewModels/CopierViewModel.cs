@@ -189,12 +189,27 @@ public class CopierViewModel : ViewModelBase
                            
         _customLevelsPath = settings.CustomLevelsPath;
         _customWIPLevelsPath = settings.CustomWIPLevelsPath;
-        _addMetadata = settings.AddMetadata;
-        ShowMetadataColumns = settings.ShowMetadataColumns;
+        if (_addMetadata != settings.AddMetadata)
+        {
+            _addMetadata = settings.AddMetadata;
+            OnPropertyChanged(nameof(AddMetadata));
+        }
+
+        if (_showMetadataColumns != settings.ShowMetadataColumns)
+        {
+            _showMetadataColumns = settings.ShowMetadataColumns;
+            OnPropertyChanged(nameof(ShowMetadataColumns));
+        }
+
         _backupRootPath = BackupPathResolver.ResolveBackupRootPath(settings);
         _enableCopierBackup = settings.EnableCopierBackup;
 
-        _defaultRenameOption = ParseDefaultRenameOption(settings);
+        var defaultRenameOption = ParseDefaultRenameOption(settings);
+        if (_defaultRenameOption != defaultRenameOption)
+        {
+            _defaultRenameOption = defaultRenameOption;
+            OnPropertyChanged(nameof(DefaultRenameOption));
+        }
 
         if (pathChanged)
         {
@@ -363,7 +378,15 @@ public class CopierViewModel : ViewModelBase
         try
         {
             BeatSaverApiResponse? apiResponse = await GetBeatSaverApiResponseAsync(hexId);
-            entry.Model.Metadata = apiResponse?.Metadata;
+            if (apiResponse != null)
+            {
+                entry.ApplyBeatSaverData(apiResponse);
+            }
+            else
+            {
+                entry.Model.Metadata = null;
+            }
+
             entry.UpdateSongName();
             StatusMessage = apiResponse?.Metadata != null
                 ? $"ID {hexId} のメタデータを取得しました"
@@ -423,6 +446,7 @@ public class CopierViewModel : ViewModelBase
                 foreach (SongScriptEntryViewModel entry in group)
                 {
                     entry.ApplyBeatSaverData(apiResponse);
+                    entry.UpdateSongName();
                 }
 
                 successCount += group.Count();

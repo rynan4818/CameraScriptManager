@@ -51,54 +51,19 @@ public class SongScriptCopyService
 
     private string PrepareJson(SongScriptEntry entry)
     {
-        try
-        {
-            using var doc = JsonDocument.Parse(entry.JsonContent);
-            using var stream = new MemoryStream();
-            using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
-
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("metadata");
-            writer.WriteStartObject();
-            writer.WriteString("mapId", entry.HexId);
-            writer.WriteString("cameraScriptAuthorName", entry.CameraScriptAuthorName ?? "");
-            if (entry.Bpm > 0)
-                writer.WriteNumber("bpm", entry.Bpm);
-
-            double duration = entry.OggDuration > 0 ? entry.OggDuration : entry.Metadata?.Duration ?? 0;
-            if (duration > 0)
-                writer.WriteNumber("duration", duration);
-
-            if (!string.IsNullOrWhiteSpace(entry.SongName))
-                writer.WriteString("songName", entry.SongName);
-            if (!string.IsNullOrWhiteSpace(entry.SongSubName))
-                writer.WriteString("songSubName", entry.SongSubName);
-            if (!string.IsNullOrWhiteSpace(entry.SongAuthorName))
-                writer.WriteString("songAuthorName", entry.SongAuthorName);
-            if (!string.IsNullOrWhiteSpace(entry.LevelAuthorName))
-                writer.WriteString("levelAuthorName", entry.LevelAuthorName);
-            if (entry.AvatarHeight.HasValue)
-                writer.WriteNumber("avatarHeight", entry.AvatarHeight.Value);
-            writer.WriteString("description", entry.Description ?? "");
-            writer.WriteEndObject();
-
-            foreach (var prop in doc.RootElement.EnumerateObject())
-            {
-                if (prop.Name is "mapId" or "songScriptAuthor" or "cameraScriptAuthor" or "cameraScriptAuthorName" or "metadata")
-                    continue;
-                prop.WriteTo(writer);
-            }
-
-            writer.WriteEndObject();
-            writer.Flush();
-
-            return Encoding.UTF8.GetString(stream.ToArray());
-        }
-        catch
-        {
-            return entry.JsonContent;
-        }
+        return MetadataService.PrepareJsonWithMetadata(
+            entry.JsonContent,
+            entry.HexId,
+            entry.Hash,
+            entry.CameraScriptAuthorName ?? "",
+            entry.Bpm,
+            entry.Duration,
+            entry.SongName,
+            entry.SongSubName,
+            entry.SongAuthorName,
+            entry.LevelAuthorName,
+            entry.AvatarHeight,
+            entry.Description ?? "");
     }
 
     public static string GetTargetFileName(SongScriptEntry entry)

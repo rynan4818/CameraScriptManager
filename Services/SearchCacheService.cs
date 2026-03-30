@@ -402,6 +402,10 @@ public sealed class SearchCacheService
             IsDescriptionFromMetadata = entry.IsDescriptionFromMetadata,
             MovementCount = entry.MovementCount,
             ScriptDuration = entry.ScriptDuration,
+            SecondLargestDuration = entry.SecondLargestDuration,
+            SecondSmallestDuration = entry.SecondSmallestDuration,
+            MedianDuration = entry.MedianDuration,
+            ModeDuration = entry.ModeDuration,
             OggDuration = entry.OggDuration
         };
     }
@@ -410,6 +414,7 @@ public sealed class SearchCacheService
     {
         return new CachedOriginalScriptMatchResult
         {
+            MatchAlgorithmVersion = entry.MatchAlgorithmVersion,
             SearchPaths = entry.SearchPaths.ToList(),
             SourceFiles = entry.SourceFiles.Select(Clone).ToList(),
             TargetFiles = entry.TargetFiles.Select(Clone).ToList(),

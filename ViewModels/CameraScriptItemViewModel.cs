@@ -10,6 +10,7 @@ public class CameraScriptItemViewModel : ViewModelBase
     private bool _isSelected;
     private bool _isModified;
     private string _mapId = "";
+    private string _hash = "";
     private string _cameraScriptAuthorName = "";
     private string _songName = "";
     private string _songSubName = "";
@@ -26,6 +27,8 @@ public class CameraScriptItemViewModel : ViewModelBase
     private bool _isSongAuthorNameLocked;
     private bool _isLevelAuthorNameLocked;
     private bool _isBpmLocked;
+    private bool _isHashLocked;
+    private bool _isDurationLocked;
     private bool _isAvatarHeightLocked;
     private bool _isDescriptionLocked;
     private bool _suppressModifiedTracking;
@@ -37,6 +40,7 @@ public class CameraScriptItemViewModel : ViewModelBase
         _suppressModifiedTracking = true;
 
         _mapId = entry.MapId;
+        _hash = entry.Hash;
         _cameraScriptAuthorName = entry.CameraScriptAuthorName;
         _songName = entry.SongName;
         _songSubName = entry.SongSubName;
@@ -111,6 +115,19 @@ public class CameraScriptItemViewModel : ViewModelBase
         }
     }
 
+    public string Hash
+    {
+        get => _hash;
+        set
+        {
+            if (SetProperty(ref _hash, value))
+            {
+                _entry.Hash = value;
+                MarkModified();
+            }
+        }
+    }
+
     public string SongName
     {
         get => _songName;
@@ -168,7 +185,14 @@ public class CameraScriptItemViewModel : ViewModelBase
     public double Duration
     {
         get => _duration;
-        set => SetProperty(ref _duration, value);
+        set
+        {
+            if (SetProperty(ref _duration, value))
+            {
+                _entry.Duration = value;
+                MarkModified();
+            }
+        }
     }
 
     public double? AvatarHeight
@@ -206,8 +230,6 @@ public class CameraScriptItemViewModel : ViewModelBase
         var ts = TimeSpan.FromSeconds(seconds);
         return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
     }
-
-    public string Hash => _entry.Hash;
 
     public bool IsCameraScriptAuthorLocked
     {
@@ -279,6 +301,18 @@ public class CameraScriptItemViewModel : ViewModelBase
         }
     }
 
+    public bool IsHashLocked
+    {
+        get => _isHashLocked;
+        set => SetProperty(ref _isHashLocked, value);
+    }
+
+    public bool IsDurationLocked
+    {
+        get => _isDurationLocked;
+        set => SetProperty(ref _isDurationLocked, value);
+    }
+
     public bool IsAvatarHeightLocked
     {
         get => _isAvatarHeightLocked;
@@ -321,6 +355,7 @@ public class CameraScriptItemViewModel : ViewModelBase
             return Services.MetadataService.PrepareJsonWithMetadata(
                 originalJson,
                 MapId,
+                Hash,
                 CameraScriptAuthorName,
                 Bpm,
                 Duration,
@@ -371,16 +406,11 @@ public class CameraScriptItemViewModel : ViewModelBase
 
             updated |= ApplyStringValue(() => IsMapIdLocked, MapId, apiResponse.Id, value => MapId = value);
             updated |= ApplyDoubleValue(() => IsBpmLocked, Bpm, meta.Bpm, value => Bpm = value);
+            updated |= ApplyDoubleValue(() => IsDurationLocked, Duration, meta.Duration, value => Duration = value);
             updated |= ApplyStringValue(() => IsSongNameLocked, SongName, meta.SongName, value => SongName = value);
             updated |= ApplyStringValue(() => IsSongSubNameLocked, SongSubName, meta.SongSubName, value => SongSubName = value);
             updated |= ApplyStringValue(() => IsSongAuthorNameLocked, SongAuthorName, meta.SongAuthorName, value => SongAuthorName = value);
             updated |= ApplyStringValue(() => IsLevelAuthorNameLocked, LevelAuthorName, meta.LevelAuthorName, value => LevelAuthorName = value);
-
-            if (!_entry.HasOriginalMetadata && meta.Duration > 0 && !_duration.Equals(meta.Duration))
-            {
-                Duration = meta.Duration;
-                updated = true;
-            }
         }
         finally
         {
@@ -434,6 +464,8 @@ public class CameraScriptItemViewModel : ViewModelBase
         IsSongAuthorNameLocked = true;
         IsLevelAuthorNameLocked = true;
         IsBpmLocked = true;
+        IsHashLocked = true;
+        IsDurationLocked = true;
         IsAvatarHeightLocked = true;
         IsDescriptionLocked = true;
     }

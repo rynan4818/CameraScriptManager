@@ -62,6 +62,7 @@ public partial class CopierView : UserControl
         ColSongAuthorName.Visibility = vis;
         ColLevelAuthorName.Visibility = vis;
         ColBpm.Visibility = vis;
+        ColDuration.Visibility = vis;
     }
 
     private void EntryDataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -77,6 +78,11 @@ public partial class CopierView : UserControl
                 EntryDataGrid.SelectedItem = row.Item;
             }
         }
+    }
+
+    private void EntryDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DataGridSelectionToggleHelper.HandlePreviewMouseLeftButtonDown(EntryDataGrid, e);
     }
 
     private void Window_DragOver(object sender, DragEventArgs e)
@@ -141,6 +147,9 @@ public partial class CopierView : UserControl
                 case "ID":
                     item.IsHexIdLocked = isLocked;
                     break;
+                case "hash":
+                    item.IsHashLocked = isLocked;
+                    break;
                 case "songName":
                     item.IsSongNameLocked = isLocked;
                     break;
@@ -158,6 +167,9 @@ public partial class CopierView : UserControl
                     break;
                 case "BPM":
                     item.IsBpmLocked = isLocked;
+                    break;
+                case "Duration":
+                    item.IsDurationLocked = isLocked;
                     break;
                 case "AvatarHeight(cm)":
                     item.IsAvatarHeightLocked = isLocked;

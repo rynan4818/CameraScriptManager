@@ -13,11 +13,13 @@ public class SongScriptEntry
     public string JsonContent { get; set; } = "";
     public string BeatSaverUrl => $"https://beatsaver.com/maps/{HexId}";
     public BeatSaverMetadata? Metadata { get; set; }
+    public string Hash { get; set; } = "";
     public string CameraScriptAuthorName { get; set; } = "";
     public string SongSubName { get; set; } = "";
     public string SongAuthorName { get; set; } = "";
     public string LevelAuthorName { get; set; } = "";
     public double Bpm { get; set; }
+    public double Duration { get; set; }
     public double? AvatarHeight { get; set; }
     public string Description { get; set; } = "";
     /// <summary>既読metadataがある場合のロック情報</summary>

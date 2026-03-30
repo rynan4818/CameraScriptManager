@@ -10,6 +10,7 @@ public static class MetadataService
     public static string PrepareJsonWithMetadata(
         string originalJson,
         string mapId,
+        string hash,
         string cameraScriptAuthorName,
         double bpm,
         double duration,
@@ -32,6 +33,7 @@ public static class MetadataService
             writer.WritePropertyName("metadata");
             writer.WriteStartObject();
             writer.WriteString("mapId", mapId);
+            writer.WriteString("hash", hash);
             writer.WriteString("cameraScriptAuthorName", cameraScriptAuthorName);
             writer.WriteNumber("bpm", bpm);
             writer.WriteNumber("duration", duration);
@@ -47,7 +49,7 @@ public static class MetadataService
             // Copy all other properties, skipping old metadata/legacy fields
             foreach (var prop in doc.RootElement.EnumerateObject())
             {
-                if (prop.Name is "metadata" or "mapId" or "songScriptAuthor" or "cameraScriptAuthor" or "cameraScriptAuthorName")
+                if (prop.Name is "metadata" or "mapId" or "hash" or "songScriptAuthor" or "cameraScriptAuthor" or "cameraScriptAuthorName")
                     continue;
                 prop.WriteTo(writer);
             }

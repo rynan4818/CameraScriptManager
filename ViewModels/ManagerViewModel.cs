@@ -21,6 +21,7 @@ public class ManagerViewModel : ViewModelBase
     private string _originalScriptPath3 = "";
     private string _backupRootPath = "";
     private bool _enableMapScriptsBackup;
+    private bool _showMetadataColumns;
     private string _statusText = "";
 
     public string CustomLevelsPath => _customLevelsPath;
@@ -52,6 +53,18 @@ public class ManagerViewModel : ViewModelBase
         set => SetProperty(ref _statusText, value);
     }
 
+    public bool ShowMetadataColumns
+    {
+        get => _showMetadataColumns;
+        set
+        {
+            if (SetProperty(ref _showMetadataColumns, value))
+            {
+                SaveSettings();
+            }
+        }
+    }
+
     public AsyncRelayCommand ScanCommand { get; }
     public AsyncRelayCommand AddMetadataCommand { get; }
     public AsyncRelayCommand ExportFolderCommand { get; }
@@ -69,11 +82,23 @@ public class ManagerViewModel : ViewModelBase
         _originalScriptPath3 = settings.OriginalScriptPath3;
         _backupRootPath = BackupPathResolver.ResolveBackupRootPath(settings);
         _enableMapScriptsBackup = settings.EnableMapScriptsBackup;
+        if (_showMetadataColumns != settings.ShowMetadataColumns)
+        {
+            _showMetadataColumns = settings.ShowMetadataColumns;
+            OnPropertyChanged(nameof(ShowMetadataColumns));
+        }
     }
 
     public void ReloadSettings()
     {
         LoadSettings();
+    }
+
+    private void SaveSettings()
+    {
+        var settings = _settingsService.Load();
+        settings.ShowMetadataColumns = ShowMetadataColumns;
+        _settingsService.Save(settings);
     }
 
     private bool EnsureAnyBeatmapPathConfigured(bool showMessage)
@@ -293,6 +318,7 @@ public class ManagerViewModel : ViewModelBase
             var newJson = MetadataService.PrepareJsonWithMetadata(
                 originalJson,
                 item.MapId,
+                item.Hash,
                 item.CameraScriptAuthorName,
                 item.Bpm,
                 item.Duration,

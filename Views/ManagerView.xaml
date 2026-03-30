@@ -42,6 +42,8 @@
                     ToolTip="選択中の譜面から Beat Saber 用プレイリストを作成します"/>
             <Button Content="元データ照合" Command="{Binding FindOriginalScriptsCommand}" Padding="16,4"
                     ToolTip="元データ検索パスから一致候補を検索します"/>
+            <CheckBox Content="譜面metadataを表示" IsChecked="{Binding ShowMetadataColumns}" VerticalAlignment="Center" Margin="8,0,0,0"
+                      ToolTip="songSubName などの譜面 metadata 列を表示します"/>
         </StackPanel>
 
         <!-- DataGrid -->
@@ -62,6 +64,7 @@
                   IsReadOnly="False"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling"
+                  PreviewMouseLeftButtonDown="ScriptDataGrid_PreviewMouseLeftButtonDown"
                   PreviewMouseRightButtonDown="ScriptDataGrid_PreviewMouseRightButtonDown">
 
             <DataGrid.ContextMenu>
@@ -135,6 +138,16 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="hash" Width="79" SortMemberPath="Hash" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="hash">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Hash, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsHashLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style><Style TargetType="TextBox"><Setter Property="Background" Value="Transparent"/><Style.Triggers><DataTrigger Binding="{Binding IsHashLocked}" Value="True"><Setter Property="Background" Value="#DDDDDD"/><Setter Property="Foreground" Value="#555555"/></DataTrigger></Style.Triggers></Style></TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <!-- CameraScriptAuthorName with lock and drag handle -->
                 <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="154" SortMemberPath="CameraScriptAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="camera_script_author">
                     <DataGridTemplateColumn.CellTemplate>
@@ -177,7 +190,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="songSubName" Width="120" SortMemberPath="SongSubName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_sub_name">
+                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" SortMemberPath="SongSubName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_sub_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongSubNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -186,7 +199,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_author_name">
+                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_author_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsSongAuthorNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -195,7 +208,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="level_author_name">
+                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="level_author_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsLevelAuthorNameLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
@@ -204,11 +217,20 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="BPM" Width="50" SortMemberPath="Bpm" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="bpm">
+                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="50" SortMemberPath="Bpm" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="bpm">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsBpmLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
                                 <TextBox.Style><Style TargetType="TextBox"><Setter Property="Background" Value="Transparent"/><Style.Triggers><DataTrigger Binding="{Binding IsBpmLocked}" Value="True"><Setter Property="Background" Value="#DDDDDD"/><Setter Property="Foreground" Value="#555555"/></DataTrigger></Style.Triggers></Style></TextBox.Style>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn x:Name="ColDuration" Header="Duration" Width="75" SortMemberPath="Duration" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="duration">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Duration, UpdateSourceTrigger=LostFocus}" IsReadOnly="{Binding IsDurationLocked}" ContextMenu="{Binding ContextMenu, RelativeSource={RelativeSource AncestorType=DataGrid}}" BorderThickness="0" Padding="2,0" VerticalAlignment="Center">
+                                <TextBox.Style><Style TargetType="TextBox"><Setter Property="Background" Value="Transparent"/><Style.Triggers><DataTrigger Binding="{Binding IsDurationLocked}" Value="True"><Setter Property="Background" Value="#DDDDDD"/><Setter Property="Foreground" Value="#555555"/></DataTrigger></Style.Triggers></Style></TextBox.Style>
                             </TextBox>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -252,9 +274,6 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-
-                <!-- Hash -->
-                <DataGridTextColumn Header="ハッシュ" Binding="{Binding Hash, Mode=OneWay}" Width="150" IsReadOnly="True" views:DataGridColumnWidthPersistence.ColumnKey="hash"/>
             </DataGrid.Columns>
         </DataGrid>
 
