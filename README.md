@@ -30,17 +30,13 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 
 ## 初回設定
 
+<img width="971" height="368" alt="image" src="https://github.com/user-attachments/assets/45aa1fc6-9e75-4e87-9513-f57339f22a96" />
+
 起動後は `Settings` タブで以下を設定してください。
 
 * `CustomLevels`
 * `CustomWIPLevels`
 * `SongScripts`
-
-`SongScripts` には絶対パスのほか、Beat Saber ルート基準の相対パスも指定できます。`CameraSongScript` 用としては、次の設定が分かりやすくおすすめです。
-
-```text
-UserData\CameraSongScript\SongScripts
-```
 
 必要に応じて、以下も設定します。
 
@@ -56,6 +52,15 @@ UserData\CameraSongScript\SongScripts
 `SongScripts` フォルダ内の `.json` / `.zip` を一覧管理するタブです。`CameraSongScript` の `SongScripts` フォルダをそのまま対象にできます。
 
 スキャン時はまず `mapId` ベースの一致候補を表示し、その後バックグラウンドで譜面 hash の追加照合を進めます。上部の進捗表示で `hash検索` の状態を確認できます。
+
+<img width="1117" height="390" alt="image" src="https://github.com/user-attachments/assets/cb66211b-cd7d-4a32-b388-b8ae36b6734e" />
+
+<img width="1246" height="576" alt="image" src="https://github.com/user-attachments/assets/c99e4db5-d5b5-439b-9563-3c3021470ba9" />
+
+<img width="1246" height="576" alt="image" src="https://github.com/user-attachments/assets/5a86cd62-ba83-48b1-9ab5-f6e8ba7108ca" />
+
+<img width="1233" height="386" alt="image" src="https://github.com/user-attachments/assets/debaad80-62c2-44be-8e0b-0629074122a6" />
+
 
 #### ツールバーボタン
 
@@ -110,6 +115,13 @@ UserData\CameraSongScript\SongScripts
 ### MapScriptsタブ
 
 `CustomLevels` / `CustomWIPLevels` フォルダ内にある既存の `SongScript.json` を一覧管理するタブです。
+
+<img width="1233" height="533" alt="image" src="https://github.com/user-attachments/assets/f9b0218d-a83d-4d0d-9b02-42dc9c266c7b" />
+
+<img width="1233" height="526" alt="image" src="https://github.com/user-attachments/assets/c4bd5d62-20cb-4fd7-8bb1-0b3cd5679678" />
+
+<img width="1071" height="288" alt="image" src="https://github.com/user-attachments/assets/602a440b-106a-445c-8e09-fefc2dd4a0bc" />
+
 
 #### ツールバーボタン
 
