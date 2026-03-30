@@ -1,4 +1,4 @@
-# CameraScript Manager & Copier
+# CameraScriptManager
 
 Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementScript 形式 JSON) を整理、配布、配置するための Windows 用デスクトップツールです。
 
@@ -61,6 +61,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 
 <img width="1233" height="386" alt="image" src="https://github.com/user-attachments/assets/debaad80-62c2-44be-8e0b-0629074122a6" />
 
+<img width="850" height="459" alt="image" src="https://github.com/user-attachments/assets/c90b2513-597f-4bc5-83cf-e5f36be6db85" />
 
 #### ツールバーボタン
 
@@ -121,7 +122,6 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 <img width="1233" height="526" alt="image" src="https://github.com/user-attachments/assets/c4bd5d62-20cb-4fd7-8bb1-0b3cd5679678" />
 
 <img width="1071" height="288" alt="image" src="https://github.com/user-attachments/assets/602a440b-106a-445c-8e09-fefc2dd4a0bc" />
-
 
 #### ツールバーボタン
 
