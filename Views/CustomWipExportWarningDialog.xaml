@@ -1,0 +1,40 @@
+<Window x:Class="CameraScriptManager.Views.CustomWipExportWarningDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WIP出力の確認"
+        Height="220"
+        Width="540"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   TextWrapping="Wrap"
+                   FontSize="14"
+                   VerticalAlignment="Center">
+            <Run Text="CustomWIPLevelsフォルダの譜面は編集されているため、メタデータに含まれるhashがBeatSaver登録と異なる場合があります。"/>
+            <LineBreak/>
+            <Run Text="CustomLevelsフォルダの譜面から出力することを推奨します。"/>
+        </TextBlock>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="閉じる"
+                    Width="110"
+                    Margin="0,0,8,0"
+                    Click="Close_Click"
+                    IsDefault="True"
+                    IsCancel="True"/>
+            <Button Content="WIPを承知で出力する"
+                    Width="170"
+                    Click="Proceed_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

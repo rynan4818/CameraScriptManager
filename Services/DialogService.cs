@@ -17,6 +17,20 @@ public class DialogService : IDialogService
         return MessageBox.Show(message, title, button, image);
     }
 
+    public bool ShowCustomWipExportWarningDialog()
+    {
+        var dialog = new CustomWipExportWarningDialog();
+
+        if (Application.Current?.MainWindow is Window owner &&
+            owner.IsLoaded &&
+            owner.IsVisible)
+        {
+            dialog.Owner = owner;
+        }
+
+        return dialog.ShowDialog() == true;
+    }
+
     public void ShowUpdateAvailableDialog(string currentVersion, string latestVersion, string releaseUrl)
     {
         var dialog = new UpdateAvailableDialog(currentVersion, latestVersion, releaseUrl);

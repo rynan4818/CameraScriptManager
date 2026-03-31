@@ -371,6 +371,12 @@ public class ManagerViewModel : ViewModelBase
             return Task.CompletedTask;
         }
 
+        if (!ConfirmExportForSelectedItems(selectedItems))
+        {
+            StatusText = "出力をキャンセルしました";
+            return Task.CompletedTask;
+        }
+
         bool isSingle = selectedItems.Count == 1;
         string defaultFileName = isSingle 
             ? ZipExportService.SanitizeFileName($"{selectedItems[0].MapId}_{selectedItems[0].SongName}_{selectedItems[0].LevelAuthorName}.zip")
@@ -404,6 +410,12 @@ public class ManagerViewModel : ViewModelBase
         {
             StatusText = "エクスポートする項目を選択してください";
             _dialogService.ShowMessageBox("エクスポートする項目を選択してください。", "情報", MessageBoxButton.OK, MessageBoxImage.Information);
+            return Task.CompletedTask;
+        }
+
+        if (!ConfirmExportForSelectedItems(selectedItems))
+        {
+            StatusText = "出力をキャンセルしました";
             return Task.CompletedTask;
         }
 
@@ -443,6 +455,19 @@ public class ManagerViewModel : ViewModelBase
         }
 
         return Task.CompletedTask;
+    }
+
+    private bool ConfirmExportForSelectedItems(IList<CameraScriptItemViewModel> selectedItems)
+    {
+        bool includesCustomWipLevels = selectedItems.Any(item =>
+            string.Equals(item.SourceType, "CustomWIPLevels", StringComparison.OrdinalIgnoreCase));
+
+        if (!includesCustomWipLevels)
+        {
+            return true;
+        }
+
+        return _dialogService.ShowCustomWipExportWarningDialog();
     }
 
     private List<(string zipEntryFolder, string fileName, string jsonContent)> BuildExportItems(
