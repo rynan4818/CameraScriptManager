@@ -63,6 +63,11 @@ public class CameraScriptItemViewModel : ViewModelBase
         OriginalSourceFiles = new System.Collections.ObjectModel.ObservableCollection<string>(entry.OriginalSourceFiles);
         _selectedOriginalSourceFile = OriginalSourceFiles.FirstOrDefault();
 
+        if (!entry.HasOriginalMetadata)
+        {
+            RestoreMetadataStateFromSource();
+        }
+
         if (entry.HasOriginalMetadata)
         {
             LockAll();
@@ -79,6 +84,122 @@ public class CameraScriptItemViewModel : ViewModelBase
         }
 
         _suppressModifiedTracking = false;
+    }
+
+    private void RestoreMetadataStateFromSource()
+    {
+        string jsonContent = _entry.JsonContent;
+
+        if (string.IsNullOrWhiteSpace(jsonContent))
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(_entry.FullFilePath) && File.Exists(_entry.FullFilePath))
+                {
+                    jsonContent = File.ReadAllText(_entry.FullFilePath);
+                    _entry.JsonContent = jsonContent;
+                }
+            }
+            catch
+            {
+                return;
+            }
+        }
+
+        if (!CameraScriptMetadataReader.TryRead(jsonContent, out var metadata))
+        {
+            return;
+        }
+
+        _entry.HasOriginalMetadata = true;
+        ApplyMetadataSnapshot(metadata);
+    }
+
+    private void ApplyMetadataSnapshot(CameraScriptMetadataSnapshot metadata)
+    {
+        if (metadata.HasMapId)
+        {
+            _mapId = metadata.MapId;
+            _entry.MapId = metadata.MapId;
+            _entry.IsMapIdFromMetadata = !string.IsNullOrWhiteSpace(_mapId);
+            _isMapIdLocked = _entry.IsMapIdFromMetadata;
+        }
+
+        if (metadata.HasHash)
+        {
+            _hash = metadata.Hash;
+            _entry.Hash = metadata.Hash;
+        }
+
+        if (metadata.HasCameraScriptAuthorName)
+        {
+            _cameraScriptAuthorName = metadata.CameraScriptAuthorName;
+            _entry.CameraScriptAuthorName = metadata.CameraScriptAuthorName;
+            _entry.IsCameraScriptAuthorFromMetadata = !string.IsNullOrWhiteSpace(_cameraScriptAuthorName);
+            _isCameraScriptAuthorLocked = _entry.IsCameraScriptAuthorFromMetadata;
+        }
+
+        if (metadata.HasSongName)
+        {
+            _songName = metadata.SongName;
+            _entry.SongName = metadata.SongName;
+            _entry.IsSongNameFromMetadata = !string.IsNullOrWhiteSpace(_songName);
+            _isSongNameLocked = _entry.IsSongNameFromMetadata;
+        }
+
+        if (metadata.HasSongSubName)
+        {
+            _songSubName = metadata.SongSubName;
+            _entry.SongSubName = metadata.SongSubName;
+            _entry.IsSongSubNameFromMetadata = true;
+            _isSongSubNameLocked = true;
+        }
+
+        if (metadata.HasSongAuthorName)
+        {
+            _songAuthorName = metadata.SongAuthorName;
+            _entry.SongAuthorName = metadata.SongAuthorName;
+            _entry.IsSongAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(_songAuthorName);
+            _isSongAuthorNameLocked = _entry.IsSongAuthorNameFromMetadata;
+        }
+
+        if (metadata.HasLevelAuthorName)
+        {
+            _levelAuthorName = metadata.LevelAuthorName;
+            _entry.LevelAuthorName = metadata.LevelAuthorName;
+            _entry.IsLevelAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(_levelAuthorName);
+            _isLevelAuthorNameLocked = _entry.IsLevelAuthorNameFromMetadata;
+        }
+
+        if (metadata.HasBpm)
+        {
+            _bpm = metadata.Bpm;
+            _entry.Bpm = metadata.Bpm;
+            _entry.IsBpmFromMetadata = _bpm > 0;
+            _isBpmLocked = _entry.IsBpmFromMetadata;
+        }
+
+        if (metadata.HasDuration)
+        {
+            _duration = metadata.Duration;
+            _entry.Duration = metadata.Duration;
+        }
+
+        if (metadata.HasAvatarHeight)
+        {
+            _avatarHeight = metadata.AvatarHeight;
+            _entry.AvatarHeight = metadata.AvatarHeight;
+            _entry.IsAvatarHeightFromMetadata = true;
+            _isAvatarHeightLocked = true;
+        }
+
+        if (metadata.HasDescription)
+        {
+            _description = metadata.Description;
+            _entry.Description = metadata.Description;
+            _entry.IsDescriptionFromMetadata = true;
+            _isDescriptionLocked = true;
+        }
     }
 
     public CameraScriptEntry Entry => _entry;

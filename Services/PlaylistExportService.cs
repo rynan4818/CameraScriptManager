@@ -135,11 +135,13 @@ public static class PlaylistExportService
             }
         }
 
+        var matchedFolderHashCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var entry in entries)
         {
             AddSongIfValid(
                 playlist.Songs,
-                entry.Hash,
+                ResolveSongScriptsEntryHash(entry, matchedFolderHashCache),
                 entry.MapId,
                 entry.SongName,
                 entry.LevelAuthorName);
@@ -182,6 +184,66 @@ public static class PlaylistExportService
             song.LevelAuthorName = levelAuthorName;
 
         songs.Add(song);
+    }
+
+    private static string ResolveSongScriptsEntryHash(
+        SongScriptsManagerEntry entry,
+        IDictionary<string, string> matchedFolderHashCache)
+    {
+        if (!string.IsNullOrWhiteSpace(entry.Hash))
+        {
+            return entry.Hash;
+        }
+
+        string customLevelsHash = ResolveMatchedFolderHash(entry.MatchedCustomLevels, matchedFolderHashCache);
+        if (!string.IsNullOrWhiteSpace(customLevelsHash))
+        {
+            return customLevelsHash;
+        }
+
+        return ResolveMatchedFolderHash(entry.MatchedCustomWIPLevels, matchedFolderHashCache);
+    }
+
+    private static string ResolveMatchedFolderHash(
+        IEnumerable<SongScriptsMatchedBeatmapFolder> matchedFolders,
+        IDictionary<string, string> matchedFolderHashCache)
+    {
+        foreach (var folder in matchedFolders)
+        {
+            if (string.IsNullOrWhiteSpace(folder.FullPath))
+            {
+                continue;
+            }
+
+            if (!matchedFolderHashCache.TryGetValue(folder.FullPath, out string? hash))
+            {
+                hash = CalculateBeatmapFolderHash(folder.FullPath);
+                matchedFolderHashCache[folder.FullPath] = hash;
+            }
+
+            if (!string.IsNullOrWhiteSpace(hash))
+            {
+                return hash;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string CalculateBeatmapFolderHash(string folderPath)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+        {
+            return string.Empty;
+        }
+
+        InfoDatData? infoDat = InfoDatReader.ReadFromFolder(folderPath);
+        if (infoDat == null || infoDat.BeatmapFilenames.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return HashCalculator.CalculateSongHash(folderPath, infoDat);
     }
 
     private static void WritePlaylist(string savePath, LegacyPlaylistData playlist)

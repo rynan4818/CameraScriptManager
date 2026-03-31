@@ -132,85 +132,74 @@ public class CameraScriptScanner
         entry.MedianDuration = scriptMetrics.MedianDuration;
         entry.ModeDuration = scriptMetrics.ModeDuration;
 
-        // Try read metadata from JSON
-        try
+        if (CameraScriptMetadataReader.TryRead(jsonContent, out var metadata))
         {
-            using var doc = JsonDocument.Parse(jsonContent);
-            var root = doc.RootElement;
+            entry.HasOriginalMetadata = true;
 
-            if (root.TryGetProperty("metadata", out var metadata))
+            if (metadata.HasMapId)
             {
-                entry.HasOriginalMetadata = true;
-
-                if (metadata.TryGetProperty("mapId", out var mapId))
-                {
-                    entry.MapId = mapId.GetString() ?? "";
-                    entry.IsMapIdFromMetadata = !string.IsNullOrWhiteSpace(entry.MapId);
-                }
-
-                if (metadata.TryGetProperty("hash", out var hash))
-                {
-                    entry.Hash = hash.GetString() ?? "";
-                }
-
-                if (metadata.TryGetProperty("cameraScriptAuthorName", out var author))
-                {
-                    entry.CameraScriptAuthorName = author.GetString() ?? "";
-                    entry.IsCameraScriptAuthorFromMetadata = !string.IsNullOrWhiteSpace(entry.CameraScriptAuthorName);
-                }
-
-                if (metadata.TryGetProperty("bpm", out var bpm))
-                {
-                    entry.Bpm = bpm.GetDouble();
-                    entry.IsBpmFromMetadata = entry.Bpm > 0;
-                }
-
-                if (metadata.TryGetProperty("duration", out var duration))
-                    entry.Duration = duration.GetDouble();
-
-                if (metadata.TryGetProperty("songName", out var songName))
-                {
-                    entry.SongName = songName.GetString() ?? "";
-                    entry.IsSongNameFromMetadata = !string.IsNullOrWhiteSpace(entry.SongName);
-                }
-
-                if (metadata.TryGetProperty("songSubName", out var songSubName))
-                {
-                    entry.SongSubName = songSubName.GetString() ?? "";
-                    entry.IsSongSubNameFromMetadata = true; // SubName can be empty sometimes, but if it exists, it's locked. Check if property is there
-                }
-
-                if (metadata.TryGetProperty("songAuthorName", out var songAuthor))
-                {
-                    entry.SongAuthorName = songAuthor.GetString() ?? "";
-                    entry.IsSongAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(entry.SongAuthorName);
-                }
-
-                if (metadata.TryGetProperty("levelAuthorName", out var levelAuthor))
-                {
-                    entry.LevelAuthorName = levelAuthor.GetString() ?? "";
-                    entry.IsLevelAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(entry.LevelAuthorName);
-                }
-
-                if (metadata.TryGetProperty("avatarHeight", out var avatarHeight))
-                {
-                    if (TryReadDouble(avatarHeight, out double avatarHeightValue))
-                    {
-                        entry.AvatarHeight = avatarHeightValue;
-                    }
-
-                    entry.IsAvatarHeightFromMetadata = true;
-                }
-
-                if (metadata.TryGetProperty("description", out var descriptionProp))
-                {
-                    entry.Description = descriptionProp.GetString() ?? "";
-                    entry.IsDescriptionFromMetadata = true;
-                }
+                entry.MapId = metadata.MapId;
+                entry.IsMapIdFromMetadata = !string.IsNullOrWhiteSpace(entry.MapId);
             }
 
+            if (metadata.HasHash)
+            {
+                entry.Hash = metadata.Hash;
+            }
+
+            if (metadata.HasCameraScriptAuthorName)
+            {
+                entry.CameraScriptAuthorName = metadata.CameraScriptAuthorName;
+                entry.IsCameraScriptAuthorFromMetadata = !string.IsNullOrWhiteSpace(entry.CameraScriptAuthorName);
+            }
+
+            if (metadata.HasBpm)
+            {
+                entry.Bpm = metadata.Bpm;
+                entry.IsBpmFromMetadata = entry.Bpm > 0;
+            }
+
+            if (metadata.HasDuration)
+            {
+                entry.Duration = metadata.Duration;
+            }
+
+            if (metadata.HasSongName)
+            {
+                entry.SongName = metadata.SongName;
+                entry.IsSongNameFromMetadata = !string.IsNullOrWhiteSpace(entry.SongName);
+            }
+
+            if (metadata.HasSongSubName)
+            {
+                entry.SongSubName = metadata.SongSubName;
+                entry.IsSongSubNameFromMetadata = true;
+            }
+
+            if (metadata.HasSongAuthorName)
+            {
+                entry.SongAuthorName = metadata.SongAuthorName;
+                entry.IsSongAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(entry.SongAuthorName);
+            }
+
+            if (metadata.HasLevelAuthorName)
+            {
+                entry.LevelAuthorName = metadata.LevelAuthorName;
+                entry.IsLevelAuthorNameFromMetadata = !string.IsNullOrWhiteSpace(entry.LevelAuthorName);
+            }
+
+            if (metadata.HasAvatarHeight)
+            {
+                entry.AvatarHeight = metadata.AvatarHeight;
+                entry.IsAvatarHeightFromMetadata = true;
+            }
+
+            if (metadata.HasDescription)
+            {
+                entry.Description = metadata.Description;
+                entry.IsDescriptionFromMetadata = true;
+            }
         }
-        catch { }
 
         // metadataが無い場合のみ、フォルダ名からmapIdを補完する
         if (!entry.HasOriginalMetadata && string.IsNullOrWhiteSpace(entry.MapId))

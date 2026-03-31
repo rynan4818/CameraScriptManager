@@ -238,10 +238,19 @@ public sealed class SearchCacheService
             {
                 string json = File.ReadAllText(CacheFilePath);
                 var loaded = JsonSerializer.Deserialize<SearchCacheDocument>(json, SerializerOptions);
-                if (loaded != null && loaded.Version == SearchCacheDocument.CurrentVersion)
+                if (loaded != null)
                 {
-                    EnsureSections(loaded);
-                    _document = loaded;
+                    bool requiresMigration = loaded.Version != SearchCacheDocument.CurrentVersion;
+                    _document = requiresMigration
+                        ? MigrateDocument(loaded)
+                        : loaded;
+
+                    EnsureSections(_document);
+                    if (requiresMigration)
+                    {
+                        SaveDocumentUnderLock(_document);
+                    }
+
                     return _document;
                 }
             }
@@ -282,6 +291,26 @@ public sealed class SearchCacheService
         document.OriginalScriptMatch.SourceFiles ??= new List<SearchCacheFileStamp>();
         document.OriginalScriptMatch.TargetFiles ??= new List<SearchCacheFileStamp>();
         document.OriginalScriptMatch.MatchesByTargetFilePath ??= new Dictionary<string, List<string>>();
+    }
+
+    private static SearchCacheDocument MigrateDocument(SearchCacheDocument document)
+    {
+        if (document.Version > SearchCacheDocument.CurrentVersion)
+        {
+            return new SearchCacheDocument();
+        }
+
+        EnsureSections(document);
+
+        if (document.Version < 6)
+        {
+            // MapScripts metadata lock state now depends on cache fields that may be
+            // missing in older cache documents, so force those entries to rescan.
+            document.CameraScriptEntries = new Dictionary<string, CachedCameraScriptScanEntry>();
+        }
+
+        document.Version = SearchCacheDocument.CurrentVersion;
+        return document;
     }
 
     private static string NormalizePathKey(string? path)
