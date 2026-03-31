@@ -207,50 +207,10 @@ public class CameraScriptScanner
             entry.MapId = HexIdExtractor.ExtractHexId(folderName) ?? "";
         }
 
-        // Read Info.dat for supplementary data
+        // Read Info.dat only for song hash calculation.
         var infoDat = InfoDatReader.ReadFromFolder(folderPath);
         if (infoDat != null)
         {
-            bool supplemented = false;
-
-            if (!entry.HasOriginalMetadata &&
-                string.IsNullOrWhiteSpace(entry.SongName) &&
-                !string.IsNullOrWhiteSpace(infoDat.SongName))
-            {
-                entry.SongName = infoDat.SongName;
-                supplemented = true;
-            }
-
-            if (!entry.HasOriginalMetadata &&
-                string.IsNullOrWhiteSpace(entry.SongSubName) &&
-                !string.IsNullOrWhiteSpace(infoDat.SongSubName))
-            {
-                entry.SongSubName = infoDat.SongSubName;
-                supplemented = true;
-            }
-
-            if (!entry.HasOriginalMetadata &&
-                string.IsNullOrWhiteSpace(entry.SongAuthorName) &&
-                !string.IsNullOrWhiteSpace(infoDat.SongAuthorName))
-            {
-                entry.SongAuthorName = infoDat.SongAuthorName;
-                supplemented = true;
-            }
-
-            if (!entry.HasOriginalMetadata &&
-                string.IsNullOrWhiteSpace(entry.LevelAuthorName) &&
-                !string.IsNullOrWhiteSpace(infoDat.LevelAuthorName))
-            {
-                entry.LevelAuthorName = infoDat.LevelAuthorName;
-                supplemented = true;
-            }
-
-            if (!entry.HasOriginalMetadata && entry.Bpm == 0 && infoDat.Bpm > 0)
-            {
-                entry.Bpm = infoDat.Bpm;
-                supplemented = true;
-            }
-
             // Calculate Song Hash based on Info.dat and associated beatmap files
             if (infoDat.BeatmapFilenames.Count > 0)
             {
@@ -259,13 +219,6 @@ public class CameraScriptScanner
                 {
                     entry.Hash = calculatedHash;
                 }
-            }
-
-            // If no original metadata but Info.dat provided data, mark as needing metadata write
-            if (!entry.HasOriginalMetadata && supplemented)
-            {
-                // Will be used to set IsModified = true in the ViewModel
-                entry.HasOriginalMetadata = false;
             }
         }
 

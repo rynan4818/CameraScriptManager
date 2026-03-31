@@ -111,7 +111,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 * 保存先は元ファイルそのものです
 * `.json` はそのまま上書き保存されます
 * `.zip` は対象 JSON のみ更新し、それ以外の ZIP 内容は維持されます
-* `SongScripts保存時にバックアップを作成する` が ON の場合、更新前ファイルを `backup/SongScripts` 配下へ相対パスつきで退避します
+* `SongScripts保存時にバックアップを作成する` が ON の場合、更新前ファイルを既定では `UserData/backup/SongScripts` 配下へ相対パスつきで退避します
 
 ### MapScriptsタブ
 
@@ -257,7 +257,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 | **CustomWIPLevels** | Beat Saber の `CustomWIPLevels` フォルダを指定します |
 | **SongScripts** | `SongScripts` 管理対象フォルダを指定します。`CameraSongScript` 用なら `UserData\CameraSongScript\SongScripts` を推奨します |
 | **元データ検索(アーカイブ/JSON) 1〜3** | `MapScripts` タブの `元データ照合` で検索する元データ保存先を指定します |
-| **バックアップルート** | バックアップ保存先のルートフォルダを指定します。空欄の場合は `CameraScriptManager.exe` 配下の `backup` を使います |
+| **バックアップルート** | バックアップ保存先のルートフォルダを指定します。空欄の場合は `CameraScriptManager.exe` と同じ場所の `UserData\backup` を使います |
 
 #### 命名規則設定
 
@@ -284,9 +284,9 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 
 | 設定項目 | 説明 |
 |---|---|
-| **MapScripts更新時にバックアップを作成する** | `MapScripts` の書き込み前に `backup/MapScripts` へ退避します |
-| **SongScripts保存時にバックアップを作成する** | `SongScripts` の保存前に `backup/SongScripts` へ退避します |
-| **Copier上書き時にバックアップを作成する** | `Copier` の上書き前に `backup/Copier` へ退避します |
+| **MapScripts更新時にバックアップを作成する** | 既定では `UserData/backup/MapScripts` へ退避します |
+| **SongScripts保存時にバックアップを作成する** | 既定では `UserData/backup/SongScripts` へ退避します |
+| **Copier上書き時にバックアップを作成する** | 既定では `UserData/backup/Copier` へ退避します |
 | **列の幅をリセット** | `MapScripts` / `SongScripts` / `Copier` の保存済み列幅を削除し、既定値に戻します |
 | **現在のバージョン / リリースURL** | `CameraScriptManager` の現在バージョンとリリースページを表示します |
 | **自動アップデートチェック** | ON の場合、起動時に `https://rynan4818.github.io/release_info.json` を 1 日 1 回以下で確認します |

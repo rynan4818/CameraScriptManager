@@ -13,6 +13,10 @@
 
         <Style x:Key="ModifiedCellStyle" TargetType="DataGridCell">
             <Style.Triggers>
+                <Trigger Property="IsEditing" Value="True">
+                    <Setter Property="Background" Value="#C0FFFF80"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                </Trigger>
                 <DataTrigger Binding="{Binding IsModified}" Value="True">
                     <Setter Property="Background" Value="#C0FFFF80"/>
                     <Setter Property="Foreground" Value="Black"/>
@@ -25,11 +29,22 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,8">
+        <Border Grid.Row="0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,8" Background="#FAFAFA">
+            <TextBlock TextWrapping="Wrap" Foreground="#333333">
+                <Hyperlink NavigateUri="https://github.com/rynan4818/CameraSongScript" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Run Text="CameraSongScript"/>
+                </Hyperlink>
+                <Run Text="用の SongScripts フォルダ内の .json / .zip を一覧管理するタブです。"/>
+                <Run Text="スキャンで一覧を更新し、必要な行にチェックを入れて metadata 追加やプレイリスト作成を行います。"/>
+            </TextBlock>
+        </Border>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,8">
             <Button Content="スキャン" Command="{Binding ScanCommand}" Padding="16,4" Margin="0,0,8,0"
                     ToolTip="SongScripts フォルダをスキャンして一覧を更新します"/>
             <Button Content="メタ情報追加" Command="{Binding SaveCheckedCommand}" Padding="16,4" Margin="0,0,8,0"
@@ -43,7 +58,7 @@
                       Margin="8,0,0,0"/>
         </StackPanel>
 
-        <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
+        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8" Background="#FAFAFA">
             <StackPanel>
                 <TextBlock Text="{Binding HashScanStatusText}" TextWrapping="Wrap"/>
                 <ProgressBar Minimum="0"
@@ -55,7 +70,7 @@
             </StackPanel>
         </Border>
 
-        <DataGrid Grid.Row="2"
+        <DataGrid Grid.Row="3"
                   x:Name="SongScriptsDataGrid"
                   ItemsSource="{Binding Items}"
                   views:DataGridColumnWidthPersistence.EnablePersistence="True"
@@ -394,7 +409,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StatusBar Grid.Row="3" Margin="0,4,0,0">
+        <StatusBar Grid.Row="4" Margin="0,4,0,0">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
             </StatusBarItem>

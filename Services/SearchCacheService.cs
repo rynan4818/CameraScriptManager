@@ -12,9 +12,7 @@ public sealed class SearchCacheService
         WriteIndented = false
     };
 
-    private static readonly string CacheFilePath = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
-        "CameraScriptManager.SearchCache.json");
+    private static readonly string CacheFilePath = AppRuntimePaths.GetSearchCacheFilePath();
 
     private static SearchCacheDocument? _document;
 
@@ -273,6 +271,7 @@ public sealed class SearchCacheService
 
             string json = JsonSerializer.Serialize(document, SerializerOptions);
             string tempPath = CacheFilePath + ".tmp";
+            AppRuntimePaths.EnsureParentDirectory(CacheFilePath);
             File.WriteAllText(tempPath, json);
             File.Move(tempPath, CacheFilePath, true);
         }
@@ -306,6 +305,13 @@ public sealed class SearchCacheService
         {
             // MapScripts metadata lock state now depends on cache fields that may be
             // missing in older cache documents, so force those entries to rescan.
+            document.CameraScriptEntries = new Dictionary<string, CachedCameraScriptScanEntry>();
+        }
+
+        if (document.Version < 7)
+        {
+            // MapScripts scan no longer supplements metadata from info.dat, so cached
+            // entries created by older versions must be rebuilt.
             document.CameraScriptEntries = new Dictionary<string, CachedCameraScriptScanEntry>();
         }
 

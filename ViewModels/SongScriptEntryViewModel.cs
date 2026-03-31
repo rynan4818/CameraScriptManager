@@ -10,6 +10,7 @@ public class SongScriptEntryViewModel : ViewModelBase
     private readonly SongScriptEntry _model;
     private readonly SettingsService _settingsService = new();
     private bool _canDownloadMissingBeatmap;
+    private bool _isMetadataModified;
 
     /// <summary>HexId変更時に呼ばれるコールバック（MainViewModelから設定される）</summary>
     public Func<SongScriptEntryViewModel, Task>? OnHexIdChanged { get; set; }
@@ -70,6 +71,12 @@ public class SongScriptEntryViewModel : ViewModelBase
         }
     }
 
+    public bool IsMetadataModified
+    {
+        get => _isMetadataModified;
+        private set => SetProperty(ref _isMetadataModified, value);
+    }
+
     // --- HexId (editable) ---
     private string _hexId = "";
     public string HexId
@@ -84,6 +91,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 OnPropertyChanged(nameof(CanOpenBeatSaver));
                 OnPropertyChanged(nameof(RenameDisplayName));
                 CanDownloadMissingBeatmap = false;
+                MarkMetadataModified();
                 _ = OnHexIdChanged?.Invoke(this);
             }
         }
@@ -101,6 +109,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.SongName = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+                MarkMetadataModified();
             }
         }
     }
@@ -151,6 +160,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.CameraScriptAuthorName = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+                MarkMetadataModified();
             }
         }
     }
@@ -166,6 +176,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.SongSubName = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+                MarkMetadataModified();
             }
         }
     }
@@ -179,6 +190,7 @@ public class SongScriptEntryViewModel : ViewModelBase
             if (SetProperty(ref _hash, value))
             {
                 _model.Hash = value;
+                MarkMetadataModified();
             }
         }
     }
@@ -194,6 +206,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.SongAuthorName = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+                MarkMetadataModified();
             }
         }
     }
@@ -209,6 +222,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.LevelAuthorName = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+                MarkMetadataModified();
             }
         }
     }
@@ -224,6 +238,7 @@ public class SongScriptEntryViewModel : ViewModelBase
                 _model.Bpm = value;
                 OnPropertyChanged(nameof(RenameDisplayName));
                 UpdateOverwriteWarnings();
+                MarkMetadataModified();
             }
         }
     }
@@ -237,6 +252,7 @@ public class SongScriptEntryViewModel : ViewModelBase
             if (SetProperty(ref _duration, value))
             {
                 _model.Duration = value;
+                MarkMetadataModified();
             }
         }
     }
@@ -248,7 +264,10 @@ public class SongScriptEntryViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _avatarHeight, value))
+            {
                 _model.AvatarHeight = value;
+                MarkMetadataModified();
+            }
         }
     }
 
@@ -259,7 +278,10 @@ public class SongScriptEntryViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _description, value))
+            {
                 _model.Description = value;
+                MarkMetadataModified();
+            }
         }
     }
 
@@ -406,6 +428,11 @@ public class SongScriptEntryViewModel : ViewModelBase
         if (seconds <= 0) return "0:00";
         var ts = TimeSpan.FromSeconds(seconds);
         return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
+    }
+
+    private void MarkMetadataModified()
+    {
+        IsMetadataModified = true;
     }
 
     public void NotifyOggDurationChanged()

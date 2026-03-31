@@ -2,7 +2,7 @@ namespace CameraScriptManager.Models;
 
 public sealed class SearchCacheDocument
 {
-    public const int CurrentVersion = 6;
+    public const int CurrentVersion = 7;
 
     public int Version { get; set; } = CurrentVersion;
     public Dictionary<string, CachedSongScriptsSourceResult> SongScriptsSources { get; set; } = new();

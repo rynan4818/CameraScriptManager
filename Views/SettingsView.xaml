@@ -175,18 +175,18 @@
                     <StackPanel>
                         <CheckBox Content="MapScripts更新時にバックアップを作成する"
                                   IsChecked="{Binding EnableMapScriptsBackup}"
-                                  ToolTip="MapScripts で上書き前に backup\\MapScripts へバックアップします"
+                                  ToolTip="既定では UserData\\backup\\MapScripts へバックアップします"
                                   Margin="0,0,0,5"/>
                         <CheckBox Content="SongScripts保存時にバックアップを作成する"
                                   IsChecked="{Binding EnableSongScriptsBackup}"
-                                  ToolTip="SongScripts 保存前に backup\\SongScripts へバックアップします"
+                                  ToolTip="既定では UserData\\backup\\SongScripts へバックアップします"
                                   Margin="0,0,0,5"/>
                         <CheckBox Content="Copier上書き時にバックアップを作成する"
                                   IsChecked="{Binding EnableCopierBackup}"
-                                  ToolTip="Copier の上書き前に backup\\Copier へバックアップします"
+                                  ToolTip="既定では UserData\\backup\\Copier へバックアップします"
                                   Margin="0,0,0,5"/>
                         <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap">
-                            <Run Text="※バックアップルートが空欄の場合は CameraScriptManager.exe 配下の backup フォルダを使用します。"/>
+                            <Run Text="※バックアップルートが空欄の場合は CameraScriptManager.exe と同じ場所の UserData\\backup フォルダを使用します。"/>
                         </TextBlock>
                         <Button Content="列の幅をリセット"
                                 Command="{Binding ResetColumnWidthsCommand}"

@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Globalization;
+using System.Diagnostics;
 using CameraScriptManager.Models;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -15,7 +16,6 @@ public class OriginalScriptMatchService
     private const double DurationToleranceSeconds = 0.1;
     private const double ModeBucketScale = 10.0;
     private const string DebugLogFileName = "debug_original_script_match.log";
-    private static readonly object DebugLogSyncRoot = new();
     private readonly string[] _searchPaths;
     private readonly Action<string, double?>? _progressCallback;
     private readonly SearchCacheService _searchCacheService = new();
@@ -515,27 +515,10 @@ public class OriginalScriptMatchService
         return value ? "true" : "false";
     }
 
+    [Conditional("DEBUG")]
     private static void DebugLog(string message)
     {
-        string line = $"[{DateTime.Now:HH:mm:ss.fff}] [OriginalMatch] {message}";
-        System.Diagnostics.Debug.WriteLine(line);
-
-        try
-        {
-            lock (DebugLogSyncRoot)
-            {
-                string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData");
-                if (!Directory.Exists(logDir))
-                {
-                    Directory.CreateDirectory(logDir);
-                }
-
-                File.AppendAllText(Path.Combine(logDir, DebugLogFileName), line + Environment.NewLine);
-            }
-        }
-        catch
-        {
-        }
+        DebugLogFileWriter.WriteLine(DebugLogFileName, "OriginalMatch", message);
     }
 
     private sealed class TargetScriptCandidate

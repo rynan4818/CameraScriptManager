@@ -13,18 +13,7 @@ public class BeatSaverApiClient : IDisposable
 #if DEBUG
     private static void DebugLog(string message)
     {
-        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [ApiClient] {message}";
-        System.Diagnostics.Debug.WriteLine(line);
-        try
-        {
-            var logDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData");
-            if (!System.IO.Directory.Exists(logDir))
-                System.IO.Directory.CreateDirectory(logDir);
-            System.IO.File.AppendAllText(
-                System.IO.Path.Combine(logDir, "debug_songdetails.log"),
-                line + Environment.NewLine);
-        }
-        catch { }
+        DebugLogFileWriter.WriteLine("debug_songdetails.log", "ApiClient", message);
     }
 #endif
 
@@ -82,13 +71,18 @@ public class BeatSaverApiClient : IDisposable
             _cache[key] = result;
             return (result, true, false);
         }
+ #if DEBUG
         catch (Exception ex)
         {
-#if DEBUG
             DebugLog($"GetMapAsync(\"{key}\"): API EXCEPTION: {ex.GetType().Name}: {ex.Message}");
-#endif
             return (null, true, false);
         }
+#else
+        catch (Exception)
+        {
+            return (null, true, false);
+        }
+#endif
     }
 
     public async Task<BeatSaverApiResponse?> GetMapFromApiAsync(string hexId)

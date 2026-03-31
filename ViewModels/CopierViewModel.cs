@@ -861,18 +861,7 @@ public class CopierViewModel : ViewModelBase
 #if DEBUG
     private static void DebugLog(string message)
     {
-        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [CopierVM] {message}";
-        System.Diagnostics.Debug.WriteLine(line);
-        try
-        {
-            var logDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData");
-            if (!System.IO.Directory.Exists(logDir))
-                System.IO.Directory.CreateDirectory(logDir);
-            System.IO.File.AppendAllText(
-                System.IO.Path.Combine(logDir, "debug_songdetails.log"),
-                line + Environment.NewLine);
-        }
-        catch { }
+        DebugLogFileWriter.WriteLine("debug_songdetails.log", "CopierVM", message);
     }
 #endif
 }

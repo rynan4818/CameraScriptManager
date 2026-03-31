@@ -39,8 +39,7 @@ public class SettingsService
 
     public SettingsService()
     {
-        var exeDir = AppDomain.CurrentDomain.BaseDirectory;
-        _settingsPath = Path.Combine(exeDir, "settings.json");
+        _settingsPath = AppRuntimePaths.GetSettingsFilePath();
     }
 
     public AppSettings Load()
@@ -61,6 +60,7 @@ public class SettingsService
     {
         try
         {
+            AppRuntimePaths.EnsureParentDirectory(_settingsPath);
             var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_settingsPath, json);
         }

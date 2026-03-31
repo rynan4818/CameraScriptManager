@@ -21,18 +21,39 @@
         <!-- 非フォーカス（InActive）時の選択状態色を通常時と同じにするためのシステムブラシの上書き -->
         <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>
         <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="{x:Static SystemColors.HighlightTextColor}"/>
+
+        <Style x:Key="ModifiedCellStyle" TargetType="DataGridCell">
+            <Style.Triggers>
+                <Trigger Property="IsEditing" Value="True">
+                    <Setter Property="Background" Value="#C0FFFF80"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding IsMetadataModified}" Value="True">
+                    <Setter Property="Background" Value="#C0FFFF80"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <Border Grid.Row="0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,8" Background="#FAFAFA">
+            <TextBlock TextWrapping="Wrap" Foreground="#333333">
+                <Run Text=".json や.zip等のアーカイブからスクリプトを取り込み、対応する CustomLevels / CustomWIPLevels へコピーするタブです。"/>
+                <Run Text="取り込み後にコピー先を確認し、必要なら metadata やファイル名を調整してコピー実行します。"/>
+            </TextBlock>
+        </Border>
+
         <!-- Settings & Action Buttons -->
-        <WrapPanel Grid.Row="0" Margin="0,0,0,5" VerticalAlignment="Center">
+        <WrapPanel Grid.Row="1" Margin="0,0,0,5" VerticalAlignment="Center">
             <CheckBox Content="譜面metadataを表示" IsChecked="{Binding ShowMetadataColumns}" VerticalAlignment="Center" Margin="0,0,15,0"
                       ToolTip="songSubName などの譜面 metadata 列を表示します"/>
             <CheckBox Content="コピー時にmetadataをUI内容で再生成" IsChecked="{Binding AddMetadata}" VerticalAlignment="Center" Margin="0,0,15,0"
@@ -68,7 +89,7 @@
         </WrapPanel>
 
         <!-- Drop Zone -->
-        <Border Grid.Row="1" MinHeight="50" BorderBrush="Gray" BorderThickness="2"
+        <Border Grid.Row="2" MinHeight="50" BorderBrush="Gray" BorderThickness="2"
                 CornerRadius="5" Background="#F5F5F5" Margin="0,0,0,5"
                 AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
@@ -80,7 +101,7 @@
         </Border>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" x:Name="EntryDataGrid" ItemsSource="{Binding Entries}"
+        <DataGrid Grid.Row="3" x:Name="EntryDataGrid" ItemsSource="{Binding Entries}"
                   views:DataGridColumnWidthPersistence.EnablePersistence="True"
                   views:DataGridColumnWidthPersistence.GridKey="Copier"
                   AutoGenerateColumns="False" CanUserAddRows="False"
@@ -171,7 +192,7 @@
                                     SortMemberPath="SourceDisplayPath"/>
 
                 <!-- Hex ID (editable, lockable) -->
-                <DataGridTemplateColumn Header="ID" Width="52" SortMemberPath="HexId" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="hex_id">
+                <DataGridTemplateColumn Header="ID" Width="52" SortMemberPath="HexId" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="hex_id">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding HexId, UpdateSourceTrigger=LostFocus}"
@@ -219,7 +240,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="hash" Width="79" SortMemberPath="Hash" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="hash">
+                <DataGridTemplateColumn Header="hash" Width="79" SortMemberPath="Hash" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="hash">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Hash, UpdateSourceTrigger=LostFocus}"
@@ -243,7 +264,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Song Name (lockable) -->
-                <DataGridTemplateColumn Header="songName" Width="172" SortMemberPath="SongName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_name">
+                <DataGridTemplateColumn Header="songName" Width="172" SortMemberPath="SongName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongName, UpdateSourceTrigger=LostFocus}"
@@ -267,7 +288,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Author (sortable, lockable) -->
-                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="149" SortMemberPath="CameraScriptAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="camera_script_author">
+                <DataGridTemplateColumn Header="cameraScriptAuthorName" Width="149" SortMemberPath="CameraScriptAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="camera_script_author">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>
@@ -297,7 +318,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- songSubName (lockable) -->
-                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" SortMemberPath="SongSubName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_sub_name">
+                <DataGridTemplateColumn x:Name="ColSongSubName" Header="songSubName" Width="120" SortMemberPath="SongSubName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_sub_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongSubName, UpdateSourceTrigger=LostFocus}"
@@ -321,7 +342,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- songAuthorName (lockable) -->
-                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_author_name">
+                <DataGridTemplateColumn x:Name="ColSongAuthorName" Header="songAuthorName" Width="130" SortMemberPath="SongAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="song_author_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding SongAuthorName, UpdateSourceTrigger=LostFocus}"
@@ -345,7 +366,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- levelAuthorName (lockable) -->
-                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="level_author_name">
+                <DataGridTemplateColumn x:Name="ColLevelAuthorName" Header="levelAuthorName" Width="120" SortMemberPath="LevelAuthorName" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="level_author_name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding LevelAuthorName, UpdateSourceTrigger=LostFocus}"
@@ -369,7 +390,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- BPM (lockable) -->
-                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="50" SortMemberPath="Bpm" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="bpm">
+                <DataGridTemplateColumn x:Name="ColBpm" Header="BPM" Width="50" SortMemberPath="Bpm" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="bpm">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Bpm, UpdateSourceTrigger=LostFocus}"
@@ -392,7 +413,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn x:Name="ColDuration" Header="Duration" Width="75" SortMemberPath="Duration" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="duration">
+                <DataGridTemplateColumn x:Name="ColDuration" Header="Duration" Width="75" SortMemberPath="Duration" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="duration">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Duration, UpdateSourceTrigger=LostFocus}"
@@ -416,7 +437,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- AvatarHeight (lockable) -->
-                <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="avatar_height">
+                <DataGridTemplateColumn Header="AvatarHeight(cm)" Width="105" SortMemberPath="AvatarHeight" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="avatar_height">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding AvatarHeight, TargetNullValue='', UpdateSourceTrigger=LostFocus}"
@@ -440,7 +461,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Description (lockable) -->
-                <DataGridTemplateColumn Header="Description" Width="139" SortMemberPath="Description" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" views:DataGridColumnWidthPersistence.ColumnKey="description">
+                <DataGridTemplateColumn Header="Description" Width="139" SortMemberPath="Description" HeaderStyle="{StaticResource MetadataColumnHeaderStyle}" CellStyle="{StaticResource ModifiedCellStyle}" views:DataGridColumnWidthPersistence.ColumnKey="description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}"
@@ -595,7 +616,7 @@
         </DataGrid>
 
         <!-- Status Bar -->
-        <StatusBar Grid.Row="3" Margin="0,5,0,0">
+        <StatusBar Grid.Row="4" Margin="0,5,0,0">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}"/>
             </StatusBarItem>

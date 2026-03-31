@@ -6,7 +6,7 @@ public static class BackupPathResolver
 {
     public static string GetDefaultBackupRootPath()
     {
-        return NormalizePath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backup"));
+        return AppRuntimePaths.GetDefaultBackupRootPath();
     }
 
     public static string ResolveBackupRootPath(AppSettings settings)
@@ -24,7 +24,7 @@ public static class BackupPathResolver
         string candidatePath = Environment.ExpandEnvironmentVariables(configuredPath.Trim());
         if (!Path.IsPathRooted(candidatePath))
         {
-            candidatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, candidatePath);
+            candidatePath = Path.Combine(AppRuntimePaths.BaseDirectory, candidatePath);
         }
 
         return NormalizePath(candidatePath);

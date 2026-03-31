@@ -13,18 +13,7 @@ public class SongDetailsCacheService
 #if DEBUG
     private static void DebugLog(string message)
     {
-        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [CacheService] {message}";
-        System.Diagnostics.Debug.WriteLine(line);
-        try
-        {
-            var logDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData");
-            if (!System.IO.Directory.Exists(logDir))
-                System.IO.Directory.CreateDirectory(logDir);
-            System.IO.File.AppendAllText(
-                System.IO.Path.Combine(logDir, "debug_songdetails.log"),
-                line + Environment.NewLine);
-        }
-        catch { }
+        DebugLogFileWriter.WriteLine("debug_songdetails.log", "CacheService", message);
     }
 #endif
 
@@ -58,9 +47,7 @@ public class SongDetailsCacheService
 #if DEBUG
             DebugLog("InitCoreAsync: START");
 #endif
-            var cacheDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData");
-            if (!System.IO.Directory.Exists(cacheDir))
-                System.IO.Directory.CreateDirectory(cacheDir);
+            var cacheDir = AppRuntimePaths.UserDataDirectory;
 
             SongDetails.SetCacheDirectory(cacheDir);
 #if DEBUG
@@ -76,17 +63,22 @@ public class SongDetailsCacheService
             DebugLog($"InitCoreAsync: SUCCESS. _details set. songs.Length={details?.songs?.Length}");
 #endif
         }
+ #if DEBUG
         catch (Exception ex)
         {
-#if DEBUG
             // TypeInitializationExceptionの場合、InnerExceptionに真の原因がある
             var innerMsg = ex.InnerException != null
                 ? $"\n  InnerException: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}"
                 : "";
             DebugLog($"InitCoreAsync: EXCEPTION: {ex.GetType().Name}: {ex.Message}{innerMsg}\n{ex.StackTrace}");
-#endif
             // 初期化失敗時はAPIフォールバックに任せる
         }
+#else
+        catch (Exception)
+        {
+            // 初期化失敗時はAPIフォールバックに任せる
+        }
+#endif
     }
 
     public bool TryGetByMapId(string hexId, out BeatSaverApiResponse response)
@@ -122,12 +114,16 @@ public class SongDetailsCacheService
             DebugLog($"TryGetByMapId(\"{hexId}\"): MISS - not found in cache");
 #endif
         }
+ #if DEBUG
         catch (Exception ex)
         {
-#if DEBUG
             DebugLog($"TryGetByMapId(\"{hexId}\"): EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-#endif
         }
+#else
+        catch (Exception)
+        {
+        }
+#endif
 
         return false;
     }
@@ -162,12 +158,16 @@ public class SongDetailsCacheService
             DebugLog($"TryGetByHash(\"{hash}\"): MISS");
 #endif
         }
+ #if DEBUG
         catch (Exception ex)
         {
-#if DEBUG
             DebugLog($"TryGetByHash(\"{hash}\"): EXCEPTION: {ex.GetType().Name}: {ex.Message}");
-#endif
         }
+#else
+        catch (Exception)
+        {
+        }
+#endif
 
         return false;
     }
