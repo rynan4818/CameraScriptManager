@@ -92,11 +92,7 @@ public sealed class AppUpdateCheckService
 
     public static bool IsUpdateAvailable(string currentVersion, string latestVersion)
     {
-        return TryParseVersion(currentVersion, out Version? current) &&
-            current is not null &&
-            TryParseVersion(latestVersion, out Version? latest) &&
-            latest is not null &&
-            latest > current;
+        return CompareVersions(latestVersion, currentVersion) > 0;
     }
 
     private static AppUpdateCheckResult CreateResult(string currentVersion, string latestVersion, bool wasCheckedOnline)
@@ -138,14 +134,48 @@ public sealed class AppUpdateCheckService
         return Version.TryParse(versionText.Trim(), out version);
     }
 
+    private static int CompareVersions(string? leftVersionText, string? rightVersionText)
+    {
+        if (!TryParseVersion(leftVersionText, out Version? left) || left is null ||
+            !TryParseVersion(rightVersionText, out Version? right) || right is null)
+        {
+            return -1;
+        }
+
+        int[] leftComponents = GetComparableComponents(left);
+        int[] rightComponents = GetComparableComponents(right);
+
+        for (int i = 0; i < leftComponents.Length; i++)
+        {
+            int comparison = leftComponents[i].CompareTo(rightComponents[i]);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+        }
+
+        return 0;
+    }
+
+    private static int[] GetComparableComponents(Version version)
+    {
+        return
+        [
+            version.Major,
+            version.Minor,
+            version.Build >= 0 ? version.Build : 0,
+            version.Revision >= 0 ? version.Revision : 0
+        ];
+    }
+
     private static string FormatVersion(Version version)
     {
-        if (version.Revision > 0)
+        if (version.Revision >= 0)
         {
             return version.ToString(4);
         }
 
-        if (version.Build > 0)
+        if (version.Build >= 0)
         {
             return version.ToString(3);
         }
