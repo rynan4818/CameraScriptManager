@@ -9,8 +9,8 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 ## 特徴
 
 * **SongScripts管理** - `SongScripts` フォルダ内の `.json` / `.zip` を一覧化し、metadata の編集保存、BeatSaver metadata 取得、プレイリスト作成、未取得譜面の BeatSaver ダウンロードを行えます
-* **MapScripts管理** - `CustomLevels` / `CustomWIPLevels` 内の既存 `SongScript.json` を一覧化し、metadata 追加、フォルダ出力、ZIP 出力、元データ照合、プレイリスト作成を行えます
-* **Copier機能** - `.json` やアーカイブ (`.zip` / `.7z` / `.rar` / `.tar` / `.gz`) を取り込み、BeatSaver ID を使って対応譜面フォルダへ自動コピーできます
+* **MapScripts管理** - `CustomLevels` / `CustomWIPLevels` 内の既存スクリプト `.json` を一覧化し、metadata 追加、フォルダ出力、ZIP 出力、元データ照合、プレイリスト作成を行えます
+* **Copier機能** - `.json` やアーカイブ (`.zip` / `.7z` / `.rar` / `.tar` / `.gz`) を取り込み、BeatSaver ID(bsr) を使って対応譜面フォルダへ自動コピーできます
 * **BeatSaver API / SongDetailsCache連携** - ID から曲名、作者名、BPM などを補完し、ローカルキャッシュで取得を高速化します
 * **metadata編集** - `cameraScriptAuthorName`、`songName`、`levelAuthorName`、`bpm`、`duration`、`avatarHeight`、`description` などを JSON に埋め込めます
 * **バックアップ対応** - `MapScripts`、`SongScripts`、`Copier` の各更新前に元データを自動バックアップできます
@@ -20,7 +20,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 ## 動作環境
 
 * Windows 10 / 11
-* [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) 以降
+* [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) ※Releaseは.exeにランタイムを同梱
 
 ## インストール
 
@@ -51,7 +51,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 
 `SongScripts` フォルダ内の `.json` / `.zip` を一覧管理するタブです。`CameraSongScript` の `SongScripts` フォルダをそのまま対象にできます。
 
-スキャン時はまず `mapId` ベースの一致候補を表示し、その後バックグラウンドで譜面 hash の追加照合を進めます。上部の進捗表示で `hash検索` の状態を確認できます。
+スキャン時はまず `BeatSaver ID(bsr)` ベースの一致候補を表示し、その後バックグラウンドで譜面 hash の追加照合を進めます。上部の進捗表示で `hash検索` の状態を確認できます。
 
 <img width="1117" height="390" alt="image" src="https://github.com/user-attachments/assets/cb66211b-cd7d-4a32-b388-b8ae36b6734e" />
 
@@ -67,8 +67,8 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 
 | ボタン / 項目 | 説明 |
 |---|---|
-| **スキャン** | `SongScripts` フォルダを再スキャンし、一覧と譜面照合結果を更新します |
-| **メタ情報追加** | チェックした行の metadata を元ファイルへ保存します。JSON だけでなく ZIP 内の対象 JSON も更新されます |
+| **スキャン** | `SongScripts` フォルダをスキャンし、一覧と譜面照合結果を更新します |
+| **メタ情報追加** | チェックした行の metadata を元ファイルへ保存します。`.json` だけでなく ZIP 内の対象 `.json` も更新されます |
 | **プレイリストを作成** | チェックした行から Beat Saber プレイリスト (`.bplist`) を生成します |
 | **譜面metadataを表示** | `songSubName` などの譜面 metadata 列の表示 / 非表示を切り替えます |
 
@@ -81,7 +81,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 | **ID** | `metadata.mapId` またはファイル / フォルダ名から推定した BeatSaver ID。編集、ロックが可能です |
 | **BeatSaver** | BeatSaver ページの `Open` リンクです。未取得譜面は `[取得]` ボタンで BeatSaver から `CustomLevels` へ展開できます |
 | **hash** | `metadata.hash`。編集、ロックが可能です |
-| **cameraScriptAuthorName** | スクリプト作者名。フィルコピー、ロックが可能です |
+| **cameraScriptAuthorName** | スクリプト作者名。EXCEL風のフィルコピー、ロックが可能です |
 | **songName** | 曲名。ロックが可能です |
 | **songSubName** | 曲サブ名。ロックが可能です |
 | **songAuthorName** | 曲アーティスト名。ロックが可能です |
@@ -115,7 +115,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 
 ### MapScriptsタブ
 
-`CustomLevels` / `CustomWIPLevels` フォルダ内にある既存の `SongScript.json` を一覧管理するタブです。
+`CustomLevels` / `CustomWIPLevels` フォルダ内にある既存の スクリプト`.json` を一覧管理するタブです。
 
 <img width="1233" height="533" alt="image" src="https://github.com/user-attachments/assets/f9b0218d-a83d-4d0d-9b02-42dc9c266c7b" />
 
@@ -132,7 +132,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 | **フォルダ出力** | 選択した項目を `yyyyMMdd_HHmmss_OUTPUT` フォルダへ出力します |
 | **ZIP出力** | 選択した項目を配布用 ZIP として出力します |
 | **プレイリストを作成** | 選択した項目から Beat Saber プレイリスト (`.bplist`) を生成します |
-| **元データ照合** | `Settings` で指定した元データ検索フォルダ内のアーカイブ / JSON と、譜面内スクリプトを `Movements` 件数、`Duration + Delay` 合計、`Duration` 統計値（2番目の最大値 / 2番目の最小値 / 中央値 / 最頻値）で照合します |
+| **元データ照合** | `Settings` で指定した元データ検索フォルダ内のアーカイブ / JSON と、譜面内スクリプトを `Movements` 件数、`Duration + Delay` 合計値、`Duration` 統計値（2番目の最大値 / 2番目の最小値 / 中央値 / 最頻値）で照合します |
 
 #### DataGrid列
 
@@ -141,7 +141,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 | **選択** | 処理対象に含める行を指定します |
 | **編集済** | 未保存の変更がある行にチェックが付きます |
 | **ID** | BeatSaver のマップ ID。編集、ロックが可能です |
-| **cameraScriptAuthorName** | スクリプト作者名。フィルコピー、ロックが可能です |
+| **cameraScriptAuthorName** | スクリプト作者名。EXCEL風のフィルコピー、ロックが可能です |
 | **songName** | 曲名。ロックが可能です |
 | **songSubName** | 曲サブ名。ロックが可能です |
 | **songAuthorName** | 曲アーティスト名。ロックが可能です |
@@ -149,14 +149,14 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 | **BPM** | BPM。ロックが可能です |
 | **AvatarHeight(cm)** | 想定アバター身長。ロックが可能です |
 | **Description** | 説明文。ロックが可能です |
-| **曲長(egg)** | 譜面フォルダ内 OGG 音声の長さです |
+| **曲長(egg)** | 譜面フォルダ内 egg 音声の長さです |
 | **ｽｸﾘﾌﾟﾄ長** | `Movements` 内の `Duration + Delay` 合計です |
 | **差分(beat)** | 曲長とスクリプト長の差を beat 単位で表示します |
 | **ファイル名** | 対象 JSON ファイル名です |
 | **フォルダ** | 譜面フォルダ名です |
 | **ソース** | `CustomLevels` / `CustomWIPLevels` の別です |
 | **元データ(アーカイブ/JSON)** | 元データ照合で見つかった候補一覧です |
-| **ハッシュ** | スクリプトファイルの hash です |
+| **ハッシュ** | 譜面の hash です |
 
 #### 右クリックメニュー
 
@@ -185,7 +185,7 @@ Beat Saber のカメラスクリプト (`SongScript.json` / CameraPlus MovementS
 | 項目 | 説明 |
 |---|---|
 | **譜面metadataを表示** | `songSubName` などの譜面 metadata 列を表示 / 非表示にします |
-| **metadataをSongScriptに追加** | コピー時に入力 metadata を JSON に埋め込みます |
+| **コピー時にmetadataをUI内容で再生成** | コピー時にUIに入力された metadata で JSON を更新します |
 | **リネーム** | 新規取り込み時の既定リネーム方式を選択します。`無し` / `SongScript` / `IdAuthorSongName` / `カスタム` から選択できます |
 | **再チェック** | `CustomLevels` / `CustomWIPLevels` を再スキャンし、照合結果を更新します |
 | **クリア** | 取り込み済み一覧をクリアします |
